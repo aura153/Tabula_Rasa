@@ -5,7 +5,7 @@
 ## 개요
 - 매일경제 60주년 홈페이지 개편에 맞춰 매일경제 초기면, 섹션, 리스트, 뷰페이지의 광고 데모 구현
 - 데모를 바탕으로 개발자와 미팅을 통해 유사한 레벨의 페이지들(증권, 부동산, 스페셜섹션 등)로 개발 확장 예정
-- 개발자와 논의를 통해 공통 광고 로직(.js), CSS(.css), HTML로 리팩토링 논의 후, 진행방향 협의
+- 개발자와 논의를 통해 공통 광고 로직(.js), CSS(.css), HTML로 리팩토링 논의 후, 진행방향 재협의
 - 페이지 레벨의 키/키밸류(동적입력)에 대한 정의 및 구현 방식에 대해서는 별로로 추가 설명 예정
   (아래와 가팅 '동적입력'이라고 임시로 표기된 부분 )
   
@@ -19,10 +19,10 @@
 
 ### 광고구현 데모
 
-- 뷰페이지 : https://tabula-rasa-six.vercel.app/view.html
-- 초기면 : https://tabula-rasa-six.vercel.app/HOME.html
-- 섹션 : https://tabula-rasa-six.vercel.app/section.html
-- 리스트 : https://tabula-rasa-six.vercel.app/list.html
+- 뷰페이지 : https://aura153.github.io/Tabula_Rasa/view.html
+- 초기면 : https://aura153.github.io/Tabula_Rasa/HOME.html
+- 섹션 : https://aura153.github.io/Tabula_Rasa/section.html
+- 리스트 : https://aura153.github.io/Tabula_Rasa/list.html
 
 ### 광고구현가이드
 https://github.com/aura153/Tabula_Rasa/blob/main/docs/Tabula_IMPLEMENTATION_GUIDE.md
