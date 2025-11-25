@@ -1,22 +1,24 @@
 # 매일경제 디지털 광고 구현 가이드 - 2025.11.25 ver 1.1
 - 작성일 : 2025.11.25
+- 광고코드의 생성 및 광고 메커니즘, 광고로딩만 구현, 기타 UI 및 디자인은 별도이니 신경쓰지 마세요.
 
 ## 개요
 - 매일경제 60주년 홈페이지 개편에 맞춰 매일경제 초기면, 섹션, 리스트, 뷰페이지의 광고 데모 구현
 - 데모를 바탕으로 개발자와 미팅을 통해 유사한 레벨의 페이지들(증권, 부동산, 스페셜섹션 등)로 개발 확장 예정
 - 개발자와 논의를 통해 공통 광고 로직(.js), CSS(.css), HTML로 리팩토링 논의후 진행 
 - 페이지 레벨의 키/키밸류(동적입력)에 대한 정의 및 구현 방식에 대해서는 별로로 추가 설명 예정
-  (아래 예시)
+  (아래와 가팅 '동적입력'이라고 임시로 표기된 부분 )
   
-googletag.pubads().setTargeting('section_list_nm', '동적입력');
-googletag.pubads().setTargeting('SOURCE_ID', '동적입력');
-googletag.pubads().setTargeting('source_type', '동적입력');
+  googletag.pubads().setTargeting('keywords', '동적입력');
+
 
 ### 소스코드
+
 - https://github.com/aura153/Tabula_Rasa
 - 각 소스코드 안에 개발자를 위한 성세 주석/설명 추가
 
 ### 광고구현 데모
+
 - 뷰페이지 : https://tabula-rasa-lac.vercel.app/view.html
 - 초기면 : https://tabula-rasa-lac.vercel.app/HOME.html
 - 섹션 : https://tabula-rasa-lac.vercel.app/section.html
@@ -55,41 +57,41 @@ https://github.com/aura153/Tabula_Rasa/blob/main/docs/Tabula_IMPLEMENTATION_GUID
 
 ---
 
-## 2. 수익화 전략 개요
+## 2. 광고 수익화 전략 개요
 
 ### 2.1 반응형(Responsive) 전략
 
-- **목표**: 하나의 AdUnitPath로 **디바이스별 인벤토리 쪼개지 않고** 운영
+- **목표**: 하나의 AdUnitPath로 **디바이스별 인벤토리 구분하지 않고** 운영
 - 구현 포인트
   - `googletag.sizeMapping()`을 사용해 **뷰포트 폭 기준**으로 지원 사이즈 그룹 정의
   - 가로형용(`sizeMapping_horizontal`) / 박스형용(`sizeMapping_square`) / in-article 혼합형(`sizeMapping_horizontal_medium`) 등 역할 구분
 - 수익 영향
-  - 트래픽이 분산되지 않아 **경쟁 밀도(경매 경쟁)** 유지 → CPM 방어 효과
-  - 다양한 사이즈를 허용하여 **다양한 캠페인(리치형, 기본 배너)** 수용
+  - 트래픽이 분산되지 않아 **경쟁 밀도(경매 경쟁)** 유지 → CPM 증대 효과
+  - 다양한 사이즈를 허용하여 **다양한 유형의 광고(동영상, 리치미디오형, 기본 배너)** 수용
 
 ### 2.2 Lazy Loading 전략
 
-- **목표**: BTF / 스크롤 하단 슬롯은 **사용자가 실제로 볼 가능성이 있을 때만** 노출 요청
+- **목표**: BTF / 스크롤 하단 슬롯은 **사용자가 실제로 볼 가능성이 있을 때만** 노출 요청, 사용자 편의성 고려
 - 구현 포인트
   - `googletag.pubads().disableInitialLoad()`로 **전역 초기 로드 OFF**
   - Eager 슬롯은 명시적으로 `display + refresh`
   - Lazy 슬롯은 `IntersectionObserver`로 뷰포트 근접 시 `display + refresh` 호출
 - 수익 영향
   - **뷰어블 인벤토리 비율 상승 → 뷰어블 기준 과금(뷰어블 CPM, vCPM) 최적화**
-  - 불필요한 BTF 노출/호출 감소 → **페이지 체감 속도 개선**, 이탈률 감소에 따른 간접 수익 효과
+  - 불필요한 BTF 노출/호출 감소 → **페이지 체감 속도 개선**, 이탈률 감소에 따른 간접 수익 효과, SEO 및 구글디스커버 최적화 가능
 
 ### 2.3 본문 In-Article 동적 삽입(View GPT)
 
 - **목표**: 기사 본문 내 적절한 간격으로 광고를 삽입하여
   - **광고 노출 수(Ad Impressions) 최대화**
-  - 동시에 **독서 경험 훼손 최소화**
-- 구현 포인트
+  - 동시에 **독자 경험 훼손 최소화**
+- 구현 포인트 (상세 구현 전략은 View GPT의 코드 주석 참조 할 것)
   - 가시 텍스트 높이 기준 “뷰포트 단위”로 간격을 계산
   - 이미지/YouTube/데이터박스 등 **시각 블록 인접 위치는 회피**
   - 짧은 기사와 긴 기사를 **서로 다른 정책**으로 처리
 - 수익 영향
-  - 본문 길이와 관계없이 **안정적인 in-article 노출 수 확보**
-  - 시각적 피로도가 과도하게 높지 않도록 제어 → 장기적으로 페이지 체류시간·재방문율에 긍정적
+  - 본문 길이와 관계없이 **안정적인 in-article 광고 노출 수 확보**
+  - 시각적 피로도가 과도하게 높지 않도록 제어 → 장기적으로 페이지 체류시간·재방문율에 긍정적 영향
 
 ---
 
@@ -158,7 +160,7 @@ googletag.pubads().setPublisherProvidedId('PPID_DYNAMIC_HASHED_ID (SERVER_HASHED
 
 #### 3.3.2 기사/컨텐츠 메타 정보 (동적 입력 대상)
 
-View / Home / Section / List 모두 아래 키 구조는 동일하며, **실제 값은 CMS에서 주입**하는 것을 전제로 합니다.
+View / Home / Section / List 모두 아래 키 구조는 동일하며, **실제 값은 CMS에서 주입**하는 것을 전제로 합니다. 추가 설명 예정
 
 ```js
 googletag.pubads().setTargeting('SOURCE_ID', '동적입력');
@@ -226,7 +228,7 @@ const sizeMapping_horizontal = googletag.sizeMapping()
   .addSize([0, 0],    [[336, 280], [300, 250], [320, 480], [320, 100], [2, 1], [1, 1], 'fluid'])
   .build();
 ```
-
+- **1024 이상 (데스크탑)**: 우측 날개 영역의 사이즈 매핑은 추후 수정 예정
 - **1024 이상 (데스크탑)**: 와이드 리더보드 / 빅사이즈 지원
 - **768~1023 (태블릿)**: 750폭 위주 + 728x90 등
 - **0~767 (모바일)**: 320x100 / 320x480 / 300x250 / 336x280 등
