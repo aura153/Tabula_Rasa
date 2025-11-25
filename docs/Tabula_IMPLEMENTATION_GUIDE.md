@@ -7,6 +7,7 @@
 - 개발자와 논의를 통해 공통 광고 로직(.js), CSS(.css), HTML로 리팩토링 논의후 진행 
 - 페이지 레벨의 키/키밸류(동적입력)에 대한 정의 및 구현 방식에 대해서는 별로로 추가 설명 예정
   (아래 예시)
+  
 googletag.pubads().setTargeting('section_list_nm', '동적입력');
 googletag.pubads().setTargeting('SOURCE_ID', '동적입력');
 googletag.pubads().setTargeting('source_type', '동적입력');
