@@ -19,10 +19,10 @@
 
 ### 광고구현 데모
 
-- 뷰페이지 : https://tabula-rasa-lac.vercel.app/view.html
-- 초기면 : https://tabula-rasa-lac.vercel.app/HOME.html
-- 섹션 : https://tabula-rasa-lac.vercel.app/section.html
-- 리스트 : https://tabula-rasa-lac.vercel.app/list.html
+- 뷰페이지 : https://tabula-rasa-six.vercel.app/view.html
+- 초기면 : https://tabula-rasa-six.vercel.app/HOME.html
+- 섹션 : https://tabula-rasa-six.vercel.app/section.html
+- 리스트 : https://tabula-rasa-six.vercel.app/list.html
 
 ### 광고구현가이드
 https://github.com/aura153/Tabula_Rasa/blob/main/docs/Tabula_IMPLEMENTATION_GUIDE.md
