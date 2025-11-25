@@ -1,17 +1,21 @@
 # 매일경제 디지털 광고 구현 가이드 - 2025.11.25 ver 1.1
-- 작성자 : 매일경제 광고마케팅국 디지털마마케팅부 황재연 부장
 - 작성일 : 2025.11.25
 
-## 0. 개요
+## 개요
 - 매일경제 60주년 홈페이지 개편에 맞춰 매일경제 초기면, 섹션, 리스트, 뷰페이지의 광고 데모 구현
 - 데모를 바탕으로 기타 유사한 페이지(증권, 부동산, 스페셜섹션 등)으로 확장
 
-### 0.1 구현 데모 파일(git)
-- 아래 github에 섹션별 데모 저장
-https://github.com/aura153/Tabula_Rasa
+### 소스코드
+- https://github.com/aura153/Tabula_Rasa
 
-- 매일경제 초기면 : https://tabula-rasa-lac.vercel.app/HOME.html
-- https://tabula-rasa-lac.vercel.app/HOME.html
+### 광고구현 데모
+- 뷰페이지 : https://tabula-rasa-lac.vercel.app/view.html
+- 초기면 : https://tabula-rasa-lac.vercel.app/HOME.html
+- 섹션 : https://tabula-rasa-lac.vercel.app/section.html
+- 리스트 : https://tabula-rasa-lac.vercel.app/list.html
+
+### 광고구현가이드
+https://github.com/aura153/Tabula_Rasa/blob/main/docs/Tabula_IMPLEMENTATION_GUIDE.md
 
 
 
