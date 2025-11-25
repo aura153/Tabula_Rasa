@@ -1,0 +1,505 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HOME GPT</title>
+    
+    <style>
+        /* (스타일 시트 부분은 원본과 동일하게 유지) */
+        body { font-family: 'Malgun Gothic', 'Dotum', Arial, sans-serif; margin: 0; padding: 0; background-color: #f6f6f6; color: #333; }
+        a { text-decoration: none; color: inherit; }
+        .container { max-width: 1210px; margin: 0 auto; padding: 0 10px; }
+        header { width: 100%; background-color: #fff; border-bottom: 1px solid #ddd; padding: 10px 0; text-align: center; }
+        .logo { font-size: 28px; font-weight: bold; color: #000; }
+        nav { background-color: #f9f9f9; border-bottom: 2px solid #333; margin-bottom: 20px; }
+        .nav-list { list-style: none; padding: 0; margin: 0; display: flex; justify-content: flex-start; }
+        .nav-list li { padding: 10px 15px; font-weight: bold; border-right: 1px solid #eee; }
+        .nav-list li:first-child { color: #c00; }
+        .content-wrap { display: flex; gap: 20px; margin-bottom: 30px; }
+        .main-content { flex: 3; min-width: 0; }
+        .sidebar { flex: 1; min-width: 280px; background-color: #fff; padding: 20px; box-sizing: border-box; border-radius: 5px; }
+        
+        .ad-slot {
+            position: relative; 
+            text-align: center;
+            color: #fff;
+            display: block;
+            margin: 0 auto;
+            font-size: 14px;
+            font-weight: bold;
+            box-sizing: border-box;
+            border: none; 
+            padding: 10px 0 0 0;  /* 상단 여백 10px (라벨 공간 확보) */
+            min-height: 1px; 
+            background-color: transparent; 
+            width: 100%;
+            max-width: 1210px;
+            transition: background-color 0.3s ease;
+            line-height: 1.5;
+            overflow: visible;
+        }
+        .gam-container {
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-grow: 1;
+            min-height: 1px;
+        }
+        
+        #TC_billboard_leaderboard, #MC_billboard_rectangle, #MR_halfpage_rectangle { 
+            background-color: transparent !important; 
+            border: none !important; 
+        }
+
+        .ad-loaded { background-color: #c00 !important; color: #fff; }
+        
+        .mk-ad-label {
+            position: absolute;
+            top: -15px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 100;
+            padding: 0;
+            background-color: transparent;
+            border: none;
+            color: #5A5A5A;
+            font-size: 13px;         /* View GPT와 통일: 13px */
+            font-weight: normal;     /* 볼드 해제 */
+            text-transform: uppercase;
+            line-height: 1;
+            white-space: nowrap;
+        }
+        
+        @media (prefers-color-scheme: dark) {
+            body { background-color: #1a1a1a; color: #e0e0e0; }
+            header { background-color: #1a1a1a; border-bottom-color: #444; }
+            .logo { color: #fff; } /* Dark Mode 타이틀 색상 대응 */
+            nav { background-color: #1a1a1a; border-bottom: 2px solid #666; }
+            .sidebar { background-color: #1a1a1a; border-color: #444; }
+            .sidebar-item { background-color: #1a1a1a; border-color: #444; }
+            .mk-ad-label {
+                background-color: transparent;
+                color: #A0A0A0;
+                border: none;
+            }
+        }
+        @media (max-width: 1024px) {
+            .content-wrap { flex-direction: column; }
+        }
+    </style>
+    
+    <script async src='https://www.googletagservices.com/tag/js/gpt.js'></script>
+    <script>
+        var googletag = googletag || {};
+        googletag.cmd = googletag.cmd || [];
+
+        const isDarkMode = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'true' : 'false';
+
+        // ▼▼▼ AdUnitPath 변수 정의 ▼▼▼
+        const AdUnitPath = '/7450/www.mk.co.kr/HOME';
+
+        // 💡 슬롯 객체 저장 (View / Section과 동일 패턴: div_id + "_slot")
+        let TC_billboard_leaderboard_slot = null;
+        let MC_billboard_rectangle_slot   = null;
+        let MR_halfpage_rectangle_slot    = null;
+
+        // ***************************************************
+        // ✅ 광고 렌더링 완료 시 'Advertisement' 라벨을 삽입하는 함수 (전역 1회 정의)
+        function addAdLabel(event) {
+            const slotId = event.slot.getSlotElementId();
+            const slotElement = document.getElementById(slotId); 
+            
+            if (event.isEmpty === false && slotElement) {
+                const outerSlot = slotElement.closest('.ad-slot'); 
+                if (!outerSlot) return;
+
+                // 이미 라벨이 있으면 중복 삽입 방지
+                if (outerSlot.querySelector('.mk-ad-label')) return; 
+
+                const labelElement = document.createElement('div');
+                labelElement.className = 'mk-ad-label';
+                labelElement.textContent = 'Advertisement';
+                
+                outerSlot.insertBefore(labelElement, outerSlot.firstChild);
+
+                // 배경/보더는 투명 처리 유지
+                outerSlot.style.border = 'none'; 
+                outerSlot.style.backgroundColor = 'transparent';
+
+                console.log(`✅ [Ad Label] Label added for ${slotId}`);
+            }
+        }
+        // ***************************************************
+
+        googletag.cmd.push(function() {
+            
+            // --- [1] 페이지 레벨 타게팅: GPT 버전, 디바이스, 환경 정보 ---
+            
+            const userAgent = navigator.userAgent.toLowerCase();
+            let deviceCategory = 'desktop';
+            if (/mobile|android|iphone|ipad|ipod/.test(userAgent) || window.innerWidth <= 768) {
+                deviceCategory = 'mobile';
+            } else if (window.innerWidth <= 1024) {
+                deviceCategory = 'tablet';
+            }
+            googletag.pubads().setTargeting('device_category', deviceCategory);
+            
+            googletag.pubads().setTargeting('domain', window.location.hostname);
+            googletag.pubads().setTargeting('url', window.location.href);
+            googletag.pubads().setTargeting('referer', document.referrer);
+            googletag.pubads().setTargeting('is_dark_mode', isDarkMode);
+            googletag.pubads().setTargeting('gpt_version', '2025'); 
+
+            // --- [2] CMS 정보 주입이 필요한 키-값 설정 ---
+            googletag.pubads().setTargeting('web_type', 'responsive');
+            googletag.pubads().setTargeting('page_type', 'HOME');
+            googletag.pubads().setTargeting('section_home_nm', 'MK');
+            
+            // ▼▼▼ 동적 입력 키-값 ▼▼▼
+            googletag.pubads().setTargeting('section_front_nm', '동적입력');
+            googletag.pubads().setTargeting('section_list_nm', '동적입력');
+            googletag.pubads().setTargeting('SOURCE_ID', '동적입력');
+            googletag.pubads().setTargeting('source_type', '동적입력');
+            googletag.pubads().setTargeting('MIDDLE_CODE_ENG_NM', '동적입력');
+            googletag.pubads().setTargeting('CODE_ID', '동적입력');
+            googletag.pubads().setTargeting('article_num', '동적입력');
+            googletag.pubads().setTargeting('title', '동적입력');
+            googletag.pubads().setTargeting('title_slug', '동적입력');
+            googletag.pubads().setTargeting('url_slug', '동적입력');
+            googletag.pubads().setTargeting('publish_date', '동적입력');
+            googletag.pubads().setTargeting('journalist', '동적입력');
+            googletag.pubads().setTargeting('keywords', '동적입력');
+            googletag.pubads().setTargeting('ticker_name', '동적입력');
+            googletag.pubads().setTargeting('has_video', '동적입력');
+            googletag.pubads().setTargeting('is_app_viewer', '동적입력');
+            googletag.pubads().setTargeting('login_type', '동적입력');
+            googletag.pubads().setTargeting('login_status', '동적입력');
+            googletag.pubads().setTargeting('membership_type', '동적입력');
+            googletag.pubads().setTargeting('brandsensitive', '동적입력');
+            // ▲▲▲ 동적 입력 키-값 ▲▲▲
+
+            // --- [3] GPT 핵심 기능 설정 ---
+            googletag.pubads().enableSingleRequest();
+            googletag.pubads().collapseEmptyDivs(true);
+            googletag.pubads().setCentering(true);
+            googletag.pubads().setPublisherProvidedId('PPID_DYNAMIC_HASHED_ID (SERVER_HASHED_ID)');
+            
+            // 🛑 전역 초기 로드 비활성화 (요청사항)
+            googletag.pubads().disableInitialLoad(); 
+
+            // ✅ GAM 이벤트 리스너 추가 (라벨)
+            googletag.pubads().addEventListener('slotRenderEnded', addAdLabel);
+
+            // --- [4] Size Mapping 정의 (2개로 분리 적용) ---
+            
+            // 0-1. 가로형 배너용 사이즈 매핑 (TC, MC)
+            const sizeMapping_horizontal = googletag.sizeMapping()
+                .addSize([1024, 0], [[1200, 300], [1200, 100], [970, 250], [980, 120], [970, 90], [930, 180], [728, 90], [2, 1], [1, 1], 'fluid'])
+                .addSize([768, 0], [[750, 300], [750, 200], [728, 90], [480, 320], [336, 280], [300, 250], [2, 1], [1, 1], 'fluid'])
+                .addSize([0, 0], [[336, 280], [300, 250], [320, 480], [320, 100], [2, 1], [1, 1], 'fluid'])
+                .build();
+
+            // 0-2. 박스형 배너용 사이즈 매핑 (MR)
+            const sizeMapping_square = googletag.sizeMapping()
+                .addSize([1024, 0], [[300, 600], [336, 280], [2, 1], [1, 1], 'fluid'])
+                .addSize([768, 0], [[336, 280], [300, 250], [2, 1], [1, 1], 'fluid'])
+                .addSize([0, 0], [[336, 280], [300, 250], [320, 480], [320, 100], [2, 1], [1, 1], 'fluid'])
+                .build();
+            // ----------------------------------------------------
+            
+            // 2. 광고 슬롯 정의 (Method Chaining 및 분리된 매핑 적용)
+            
+            // TC_billboard_leaderboard (Eager Load) - sizeMapping_horizontal 적용
+            TC_billboard_leaderboard_slot = googletag.defineSlot(
+                AdUnitPath,
+                [[1200, 300], [970, 250], [728, 90], [320, 100], [1, 1], 'fluid'],
+                'TC_billboard_leaderboard'
+            )
+                .defineSizeMapping(sizeMapping_horizontal) 
+                .setTargeting('div_id', 'TC_billboard_leaderboard')
+                .setTargeting('load_type', 'eager')
+                .setTargeting('position', 'TC')
+                .setTargeting('ad_area_type', 'ATF') 
+                .setTargeting('default_exposure', 'hidden') 
+                .addService(googletag.pubads());
+
+            // MC_billboard_rectangle (Lazy Load) - sizeMapping_horizontal 적용
+            MC_billboard_rectangle_slot = googletag.defineSlot(
+                AdUnitPath,
+                [[1200, 300], [970, 250], [750, 300], [336, 280], [1, 1], 'fluid'],
+                'MC_billboard_rectangle'
+            )
+                .defineSizeMapping(sizeMapping_horizontal) 
+                .setTargeting('div_id', 'MC_billboard_rectangle')
+                .setTargeting('load_type', 'lazy')
+                .setTargeting('position', 'MC')
+                .setTargeting('ad_area_type', '')
+                .setTargeting('default_exposure', '') 
+                .addService(googletag.pubads());
+
+            // MR_halfpage_rectangle (Lazy Load) - sizeMapping_square 적용
+            MR_halfpage_rectangle_slot = googletag.defineSlot(
+                AdUnitPath,
+                [[300, 600], [336, 280], [1, 1], 'fluid'],
+                'MR_halfpage_rectangle'
+            )
+                .defineSizeMapping(sizeMapping_square) 
+                .setTargeting('div_id', 'MR_halfpage_rectangle')
+                .setTargeting('load_type', 'lazy')
+                .setTargeting('position', 'MR')
+                .setTargeting('ad_area_type', '')
+                .setTargeting('default_exposure', '')                
+                .addService(googletag.pubads());
+            
+            googletag.enableServices();
+
+            // 🟢 Eager Load용 TC는 BODY 쪽에서 display + refresh 호출
+            console.log('▶️ [GPT INIT] Services enabled. TC_billboard_leaderboard will be displayed via body script.');
+        });
+    </script>
+</head>
+<body>
+
+    <header>
+        <div class="container">
+            <div class="logo">HOME GPT</div>
+        </div>
+    </header>
+
+    <nav>
+        <div class="container">
+            <ul class="nav-list">
+                <li>HOME</li>
+                <li>뉴스종합</li>
+                <li>부동산</li>
+                <li>증권</li>
+                <li>오피니언</li>
+                <li>스포츠</li>
+            </ul>
+        </div>
+    </nav>
+    
+    <div class="container">
+        
+        <div id="TC_billboard_leaderboard" class="ad-slot ad-1 gam-container">
+            <div class="gam-container">
+                <script>
+                    // BODY에서 Eager Load: display + refresh
+                    googletag.cmd.push(function() { 
+                        googletag.display('TC_billboard_leaderboard');
+                        googletag.pubads().refresh([TC_billboard_leaderboard_slot]);
+                        console.log("▶️ [Immediate Load] Ad ID: TC_billboard_leaderboard | DISPLAY + REFRESH called on page load.");
+                    });
+                </script>
+            </div>
+        </div>
+
+        <div class="content-wrap">
+            <div class="main-content">
+                <section class="highlight-news">
+                    <h2>🔥 Main Contents: Highlight News</h2>
+                    <p style="font-size: 20px; font-weight: bold; margin-bottom: 5px;">**美 빅테크, AI 주도권 경쟁 심화... 투자 급증 속 규제 리스크 부상**</p>
+                    <p style="font-size: 14px; color: #555;">* AI 반도체 수급난 장기화... K-반도체 업계 새로운 전략 모색</p>
+                    <ul style="list-style: disc; padding-left: 20px; margin-top: 5px; color: #007bff;">
+                        <li>차세대 LLM 모델 공개, 초거대 AI 경쟁의 서막</li>
+                        <li>생성형 AI의 확산, 콘텐츠 산업에 미치는 영향 분석</li>
+                    </ul>
+                </section>
+                <section class="article-section">
+                    <h2>💰 Main Contents: Market & Finance</h2>
+                    <p style="font-size: 20px; font-weight: bold; margin-bottom: 5px;">**금리 인하 기대감 '주춤'... 코스피 2700선 공방 장기화 예상**</p>
+                    <p style="font-size: 14px; color: #555;">* 부동산 PF 리스크 재부각, 금융당국 '선제적 대응' 주문</p>
+                    <div class="news-item">
+                        <div class="news-item-img"></div>
+                        <p style="margin: 0; font-weight: bold;">[속보] 원/달러 환율, 장중 1,350원 돌파... 수출 기업 희비 교차</p>
+                    </div>
+                </section>
+                <div class="spacer-section">
+                    <h3>💡 Special Feature: Future Tech</h3>
+                    <p style="font-size: 16px;">**우주 경제 시대 개막: 민간 우주선, 저궤도 통신망 경쟁 가열**</p>
+                    <ul style="list-style: square; padding-left: 20px; margin-top: 5px;">
+                        <li>차세대 LLM 모델 공개, 초거대 AI 경쟁의 서막</li>
+                        <li>양자 컴퓨터 상용화, 보안 패러다임 변화 예고</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="sidebar">
+                <h3>⭐ Right Contents: Popular Ranking</h3>
+                <ul class="ranking-list">
+                    <li>1. [단독] 2026년 가계부채 전망 보고서...</li>
+                    <li>2. 테슬라 다음은 이 기업? 로봇주 주목</li>
+                    <li>3. 상반기 최고 수익률 펀드 리스트 공개</li>
+                </ul>
+                <div class="sidebar-item">
+                    <h4>Quick Stats</h4>
+                    <p>코스피: +0.5% | 나스닥: -0.2%</p>
+                </div>
+                <div class="sidebar-item">
+                    <h4>Editorial Picks</h4>
+                    <p>논설: "AI 윤리, 기업의 사회적 책임으로"</p>
+                </div>
+            </div>
+        </div>
+        
+        <div id="MC_billboard_rectangle" class="ad-slot ad-2">
+            <div class="gam-container">
+            </div>
+        </div>
+
+        <div class="content-wrap">
+            <div class="main-content">
+                <section class="article-section">
+                    <h2>🌍 Sub Contents: Global Issue</h2>
+                    <p style="font-size: 20px; font-weight: bold; margin-bottom: 5px;">**유럽, 녹색 전환 가속... 탄소 국경세 도입 현실화**</p>
+                    <div class="news-item">
+                        <div class="news-item-img"></div>
+                        <p style="margin: 0; font-weight: bold;">러시아-우크라이나 전쟁 장기화, 국제 에너지 시장 불안정 심화</p>
+                    </div>
+                </section>
+                <div class="spacer-section">
+                    <h3>🎭 Sub Contents: Society & Culture</h3>
+                    <p style="font-size: 16px;">**OTT 구독료 인상 도미노... 소비자 부담 증가 논란**</p>
+                    <ul style="list-style: circle; padding-left: 20px; margin-top: 5px;">
+                        <li>MZ세대 '갓생' 트렌드 속 숨겨진 의미</li>
+                    </ul>
+                </div>
+                <div class="spacer-section" style="border-left-color: #38761d;">
+                    <h3>📝 Policy Briefing</h3>
+                    <p style="font-size: 16px;">**정부, 저출산 대책 발표... 파격적인 주거 지원 방안 포함**</p>
+                </div>
+            </div>
+            
+            <div class="sidebar">
+                <h3>📌 Right Contents: Investment Tips</h3>
+                <ul class="ranking-list" style="counter-reset: none; padding-left: 10px; list-style-type: disc;">
+                    <li>인플레이션 헤지 포트폴리오 구축 전략</li>
+                </ul>
+                <h3 style="margin-top: 20px;">📌 Right Contents: Tech Review</h3>
+                <div class="sidebar-item">
+                    <p>최신 스마트폰 카메라 기술 비교 분석</p>
+                </div>
+                <h3 style="margin-top: 20px;">📌 Right Contents: Lifestyle</h3>
+                <ul class="ranking-list" style="counter-reset: none; padding-left: 10px; list-style-type: disc;">
+                    <li>웰니스 여행지 추천: 몸과 마음을 치유하는 공간</li>
+                </ul>
+                
+                <div id="MR_halfpage_rectangle" class="ad-slot ad-3"> 
+                    <div class="gam-container">
+                    </div>
+                </div>
+                
+                <h3 style="margin-top: 20px;">📰 Quick Links</h3>
+                <ul class="ranking-list" style="counter-reset: none; padding-left: 10px; list-style-type: disc;">
+                    <li>매경 지면 보기</li>
+                    <li>주요 공시 사항</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <footer>
+        <p style="text-align: center; padding: 15px; background-color: #333; color: white; margin-top: 0;">
+            &copy; 2025 Mockup Site. All Rights Reserved. (매일경제 레이아웃 모방)
+        </p>
+    </footer>
+
+    <script>
+        // ----------------------------------------------------------
+        // View GPT와 일관된 Lazy Load 구조
+        //  - LAZY_AD_SLOT_IDS: Lazy 대상 슬롯 ID 목록
+        //  - lazyAdSlotsHTML: DOM 요소 목록
+        //  - lazyGamSlots: GAM 슬롯 객체 목록
+        //  - lazyObserver: IntersectionObserver 인스턴스
+        // ----------------------------------------------------------
+        const LAZY_AD_SLOT_IDS = [
+            'MC_billboard_rectangle',
+            'MR_halfpage_rectangle'
+        ];
+
+        let lazyAdSlotsHTML = [];
+        let lazyGamSlots = [];
+        let lazyObserver = null;
+
+        // ==========================================================
+        // 함수 1. Lazy Load 대상 광고 슬롯 설정 및 Observer 생성
+        // ==========================================================
+        function setupLazyLoading() {
+            const allAdSlots = document.querySelectorAll('.ad-slot');
+            lazyAdSlotsHTML = [];
+
+            allAdSlots.forEach(slot => {
+                if (LAZY_AD_SLOT_IDS.includes(slot.id)) {
+                    lazyAdSlotsHTML.push(slot);
+                }
+            });
+            
+            lazyGamSlots = [];
+            
+            if (window.googletag && googletag.cmd) {
+                googletag.cmd.push(function() {
+                    const definedSlots = googletag.pubads().getSlots();
+                    lazyGamSlots = definedSlots.filter(slot =>
+                        LAZY_AD_SLOT_IDS.includes(slot.getSlotElementId())
+                    );
+                });
+            }
+
+            const options = {
+                root: null, 
+                rootMargin: '0px 0px 100px 0px', 
+                threshold: 0.0
+            };
+
+            lazyObserver = new IntersectionObserver(function(entries, observerInstance) {
+                entries.forEach(entry => {
+                    if (!entry.isIntersecting) return;
+
+                    const slotId = entry.target.id;
+
+                    if (window.googletag && googletag.cmd) {
+                        googletag.cmd.push(function() {
+                            const slotToRefresh = lazyGamSlots.find(
+                                s => s.getSlotElementId() === slotId
+                            );
+
+                            if (slotToRefresh) {
+                                // disableInitialLoad() 환경 → display + refresh 패턴
+                                googletag.display(slotId); 
+                                googletag.pubads().refresh([slotToRefresh]); 
+                                console.log(`✅ [Lazy Load SUCCESS] Ad ID: ${slotId} | Status: DISPLAY + REFRESH upon scroll.`);
+                            }
+                        });
+                    }
+
+                    observerInstance.unobserve(entry.target);
+                });
+            }, options);
+        }
+
+        // ==========================================================
+        // 함수 2. Lazy Load 대상 슬롯 관찰 시작
+        // ==========================================================
+        function startObservingLazySlots() {
+            if (!lazyObserver || !lazyAdSlotsHTML || lazyAdSlotsHTML.length === 0) return;
+
+            lazyAdSlotsHTML.forEach(slot => {
+                lazyObserver.observe(slot);
+                console.log(`⏳ [Lazy Load Register] Ad ID: ${slot.id} | Registered for Lazy Load.`);
+            });
+        }
+
+        // ==========================================================
+        // DOMContentLoaded 시점에 Lazy 관련 로직 실행
+        // ==========================================================
+        document.addEventListener('DOMContentLoaded', function() {
+            setupLazyLoading();        // Lazy 대상 수집 및 Observer 초기화
+            startObservingLazySlots(); // Lazy 대상 슬롯 관찰 시작
+        });
+
+        // ※ addAdLabel 및 이벤트 리스너는 <head> 영역에서 전역 1회만 등록
+    </script>
+</body>
+</html>
