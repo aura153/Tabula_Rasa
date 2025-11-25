@@ -762,8 +762,8 @@ googletag.pubads().setTargeting('section_list_nm', 'economic-policy');
 
 ## 10. 마무리
 
-추후 다음과 같은 방향으로 계속 업데이트 예정
-
+추후 다음과 같은 방향으로 추가 개발 및 개발협의, 업데이트 예정
+- 효율적인 유지/보수를 위해 '공통 광고모듈(.js),스타일(.css), HTML'로 나누는 방향 협의
 - 1st-party 데이터 강화 및 타겟팅 발굴
 - PPID 적용
 - Prebid/오픈빗 통합, **헤더비딩 연동 규칙** 추가, 수익화 극대화 추진
