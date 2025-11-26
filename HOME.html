@@ -23,9 +23,41 @@
         .nav-list { list-style: none; padding: 0; margin: 0; display: flex; justify-content: flex-start; }
         .nav-list li { padding: 10px 15px; font-weight: bold; border-right: 1px solid #eee; }
         .nav-list li:first-child { color: #c00; }
+
         .content-wrap { display: flex; gap: 20px; margin-bottom: 30px; }
-        .main-content { flex: 3; min-width: 0; }
-        .sidebar { flex: 1; min-width: 280px; background-color: #fff; padding: 20px; box-sizing: border-box; border-radius: 5px; }
+
+        /*
+         * [레이아웃 · 메인/우측 컬럼 비율 조정]
+         * - 우측 사이드바에 300px 폭의 광고(예: 300x250, 300x600)가 정확히 들어갈 수 있도록
+         *   사이드바의 실제 콘텐츠 영역(패딩 제외)이 최소 300px 이상이 되도록 조정했습니다.
+         *
+         * - .sidebar는 padding: 20px(좌우 합 40px)을 가지고 있으므로,
+         *   300px 크기의 광고 크리에이티브가 잘리지 않게 하려면
+         *   전체 사이드바 폭이 최소 340px 이상이어야 합니다.
+         *
+         * - 조정 내용:
+         *   - main-content: flex: 1 1 auto → 남은 영역을 자연스럽게 차지하도록 설정
+         *   - sidebar    : flex: 0 0 340px, min-width: 340px → 우측 컬럼 폭을 고정에 가깝게 확보
+         *
+         * - 결과:
+         *   - 데스크탑(1210px 컨테이너 기준)에서 우측 영역은 340px(패딩 포함)로 고정,
+         *     내부 ad-slot은 실제 300px 폭을 확보하게 되어 300x600/300x250 소재가 안정적으로 노출됩니다.
+         *   - 모바일/태블릿 구간(1024px 이하)에서는 아래 @media 규칙에 따라 컬럼이 세로 스택 구조가 되므로,
+         *     폭 제약 없이 100% 폭으로 자연스럽게 표시됩니다.
+         */
+        .main-content {
+            flex: 1 1 auto;  /* 남은 공간을 유연하게 차지 */
+            min-width: 0;
+        }
+
+        .sidebar {
+            flex: 0 0 340px;      /* 우측 컬럼 폭을 340px 기준으로 고정 (패딩 포함) */
+            min-width: 340px;     /* 최소 폭 보장 → 내부 콘텐츠 영역은 300px 이상 확보 */
+            background-color: #fff;
+            padding: 20px;
+            box-sizing: border-box;
+            border-radius: 5px;
+        }
         
         /*
          * [광고 공통 · .ad-slot 래퍼 설명]
@@ -135,6 +167,8 @@
             header { background-color: #1a1a1a; border-bottom-color: #444; }
             .logo { color: #fff; } /* Dark Mode 타이틀 색상 대응 */
             nav { background-color: #1a1a1a; border-bottom: 2px solid #666; }
+
+            /* 폭/레이아웃은 기본 .sidebar 정의를 그대로 사용하고, 다크모드에서는 색상만 변경 */
             .sidebar { background-color: #1a1a1a; border-color: #444; }
             .sidebar-item { background-color: #1a1a1a; border-color: #444; }
 
@@ -155,6 +189,8 @@
             /*
              * [반응형 레이아웃 · HOME 전용]
              * - 1024px 이하에서는 메인/사이드 두 컬럼을 세로 방향(column)으로 배치합니다.
+             * - 이 때는 .sidebar 폭이 100%로 확장되므로, 위에서 설정한 min-width 340px는
+             *   모바일/태블릿 환경에 부정적 영향을 주지 않습니다.
              * - 광고 자체의 사이즈는 GPT sizeMapping에서 제어하므로,
              *   여기서는 광고 슬롯이 포함된 레이아웃 컨테이너만 제어하는 수준으로 유지합니다.
              */
