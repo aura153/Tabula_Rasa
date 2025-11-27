@@ -212,6 +212,20 @@
             googletag.pubads().addEventListener('slotRenderEnded', addAdLabel);
 
             // ------------------------------------------------------------------
+            // [페이지 설정 config – centering]
+            //
+            // - PageSettingsConfig를 통해 광고 크리에이티브를
+            //   슬롯 기준 가로 중앙 정렬하도록 설정합니다.
+            // - 기존 gpt_mobile.js의 기본 가운데 정렬과 유사한 정책을
+            //   View/Home/Section/List GPT 전체에 일관되게 적용하기 위한 설정입니다.
+            // - display() / refresh() 이전에 한 번만 호출되면 되며,
+            //   이후에 요청되는 슬롯들에 대해 centering이 적용됩니다.
+            // ------------------------------------------------------------------
+            googletag.setConfig({
+                centering: true
+            });
+
+            // ------------------------------------------------------------------
             // 0. Size Mapping 정의 – 반응형 광고 사이즈 정책
             //
             // - 이 View GPT에서는 3가지 대표 매핑을 사용합니다.
@@ -519,6 +533,11 @@
             //     항상 자연스럽게 연속성을 유지합니다.
             //   · shufflePopularNewsNativeAds()에서 "기사 순서는 고정"된 상태에서
             //     광고만 기사 사이의 여러 위치 중 랜덤하게 섞입니다.
+            // - 크리에이티브 정책:
+            //   · size 배열에 'fluid'를 포함해 반응형 네이티브 템플릿을 "기본"으로 사용하고,
+            //     320x100 / 320x50 등 고정 크기는 백워드 컴패티빌리티용 fallback으로 유지합니다.
+            //   · CSS 레벨에서는 슬롯 내부 컨테이너를 width:100%로 두고,
+            //     실제 텍스트/이미지의 좌우 정렬은 크리에이티브 템플릿에서 제어하는 것을 권장합니다.
             // ------------------------------------------------------------------
             if (deviceCategory === 'mobile' || deviceCategory === 'tablet') {
                 const BC_native_list_1_slot = googletag.defineSlot(
@@ -776,8 +795,8 @@
         .native-ad-list-item {
             display: none; /* 기본값: 비노출 (특히 데스크탑) */
             align-items: center;
-            justify-content: center;
-            text-align: center;
+            justify-content: flex-start; /* 네이티브는 기사 리스트와 동일하게 좌측 정렬 */
+            text-align: left;
             border: none;
             background-color: transparent;
             color: inherit;
@@ -790,6 +809,18 @@
             overflow: visible;
             transition: none;
             list-style-type: none;
+        }
+
+        /* 네이티브 슬롯 내부 컨테이너: fluid + 100% 폭 기준
+           - 크리에이티브 템플릿에서 좌측 정렬 레이아웃을 구성할 수 있도록
+             슬롯 레벨에서는 width:100% 보장 및 불필요한 마진 제거 */
+        #BC_native_list_1 > div,
+        #BC_native_list_1 iframe,
+        #BC_native_list_2 > div,
+        #BC_native_list_2 iframe {
+            width: 100% !important;
+            max-width: 100% !important;
+            margin: 0 !important;
         }
 
         /* 기존 인기뉴스(좌측) 스타일 – 참고용 */
@@ -980,6 +1011,14 @@
 
             .related-list { border-top-color: #333; }
             .related-list li + li { border-top-color: #333; }
+
+            /* ✅ 다크 모드에서 이 시각 주요 뉴스 번호 & AD 라벨 가독성 개선 */
+            .related-list li::before {
+                color: #e5e5e5;
+            }
+            .related-list .native-ad-list-item::before {
+                color: #f0c040;
+            }
 
             .ad-mc-article {
                 background-color: #333;
@@ -1715,7 +1754,7 @@
         // - 실행 순서:
         //   1) setupInArticleAds()           → 본문 내 in-article 동적 배치 + 미사용 슬롯 제거
         //   2) setupLazyLoading()            → Lazy 대상 슬롯 수집 + GAM 슬롯 매핑 + Observer 생성
-        //   3) shufflePopularNewsNativeAds() → 우측 '이 시각 주요 뉴스' 내 Native 광고 랜덤 배치
+        //   3) shufflePopularNewsNativeAds() → 우측 '이 시각 주요 뉴스' 내 Native 광고 랜덤 배치 (기사 순서 고정, 광고만 셔플)
         //   4) startObservingLazySlots()     → IntersectionObserver 관찰 시작
         // ==========================================================
         document.addEventListener('DOMContentLoaded', function () {
