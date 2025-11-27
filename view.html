@@ -770,7 +770,7 @@
 
            - 이 템플릿에서는 height/min-height를 명시적으로 강제하지 않습니다.
              · collapseEmptyDivs(true)와 결합하여,
-               광고가 노필일 경우 div가 자연스럽게 0px로 접히도록 합니다.
+               광고가 노필일 경우 div가 자연스럽게 0px으로 접히도록 합니다.
              · 광고가 실제로 들어오면 크리에이티브 높이만큼 확장됩니다.
         ------------------------------------------------------------------ */
         .ad-slot {
@@ -880,21 +880,55 @@
             border-bottom: 1px solid #f0f0f0;
         }
 
+        /* ----------------------------------------------------
+           이 시각 주요 뉴스 리스트 스타일링
+           - 번호(1,2,3...) 자동 생성
+           - 각 항목 사이 회색 라인
+           - 광고 LI(BC_native_list_1/2)도 동일하게 번호 포함
+        ---------------------------------------------------- */
         .related-list {
             list-style-type: none;
             padding-left: 0;
             margin: 0;
+            counter-reset: hotNewsRank;
+            border-top: 1px solid #e5e5e5;
         }
         .related-list li {
-            padding: 8px 0;
+            position: relative;
+            padding: 10px 0 12px 26px; /* 숫자 영역 확보용 left padding */
+            font-size: 14px;
+            line-height: 1.5;
+        }
+        .related-list li + li {
+            border-top: 1px solid #e5e5e5;
+        }
+        .related-list li::before {
+            counter-increment: hotNewsRank;
+            content: counter(hotNewsRank);
+            position: absolute;
+            left: 0;
+            top: 50%;
+            transform: translateY(-50%);
+            font-weight: 700;
+            font-size: 16px;
+            color: #111;
         }
         .related-list li a {
             font-size: 14px;
             line-height: 1.5;
+            display: block;
+        }
+        /* Native 광고 LI도 동일한 패딩 사용 */
+        .related-list .native-ad-list-item {
+            padding: 10px 0 12px 26px;
         }
 
-        .related-list .native-ad-list-item {
-            padding: 8px 0;
+        .related-list li a:hover {
+            text-decoration: underline;
+        }
+
+        .comment-section {
+            margin-bottom: 20px;
         }
 
         /* ------------------------------------------------------------------
@@ -1003,6 +1037,9 @@
                 border: none;
                 color: inherit;
             }
+
+            .related-list { border-top-color: #333; }
+            .related-list li + li { border-top-color: #333; }
 
             .ad-mc-article {
                 background-color: #333;
@@ -1188,24 +1225,24 @@
                 <div class="related-box">
                     <h4>**이 시각 주요 뉴스** (10개로 확장)</h4>
                     <ul class="related-list">
-                        <li><a href="#">1. 금리 추가 인상 없을 듯... 가계 부담 완화 기대</a></li>
-                        <li><a href="#">2. 주요 기업, 하반기 채용 규모 전년 대비 20% 확대</a></li>
+                        <li><a href="#">금리 추가 인상 없을 듯... 가계 부담 완화 기대</a></li>
+                        <li><a href="#">주요 기업, 하반기 채용 규모 전년 대비 20% 확대</a></li>
 
                         <!-- BC_native_list_1: 이 시각 주요 뉴스 목록 중간에 삽입되는 Native 광고/위젯 (모바일/태블릿 전용) -->
                         <li id="BC_native_list_1" class="native-ad-list-item" data-googletag-enabled="false"></li>
 
-                        <li><a href="#">3. 정부, 청년 주거 정책 특별 대책 발표</a></li>
-                        <li><a href="#">4. 글로벌 증시, AI 기술주 실적에 따라 희비 교차</a></li>
-                        <li><a href="#">5. 유럽 경제, 긴축 완화 시그널 포착</a></li>
+                        <li><a href="#">정부, 청년 주거 정책 특별 대책 발표</a></li>
+                        <li><a href="#">글로벌 증시, AI 기술주 실적에 따라 희비 교차</a></li>
+                        <li><a href="#">유럽 경제, 긴축 완화 시그널 포착</a></li>
 
                         <!-- BC_native_list_2: 이 시각 주요 뉴스 목록 중간에 삽입되는 Native 광고/위젯 (모바일/태블릿 전용) -->
                         <li id="BC_native_list_2" class="native-ad-list-item" data-googletag-enabled="false"></li>
 
-                        <li><a href="#">6. 유가 급등세 둔화, 에너지 시장 안정 기대</a></li>
-                        <li><a href="#">7. 국내 스타트업, 시리즈 C 투자 유치 성공</a></li>
-                        <li><a href="#">8. 파운드리 공정, 초미세화 경쟁 가속</a></li>
-                        <li><a href="#">9. 비트코인, 변동성 장세 지속 전망</a></li>
-                        <li><a href="#">10. 신기술 도입으로 인한 노동 시장 변화</a></li>
+                        <li><a href="#">유가 급등세 둔화, 에너지 시장 안정 기대</a></li>
+                        <li><a href="#">국내 스타트업, 시리즈 C 투자 유치 성공</a></li>
+                        <li><a href="#">파운드리 공정, 초미세화 경쟁 가속</a></li>
+                        <li><a href="#">비트코인, 변동성 장세 지속 전망</a></li>
+                        <li><a href="#">신기술 도입으로 인한 노동 시장 변화</a></li>
                     </ul>
                 </div>
 
