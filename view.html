@@ -122,38 +122,10 @@
 
         // ------------------------------------------------------------------
         // [GAM 초기화 블록]
-        //
-        // - googletag.cmd.push(function() { ... }) 내부는
-        //   GPT 라이브러리 로딩 완료 후 한 번 실행됩니다.
-        // - 이 안에서:
-        //   · 페이지 레벨 타게팅 (setTargeting)
-        //   · 사이즈 매핑(sizeMapping)
-        //   · 슬롯 정의(defineSlot)
-        //   · GAM 기능 활성화(enableSingleRequest, collapseEmptyDivs, disableInitialLoad 등)
-        //   을 모두 설정합니다.
         // ------------------------------------------------------------------
         googletag.cmd.push(function () {
 
             // --- [1] device_category 결정 (페이지 레벨 공통 타게팅) -----------------
-            //
-            // - device_category는 페이지/슬롯 타게팅과
-            //   "어떤 슬롯을 정의/로딩할지"를 결정하는 핵심 기준입니다.
-            //
-            //   · desktop : 데스크탑
-            //   · mobile  : 모바일
-            //   · tablet  : 태블릿
-            //
-            // - 판별 로직:
-            //   1) UserAgent 기반: /mobile|android|iphone|ipad|ipod/ 정규식
-            //   2) 뷰포트 기반   : window.innerWidth
-            //
-            // - 활용 예:
-            //   · 데스크탑 전용 슬롯만 선언/로딩 (TC_billboard_X, MR_side_rail_X)
-            //   · 모바일/태블릿 전용 Native 슬롯만 선언/로딩 (BC_native_list_1/2)
-            //
-            //   → 동일한 HTML 템플릿을 사용하면서도
-            //     디바이스별로 전혀 다른 인벤토리 구성을 만들 수 있습니다.
-            // ------------------------------------------------------------------
             const userAgent = navigator.userAgent.toLowerCase();
             let deviceCategory = 'desktop';
             if (/mobile|android|iphone|ipad|ipod/.test(userAgent) || window.innerWidth <= 768) {
@@ -164,20 +136,6 @@
 
             // ------------------------------------------------------------------
             // [페이지 레벨 키/값 설정 – 공통 타게팅]
-            //
-            // - setTargeting(key, value)는 GAM에서 사용할 수 있는
-            //   "타게팅 파라미터"를 설정합니다.
-            // - 페이지 레벨 타게팅:
-            //   · pubads()에 직접 setTargeting을 호출한 값은
-            //     "이 페이지의 모든 슬롯"에 기본적으로 적용됩니다.
-            //   · 예: device_category, page_type, section_front_nm 등
-            //
-            // - 이후 슬롯 레벨에서 setTargeting을 다시 호출하면:
-            //   · 해당 슬롯에 한해 페이지 레벨 값보다 우선합니다.
-            //   · 예: position(TC, MR, MC 등), ad_area_type(in_article 등)
-            //
-            // → 운영/보고 관점에서, "페이지 레벨 vs 슬롯 레벨" 타게팅을
-            //   명확히 구분해 두어야 나중에 조건 분기와 리포팅이 편리합니다.
             // ------------------------------------------------------------------
             googletag.pubads().setTargeting('device_category', deviceCategory);
 
@@ -192,22 +150,6 @@
             //    · 개인 식별 정보는 모두 서버에서 해시/익명화한 뒤 전달해야 합니다.
 
             // ▼▼▼ 동적 입력 키-값 ▼▼▼
-            // ------------------------------------------------------------------
-            // [CMS/백엔드에서 동적으로 채워야 하는 타게팅 값]
-            //
-            // - 아래 값들은 View 페이지 템플릿에서
-            //   실제 기사 메타데이터로 치환되어야 합니다.
-            //
-            //   예:
-            //     · section_list_nm      : economy, stock, real-estate 등
-            //     · SOURCE_ID / source_type : 기사 출처/타입
-            //     · article_num          : 기사 고유 번호
-            //     · title / title_slug   : 기사 제목 / 슬러그
-            //     · keywords             : 태그/키워드
-            //
-            // - 광고주/에이전시는 이 값들을 기반으로
-            //   특정 섹션/주제/기자/티커 등에 맞춘 타게팅을 구성할 수 있습니다.
-            // ------------------------------------------------------------------
             googletag.pubads().setTargeting('domain', window.location.hostname);
             googletag.pubads().setTargeting('url', window.location.href);
             googletag.pubads().setTargeting('referer', document.referrer);
@@ -234,27 +176,10 @@
             // ▲▲▲ 동적 입력 키-값 ▲▲▲
 
             // ✅ GAM 이벤트 리스너 추가
-            // - slotRenderEnded는 "각 슬롯 렌더링이 끝났을 때" 호출됩니다.
-            // - 이 시점에 addAdLabel을 호출해, 실제 광고가 노출된 슬롯에만
-            //   라벨을 붙입니다.
             googletag.pubads().addEventListener('slotRenderEnded', addAdLabel);
 
             // ------------------------------------------------------------------
             // 0. Size Mapping 정의 – 반응형 광고 사이즈 정책
-            //
-            // - googletag.sizeMapping():
-            //   · 브라우저 뷰포트 크기에 따라 허용할 크리에이티브 사이즈를 정의합니다.
-            //   · addSize([뷰포트 최소 크기], [허용 광고 사이즈 리스트]) 형태로
-            //     여러 구간을 정의한 뒤, build()로 최종 매핑 객체를 생성합니다.
-            //
-            // - 이 View GPT에서는 세 가지 매핑을 사용합니다.
-            //   · sizeMapping_horizontal        : 헤더/빌보드/와이드형 배너용
-            //   · sizeMapping_siderail_square   : 우측 사이드 레일 MR(300x600 등)용
-            //   · sizeMapping_article_horizontal: 본문 in-article 및 중형 직사각형용
-            //
-            // - 중요:
-            //   · 여기서 정의한 사이즈는 "허용 후보" 리스트일 뿐,
-            //     실제 어떤 사이즈가 집행되는지는 GAM 라인아이템 설정에 따라 달라집니다.
             // ------------------------------------------------------------------
             const sizeMapping_horizontal = googletag.sizeMapping()
                 .addSize([1024, 0], [
@@ -323,14 +248,6 @@
 
             // ------------------------------------------------------------------
             // 5. 광고 슬롯 변수 초기화
-            //
-            // - 네이밍 규칙:
-            //   · DOM div id:   TC_billboard_X
-            //   · JS 변수명:    TC_billboard_X_slot
-            //   · GAM slot ID:  defineSlot(..., 'TC_billboard_X')
-            //
-            // → "DOM id + _slot" 패턴을 유지하면
-            //   디버깅/확장 시 혼선을 최소화할 수 있습니다.
             // ------------------------------------------------------------------
             let TC_billboard_X_slot = null;
             let MR_side_rail_X_slot = null;
@@ -342,16 +259,9 @@
             let MC_article_rectangle_6_slot = null;
             let MC_article_rectangle_7_slot = null;
             let MC_article_rectangle_8_slot = null;
-            // BC_byline / BC_billboard는 lazyLoad 시 getSlots()로 조회하므로
-            // 별도 전역 변수는 필수는 아니나, 가독성을 위해 필요시 추가 가능
 
             // ------------------------------------------------------------------
             // 5-1. [Desktop 전용] TC_billboard_X (Eager Load, ATF)
-            //
-            // - 데스크탑에서만 정의 + 로딩되는 상단 빌보드 광고입니다.
-            // - load_type = 'eager':
-            //   · 페이지 로드 직후 1회 즉시 refresh() 되는 슬롯입니다.
-            //   · Lazy Load 대상이 아니므로 IntersectionObserver와 무관합니다.
             // ------------------------------------------------------------------
             if (deviceCategory === 'desktop') {
                 TC_billboard_X_slot = googletag.defineSlot(AdUnitPath, [
@@ -373,13 +283,6 @@
 
             // ------------------------------------------------------------------
             // 5-2. [Desktop 전용] MR_side_rail_X (Lazy Load, ATF)
-            //
-            // - 우측 사이드 레일 MR 광고는 데스크탑에서만 정의합니다.
-            // - load_type = 'lazy':
-            //   · 실제 광고 요청은 IntersectionObserver를 통해
-            //     사용자가 해당 영역 근처로 스크롤 했을 때 발생합니다.
-            // - LAZY_AD_SLOT_IDS에 포함되어 있으며,
-            //   setupLazyLoading()에서 lazy 대상 슬롯으로 수집됩니다.
             // ------------------------------------------------------------------
             if (deviceCategory === 'desktop') {
                 MR_side_rail_X_slot = googletag.defineSlot(AdUnitPath, [
@@ -397,24 +300,6 @@
 
             // ------------------------------------------------------------------
             // 5-3 ~ 5-10. MC in-article 슬롯 (모두 Lazy Load)
-            //
-            // - MC_article_rectangle_1 ~ 8:
-            //   · 모두 본문 내부(in_article)에 동적으로 삽입될 여유 슬롯들입니다.
-            //   · 초기 DOM 상에서는 article-body 내부의 특정 위치에 단순히 "빈 div"로 존재하다가,
-            //     setupInArticleAds()에서 규칙에 따라 재배치/삭제됩니다.
-            //
-            // - load_type = 'lazy':
-            //   · 실제 광고 요청은 항상 IntersectionObserver에 의해
-            //     해당 슬롯이 뷰포트 근처에 도달했을 때 발생합니다.
-            //
-            // - 사이즈 정책:
-            //   · sizeMapping_article_horizontal을 공통 사용합니다.
-            //   · 일부 슬롯은 300x251, 252, ... 처럼
-            //     개별 라인아이템/캠페인을 구분할 수 있도록
-            //     약간씩 다른 사이즈를 포함합니다.
-            //
-            // - ad_area_type = 'in_article':
-            //   · 본문 내 in-article 재고로 리포팅/타게팅할 수 있도록 별도 태그를 부여합니다.
             // ------------------------------------------------------------------
             MC_article_rectangle_1_slot = googletag.defineSlot(
                 AdUnitPath,
@@ -562,16 +447,9 @@
             // ------------------------------------------------------------------
             // 5-13, 5-14. BC_native_list_1/2 (Lazy Load, "이 시각 주요 뉴스" 영역 Native)
             //
-            // - 위치:
-            //   · 우측 컬럼의 '**이 시각 주요 뉴스** (10개로 확장)' 리스트 내부
-            // - 디바이스 정책:
-            //   · 모바일/태블릿 전용 슬롯
-            //   · 데스크탑에서는 defineSlot을 아예 하지 않으며,
-            //     CSS에서도 .native-ad-list-item을 숨깁니다.
-            //
-            // - 사이즈:
-            //   · [320,100], [320,50], [1,1], 'fluid' 등
-            //   · 모바일/태블릿 뷰포트에서 100% 폭 리스트 아이템 내에 노출되는 형태를 가정
+            // - 이 슬롯은 우측 "이 시각 주요 뉴스" 기사 리스트에 섞여 들어가는 형태입니다.
+            // - CSS 카운터로 생성되는 기사 번호에는 포함되지 않고,
+            //   시각적으로는 "AD" 라벨만 노출되도록 처리합니다.
             // ------------------------------------------------------------------
             if (deviceCategory === 'mobile' || deviceCategory === 'tablet') {
                 const BC_native_list_1_slot = googletag.defineSlot(
@@ -601,42 +479,14 @@
 
             // ------------------------------------------------------------------
             // 6. GAM 핵심 기능 활성화
-            //
-            // - enableSingleRequest():
-            //   · 모든 슬롯 요청을 하나의 HTTP 요청으로 묶어서 전송합니다.
-            //   · 네트워크 오버헤드 및 지연 시간 개선에 유리합니다.
-            //
-            // - collapseEmptyDivs(true):
-            //   · "div" 기반 광고 컨테이너가 비어 있는 경우(노필), 해당 요소를 접어
-            //     레이아웃 공백을 최소화합니다.
-            //   · 이 템플릿에서는 .ad-slot이 div로 구성되어 있으며,
-            //     별도의 min-height를 강제하지 않아 빈 슬롯은 자연스럽게 0px으로 접힙니다.
-            //
-            // - disableInitialLoad():
-            //   · GPT가 페이지 로드 시 자동으로 광고를 요청하는 기본 동작을 비활성화합니다.
-            //   · 이후 모든 광고 호출은 명시적으로 display() + refresh()를 통해 수행됩니다.
-            //   · 이 View GPT에서는:
-            //     · TC_billboard_X(Eager): 초기 한 번만 refresh()
-            //     · 나머지 Lazy 슬롯: IntersectionObserver에서 display + refresh()
             // ------------------------------------------------------------------
             googletag.pubads().enableSingleRequest();
             googletag.pubads().collapseEmptyDivs(true);
-
-            // Lazy 슬롯 자동 요청 방지
             googletag.pubads().disableInitialLoad();
-
             googletag.enableServices();
 
             // ------------------------------------------------------------------
-            // [Eager Load 처리]
-            //
-            // - TC_billboard_X_slot이 정의된 경우에만 refresh()를 호출합니다.
-            // - display()는 Body 상단 ad-slot 내부 script에서 호출되며,
-            //   여기서는 "광고 요청(refresh)"만 담당합니다.
-            //
-            // - 홈/섹션/리스트 페이지의 경우,
-            //   TC 슬롯의 display + refresh 타이밍을 동일한 패턴으로 맞춰
-            //   유지보수성을 확보할 수 있습니다.
+            // [Eager Load 처리] – 데스크탑 TC_billboard_X
             // ------------------------------------------------------------------
             googletag.cmd.push(function () {
                 if (TC_billboard_X_slot) {
@@ -647,10 +497,7 @@
     </script>
 
     <style>
-        /* [기존 View Mockup 스타일 유지]
-           - 이 영역은 기사 본문/레이아웃 전반에 대한 스타일을 정의합니다.
-           - 광고 관련 CSS는 별도 주석으로 설명을 덧붙였습니다.
-        */
+        /* [기존 View Mockup 스타일 유지] */
         body {
             font-family: 'Malgun Gothic', 'Dotum', Arial, sans-serif;
             margin: 0;
@@ -681,15 +528,6 @@
             z-index: 5;
         }
 
-        /* ------------------------------------------------------------------
-           우측 관련 영역 (.related-area) – 데스크탑/모바일 공통 기본값
-
-           - 데스크탑:
-             · 아래 @media (min-width: 1025px)에서
-               flex-basis / min-width를 통해 최소 336px 폭 확보
-           - 모바일/태블릿:
-             · 아래 @media (max-width: 1024px)에서 width: 100%로 전환
-        ------------------------------------------------------------------ */
         .related-area {
             flex: 1;
             z-index: 5;
@@ -724,7 +562,6 @@
         .article-body p { margin-bottom: 1.5em; text-indent: 1em; }
         .article-image { text-align: center; margin: 25px 0; }
 
-        /* 데이터 박스 */
         .dummy-data-box {
             background-color: #f9f9f9;
             border: 1px solid #eee;
@@ -735,7 +572,6 @@
             line-height: 1.6;
         }
 
-        /* YouTube 등 Embeds */
         .article-embed {
             margin: 25px 0;
         }
@@ -761,17 +597,6 @@
 
         /* ------------------------------------------------------------------
            [광고 공통 컨테이너: .ad-slot]
-
-           - 모든 광고 div(TC/MR/MC/BC)는 .ad-slot 클래스를 공유합니다.
-           - 역할:
-             · 광고 영역을 중앙 정렬하고, 레이블 상단 여백을 관리합니다.
-             · 배경색/테두리는 기본적으로 투명 처리하여
-               광고 크리에이티브 자체가 레이아웃을 결정하도록 합니다.
-
-           - 이 템플릿에서는 height/min-height를 명시적으로 강제하지 않습니다.
-             · collapseEmptyDivs(true)와 결합하여,
-               광고가 노필일 경우 div가 자연스럽게 0px으로 접히도록 합니다.
-             · 광고가 실제로 들어오면 크리에이티브 높이만큼 확장됩니다.
         ------------------------------------------------------------------ */
         .ad-slot {
             background-color: transparent;
@@ -786,14 +611,13 @@
             box-sizing: border-box;
             border: none;
             transition: background-color 0.5s ease;
-            width: 100%;    /* 부모 컨테이너(기사 본문/우측 컬럼/바이라인 등)의 폭을 100% 사용 */
-            height: auto;   /* 높이는 실제 크리에이티브/iframe에 의해 결정 */
+            width: 100%;
+            height: auto;
             position: relative;
             z-index: 10;
-            padding-top: 10px; /* 상단 여백은 라벨/광고가 겹치지 않도록 최소 간격 확보 */
+            padding-top: 10px;
         }
 
-        /* in-article 및 Native용 광고 슬롯에 대한 임시 스타일(테스트/시각화용) */
         .ad-mc-article {
             background-color: #f9f9f9;
             color: #ccc;
@@ -801,7 +625,6 @@
             border: 1px solid #ccc;
         }
 
-        /* 광고 로딩 여부를 시각적으로 확인하고 싶을 때 사용할 수 있는 클래스 */
         .ad-loaded {
             background-color: #c00 !important;
             color: #fff;
@@ -811,13 +634,6 @@
 
         /* ------------------------------------------------------------------
            [Advertisement 라벨 스타일: .mk-ad-label]
-
-           - addAdLabel()에서 동적으로 생성되는 라벨의 스타일입니다.
-           - 특징:
-             · 광고 div(.ad-slot)의 상단에 고정되도록 absolute + top: -15px 적용
-             · 줄바꿈 없이 한 줄로 표시(white-space: nowrap)
-             · 폰트 크기: 13px (View/Home/Section/List 공통 가이드)
-             · font-weight: normal (볼드 해제) – 콘텐츠와 시각적 균형 고려
         ------------------------------------------------------------------ */
         .mk-ad-label {
             position: absolute;
@@ -845,12 +661,6 @@
 
         /* ------------------------------------------------------------------
            Native 광고용 LI 컨테이너 (.native-ad-list-item)
-
-           - 우측 '이 시각 주요 뉴스' 리스트 내에
-             기사 LI와 함께 섞여 들어가는 Native 슬롯입니다.
-           - "모바일/태블릿 전용" 노출 정책:
-             · 기본(display: none)으로 두고,
-               @media (max-width: 1024px)에서만 display: flex로 노출합니다.
         ------------------------------------------------------------------ */
         .native-ad-list-item {
             display: none; /* 기본값: 비노출 (특히 데스크탑) */
@@ -864,7 +674,7 @@
             margin: 0;
             font-weight: normal;
             font-size: 15px;
-            width: 100%;   /* 부모 UL(li) 폭을 그대로 사용 (모바일에서 100%) */
+            width: 100%;
             height: auto;
             overflow: visible;
             transition: none;
@@ -882,9 +692,9 @@
 
         /* ----------------------------------------------------
            이 시각 주요 뉴스 리스트 스타일링
-           - 번호(1,2,3...) 자동 생성
-           - 각 항목 사이 회색 라인
-           - 광고 LI(BC_native_list_1/2)도 동일하게 번호 포함
+           - 기사 LI만 1,2,3... 번호 자동 생성
+           - Native 광고 LI(BC_native_list_1/2)는 "AD"로 고정 표기
+           - AD 항목은 카운터 증가에서 제외 → 기사 카운트에 영향 없음
         ---------------------------------------------------- */
         .related-list {
             list-style-type: none;
@@ -895,13 +705,15 @@
         }
         .related-list li {
             position: relative;
-            padding: 10px 0 12px 26px; /* 숫자 영역 확보용 left padding */
+            padding: 10px 0 12px 26px; /* 숫자/AD 라벨 영역 확보 */
             font-size: 14px;
             line-height: 1.5;
         }
         .related-list li + li {
             border-top: 1px solid #e5e5e5;
         }
+
+        /* 기본: 모든 li에 대해 카운터 증가 + 숫자 노출 */
         .related-list li::before {
             counter-increment: hotNewsRank;
             content: counter(hotNewsRank);
@@ -913,12 +725,26 @@
             font-size: 16px;
             color: #111;
         }
+
+        /* Native 광고 LI: 카운터는 증가시키지 않고 "AD" 텍스트만 노출 */
+        .related-list .native-ad-list-item::before {
+            counter-increment: none;  /* 기사 카운트에 영향 없음 */
+            content: "AD";
+            position: absolute;
+            left: 0;
+            top: 50%;
+            transform: translateY(-50%);
+            font-weight: 700;
+            font-size: 13px;
+            color: #888;
+        }
+
         .related-list li a {
             font-size: 14px;
             line-height: 1.5;
             display: block;
         }
-        /* Native 광고 LI도 동일한 패딩 사용 */
+        /* Native 광고 LI 패딩(텍스트 영역) 통일 */
         .related-list .native-ad-list-item {
             padding: 10px 0 12px 26px;
         }
@@ -933,13 +759,6 @@
 
         /* ------------------------------------------------------------------
            디바이스별 광고 노출 제어 – .ad-tc, .ad-mr
-           - ad-tc: Top Center(헤더 하단) 광고 그룹
-           - ad-mr: Side Rail(우측) 광고 그룹
-
-           - 기본값: display: none;
-           - 데스크탑(1025px 이상)에서는 ad-tc, MR_side_rail_X를 노출합니다.
-           - 모바일/태블릿에서는 우측 레일이 없으므로
-             MR_side_rail_X를 숨겨 레이아웃을 단순화합니다.
         ------------------------------------------------------------------ */
         .ad-tc,
         .ad-mr {
@@ -948,8 +767,6 @@
 
         /* ------------------------------
            데스크탑 레이아웃 (>= 1025px)
-           - 우측 컬럼 최소 336px 확보
-           - MR_side_rail_X 노출
         ------------------------------ */
         @media (min-width: 1025px) {
             .ad-tc {
@@ -959,19 +776,11 @@
                 display: flex;
             }
 
-            /* 우측 컬럼: 최소 336px 확보
-               - flex: 0 1 336px;
-                 · flex-basis: 336px (기본 폭)
-                 · flex-shrink: 1 (필요 시 줄어들 수 있지만)
-                 · min-width: 336px으로 실제 줄어드는 폭 제한
-            */
             .related-area {
                 flex: 0 1 336px;
                 min-width: 336px;
                 width: auto;
             }
-
-            /* 기사 본문 영역은 나머지 가용 폭을 유연하게 사용 */
             .article-area {
                 flex: 1 1 auto;
                 min-width: 0;
@@ -980,8 +789,6 @@
 
         /* ------------------------------
            태블릿/모바일 레이아웃 (<= 1024px)
-           - 우측 컬럼 아래로 내려오고 폭 100%
-           - Native LI(BC_native_list_1/2) 노출
         ------------------------------ */
         @media (max-width: 1024px) {
             .content-wrap {
@@ -1001,11 +808,6 @@
 
         /* ------------------------------------------------------------------
            다크 모드 지원
-           - prefers-color-scheme: dark 환경에서의 색상/배경/보더 조정입니다.
-           - 광고 슬롯(.ad-slot)은 가능한 한 투명하게 유지하여,
-             광고 크리에이티브 자체 디자인을 존중하는 방향으로 설정했습니다.
-           - mk-ad-label은 다크 모드에서 대비를 주기 위해
-             약간 어두운 반투명 배경 + 밝은 텍스트 색상을 사용합니다.
         ------------------------------------------------------------------ */
         @media (prefers-color-scheme: dark) {
             body { background-color: #1a1a1a; color: #e0e0e0; }
@@ -1048,7 +850,6 @@
 
             .embed-caption { color: #aaa; }
 
-            /* ✅ 다크 모드에서 라벨 대비 강화 */
             .mk-ad-label {
                 background-color: rgba(0, 0, 0, 0.7);
                 color: #f5f5f5;
@@ -1080,11 +881,7 @@
 
     <div class="container">
 
-        <!--
-            TC_billboard_X: 상단 빌보드 영역
-            - display()는 여기서, refresh()는 상단 GAM 초기화 블록에서 수행합니다.
-            - 데스크탑 전용 슬롯이며, eager 로딩 대상입니다.
-        -->
+        <!-- TC_billboard_X: 상단 빌보드 영역 -->
         <div id="TC_billboard_X" class="ad-slot ad-tc">
             <script>
                 googletag.cmd.push(function () {
@@ -1124,10 +921,6 @@
                         <p>주요 성장 동력: 클라우드 AI 서비스, 엣지 AI 디바이스, 자율주행 차량용 칩. 이 박스 역시 뷰포트 확보에 기여합니다。</p>
                     </div>
 
-                    <!-- MC_article_rectangle_* 슬롯들은 동적 주입 대상
-                         - 초기에는 본문 내 미리 배치되어 있으나,
-                           setupInArticleAds()에서 기사 길이/시각 블록을 고려해
-                           위치가 재조정되거나 삭제될 수 있습니다. -->
                     <div id="MC_article_rectangle_1" class="ad-slot ad-mc-article"></div>
 
                     <p>전문가들은 현재의 기술 경쟁 구도가 과거의 메모리 치킨 게임과는 완전히 다른 양상을 보인다고 분석합니다. 단순히 생산량을 늘리는 것이 아니라, 얼마나 빠르게 고도화된 설계 및 파운드리 기술을 결합하느냐가 승패를 가르는 열쇠라는 것입니다. 이로 인해 반도체 설계 인력에 대한 수요가 급증하고 있으며, 국내외 대학의 관련 학과들은 정원 확대 요구를 받고 있습니다. 특히 첨단 패키징 기술이 중요성이 부각되고 있으며, 칩과 메모리를 통합하는 첨단 패키징 기술이 없이는 NPU의 연산 속도를 끌어올리기 어렵기 때문입니다. 이 내용이 첫 번째 본문 광고 전에 <strong>약 1 뷰포트 높이</strong>를 확보합니다。</p>
@@ -1145,10 +938,6 @@
                     <p>정부는 AI 반도체 개발의 전주기적 지원을 위해 대규모 국가 연구개발(R&D) 프로젝트를 추진하고, 민간 투자 리스크를 완화하기 위한 세제 혜택 및 금융 지원을 확대해야 합니다. 특히 시스템 반도체 분야는 인프라 구축에 막대한 초기 비용이 들기 때문에, 공공 파운드리 시설의 개방 및 활용도를 높여 중소 팹리스 기업의 진입 장벽을 낮추는 것도 중요합니다. 또한, 국제 표준 선점을 위해 주요 기술 동맹에 적극적으로 참여하고, 수출 규제 등 글로벌 공급망의 불확실성에 대비하는 외교적 역량도 강화해야 합니다.</p>
                     <p>AI 반도체가 미래 산업의 핵심 동력인 만큼, 반도체 제조뿐만 아니라 소프트웨어 및 알고리즘과의 결합을 통한 '토털 솔루션' 제공 능력을 갖추는 것이 필수입니다. 국내 기업들은 NPU 성능을 최적화하는 전용 AI 소프트웨어 플랫폼을 구축하고, 고객사의 다양한 요구사항에 빠르게 대응할 수 있는 유연성을 확보해야 합니다. 이러한 노력들이 결실을 맺는다면, 한국은 AI 반도체 분야에서 명실상부한 기술 강국으로 도약할 수 있을 것입니다：</p>
 
-                    <!-- ✅ YouTube Embeds (시각 블록)
-                         - setupInArticleAds()에서 "시각 블록"으로 인식하는 대상입니다.
-                         - 시각 블록 주변에는 광고가 너무 촘촘히 붙지 않도록
-                           별도의 간격 규칙이 적용됩니다. -->
                     <div class="article-embed">
                         <div class="embed-wrapper">
                             <iframe
@@ -1169,12 +958,10 @@
                     <p>궁극적으로, 고성능 컴퓨팅(HPC)과 엣지 디바이스(Edge Device)를 위한 저전력 고효율 NPU 개발이 핵심 과제입니다. 서버급 AI 칩뿐만 아니라, 모바일, 자율주행, IoT 등 다양한 분야에서 맞춤형 칩 수요가 증가하고 있기 때문입니다. 이를 위해 정부 차원의 R&D 지원과 함께, 국내 반도체 학과 및 연구소의 인력 양성 프로그램 확대가 시급합니다. 인재 확보야말로 장기적인 '초격차'를 유지할 수 있는 근본적인 힘입니다。</p>
                     <p>최근에는 칩렛(Chiplet) 기술과 첨단 패키징(Advanced Packaging) 기술의 중요성이 더욱 부각되고 있습니다. 서로 다른 기능을 하는 반도체를 하나의 패키지에 통합하여 성능을 극대화하는 이 기술은 AI 칩의 성능을 결정하는 핵심 요소가 되었습니다. 한국 기업들은 HBM과 같은 독보적인 메모리 기술을 활용하여, 칩렛 기반의 고성능 AI 반도체 솔루션을 세계 시장에 선제적으로 제시해야 합니다. 이는 메모리 강국에서 AI 반도체 강국으로 도약하는 중요한 분기점이 될 것입니다。</p>
                     <p>또한, AI 반도체 스타트업 생태계 활성화가 필요합니다. 대기업의 파운드리 역량과 유망 스타트업의 혁신적인 NPU 설계 아이디어가 결합될 때 시너지가 발생합니다. 정부는 스타트업이 초기 개발 단계에서 겪는 테스트베드 접근성 문제나 자금 조달 문제를 해소하는 데 집중해야 합니다. 궁극적으로, 한국이 AI 반도체 분야에서 글로벌 리더십을 확보하기 위해서는 민간의 혁신 의지와 정부의 전략적 지원이 유기적으로 결합되는 'K-칩스 동맹'이 필수적입니다. 향후 5년이 한국 반도체 산업의 미래 50년을 좌우할 중요한 시기가 될 것입니다.</p>
-
                     <p><strong>[본문 4: 미래 전망과 정책 방향]</strong> AI 반도체 시장의 승자는 기술력과 더불어 '생태계 확장' 능력에 따라 결정될 것입니다. 단순히 칩의 성능을 높이는 것을 넘어, 그 칩을 활용할 수 있는 소프트웨어 플랫폼과 개발자 커뮤니티를 얼마나 빠르게 구축하느냐가 중요합니다. 엔비디아의 CUDA 생태계처럼, 한국형 AI 칩도 자체적인 소프트웨어 인프라를 구축하고, 국내외 개발자들에게 개방하여 활용도를 높여야 합니다. 이를 위해, 국내 기업들은 오픈소스 기반의 AI 플랫폼 개발에 적극 참여하고, 협력사들과의 데이터 공유 및 공동 개발을 위한 협의체를 구성하는 것이 시급합니다.</p>
                     <p>또한, 국제적인 협력과 외교적 노력이 뒷받침되어야 합니다. 미국과 중국 간의 기술 패권 경쟁이 심화되는 상황에서, 한국은 특정 국가에 종속되지 않고 안정적인 공급망을 유지할 수 있는 '전략적 자율성'을 확보해야 합니다. 핵심 소재, 부품, 장비(소부장)에 대한 국산화율을 높이는 동시에, 미국, 유럽 등 우방국과의 반도체 동맹을 강화하여 기술 표준 및 수출 규제 대응 능력을 키워야 합니다. 이는 단기적인 성과보다는 장기적인 국가 안보 및 산업 경쟁력 차원에서 접근해야 할 문제입니다.</p>
                     <p>교육 시스템의 혁신도 필수적입니다. AI 반도체 산업이 요구하는 융합적 사고와 실무 능력을 갖춘 인재를 양성하기 위해, 대학 교육 과정에 AI, 반도체 설계, 소프트웨어 코딩을 통합하는 새로운 커리큘럼 도입이 절실합니다. 정부는 계약학과, 특성화 대학원 등 인력 양성 프로그램을 확대하고, 기업들에게 인재 채용 및 교육에 대한 강력한 인센티브를 제공해야 합니다. 결국, 반도체는 '사람'이 만드는 것이며, 우수한 인재만이 미래의 기술 패권을 쥘 수 있는 열쇠입니다。</p>
 
-                    <!-- MC_article_rectangle_5 ~ 8: 동적 재배치 대상 -->
                     <div id="MC_article_rectangle_5" class="ad-slot ad-mc-article"></div>
                     <div id="MC_article_rectangle_6" class="ad-slot ad-mc-article"></div>
                     <div id="MC_article_rectangle_7" class="ad-slot ad-mc-article"></div>
@@ -1228,21 +1015,18 @@
                         <li><a href="#">금리 추가 인상 없을 듯... 가계 부담 완화 기대</a></li>
                         <li><a href="#">주요 기업, 하반기 채용 규모 전년 대비 20% 확대</a></li>
 
-                        <!-- BC_native_list_1: 이 시각 주요 뉴스 목록 중간에 삽입되는 Native 광고/위젯 (모바일/태블릿 전용) -->
+                        <!-- BC_native_list_1: 이 시각 주요 뉴스 목록 중간에 삽입되는 Native 광고/위젯 (모바일/태블릿 전용)
+                             - CSS 카운터에서는 제외되고, 좌측 라벨에 "AD" 표기 -->
                         <li id="BC_native_list_1" class="native-ad-list-item" data-googletag-enabled="false"></li>
 
                         <li><a href="#">정부, 청년 주거 정책 특별 대책 발표</a></li>
                         <li><a href="#">글로벌 증시, AI 기술주 실적에 따라 희비 교차</a></li>
-                        <li><a href="#">유럽 경제, 긴축 완화 시그널 포착</a></li>
 
-                        <!-- BC_native_list_2: 이 시각 주요 뉴스 목록 중간에 삽입되는 Native 광고/위젯 (모바일/태블릿 전용) -->
+                        <!-- BC_native_list_2: 이 시각 주요 뉴스 목록 중간에 삽입되는 Native 광고/위젯 (모바일/태블릿 전용)
+                             - CSS 카운터에서는 제외되고, 좌측 라벨에 "AD" 표기 -->
                         <li id="BC_native_list_2" class="native-ad-list-item" data-googletag-enabled="false"></li>
 
-                        <li><a href="#">유가 급등세 둔화, 에너지 시장 안정 기대</a></li>
-                        <li><a href="#">국내 스타트업, 시리즈 C 투자 유치 성공</a></li>
-                        <li><a href="#">파운드리 공정, 초미세화 경쟁 가속</a></li>
-                        <li><a href="#">비트코인, 변동성 장세 지속 전망</a></li>
-                        <li><a href="#">신기술 도입으로 인한 노동 시장 변화</a></li>
+                        <li><a href="#">유럽 경제, 긴축 완화 시그널 포착</a></li>
                     </ul>
                 </div>
 
@@ -1267,33 +1051,6 @@
     </footer>
 
     <script>
-        // ----------------------------------------------------------
-        // [Lazy Load 인프라: 공통 메커니즘 설명]
-        //
-        // - 이 블록은 View/Home/Section/List GPT에서 공통으로 사용할 수 있는
-        //   IntersectionObserver 기반 Lazy Load 구현 패턴입니다.
-        //
-        // - 구성 요소:
-        //   · LAZY_AD_SLOT_IDS     : Lazy 대상 광고 div id 리스트
-        //   · lazyAdSlotsHTML      : DOM에서 관찰할 실제 요소 목록
-        //   · lazyGamSlots         : GAM에 정의된 슬롯 객체 목록
-        //   · lazyObserver         : IntersectionObserver 인스턴스
-        //
-        // - 동작 흐름:
-        //   1) DOMContentLoaded 시:
-        //      · setupInArticleAds() → 본문 내 in-article 슬롯 재배치
-        //      · setupLazyLoading()  → LAZY_AD_SLOT_IDS 기반으로 관찰 대상 수집 + GAM 슬롯 매핑
-        //      · shufflePopularNewsNativeAds() → 우측 '이 시각 주요 뉴스' + Native 랜덤 섞기
-        //      · startObservingLazySlots()     → IntersectionObserver 관찰 시작
-        //   2) 사용자가 스크롤해서 광고 div가 뷰포트 근처에 도달하면:
-        //      · observer 콜백에서 해당 slotId에 대해
-        //        googletag.display(slotId) + pubads().refresh([slot]) 호출
-        //   3) 한 번 로드된 슬롯은 unobserve 처리하여 중복 호출 방지
-        //
-        // - disableInitialLoad()와의 관계:
-        //   · 상단 GAM 설정에서 disableInitialLoad()를 호출했기 때문에,
-        //     display/refresh가 호출되기 전까지는 어떠한 광고 요청도 발생하지 않습니다.
-        // ----------------------------------------------------------
         const LAZY_AD_SLOT_IDS = [
             'MR_side_rail_X',
             'MC_article_rectangle_1',
@@ -1310,46 +1067,10 @@
             'BC_native_list_2'
         ];
 
-        let lazyAdSlotsHTML = []; // IntersectionObserver가 관찰할 DOM 요소 목록
-        let lazyGamSlots = [];    // GAM에 정의된 슬롯 객체 목록
-        let lazyObserver = null;  // IntersectionObserver 인스턴스
+        let lazyAdSlotsHTML = [];
+        let lazyGamSlots = [];
+        let lazyObserver = null;
 
-        // ==========================================================
-        // 함수 1. 본문 in-article 광고 동적 주입
-        //
-        // [핵심 개념 정리]
-        // - 목적:
-        //   · 기사마다 본문 길이/구성이 달라져도,
-        //     in-article 광고가 "적절한 간격"으로 노출되도록 동적으로 위치를 계산합니다.
-        //
-        // - 기준:
-        //   · "텍스트 높이"만을 누적하여, 순수 텍스트 기준 거리로 뷰포트 간격을 계산합니다.
-        //   · 이미지/영상/데이터박스 등 시각 블록은 거리 계산에서는 제외하되,
-        //     "이후 광고 최소 간격"을 따로 적용합니다.
-        //
-        // - 규칙:
-        //   1) 짧은 기사(totalTextHeight < 1 뷰포트):
-        //      · 가장 마지막 본문 블록 뒤에 MC_article_rectangle_1 하나만 삽입
-        //      · 나머지 in-article 슬롯(MC_article_rectangle_2~8)은 DOM 제거 + GAM 슬롯 destroy
-        //
-        //   2) 일반 기사:
-        //      · 광고 간 최소 간격: VIEWPORT_GAP_BETWEEN_ADS (1.0 뷰포트)
-        //      · 마지막 시각 블록 이후 최소 간격: VIEWPORT_AFTER_VISUAL_MIN (0.5 뷰포트)
-        //      · 시각 블록(이미지/iframe/테이블 등) 바로 위/아래에는 광고를 붙이지 않음
-        //        (독자 경험 보호)
-        //
-        // - 뷰포트/레이아웃 변화에 대한 대응:
-        //   · 이 로직은 DOMContentLoaded 시점에 한 번 수행됩니다.
-        //   · window.innerHeight를 기준으로 계산하므로,
-        //     최초 로딩 시점의 뷰포트 크기를 기준으로 광고 위치가 결정됩니다.
-        //   · 이후 사용자가 브라우저 크기를 변경하더라도 광고 위치는 다시 계산하지 않습니다.
-        //     (필요 시 resize 이벤트와 연동해 재계산 로직을 확장할 수 있습니다.)
-        //
-        // - 기사 내용 변경 시:
-        //   · 이 JS는 "현재 렌더된 .article-body DOM 상태"를 기준으로만 계산합니다.
-        //   · CMS에서 본문 구조가 변하거나 문단이 늘어나는 경우에도,
-        //     페이지 로딩 시점에 다시 계산되므로 새로운 본문 구조에 맞게 배치됩니다.
-        // ==========================================================
         function setupInArticleAds() {
             const MC_IN_ARTICLE_SLOT_IDS = [
                 'MC_article_rectangle_1',
@@ -1367,38 +1088,29 @@
 
             const viewportHeight = window.innerHeight || 800;
 
-            // in-article 광고 간격 정책 (뷰포트 기준)
-            const VIEWPORT_GAP_BETWEEN_ADS = 1.0;   // 광고 간 최소 간격: 텍스트 기준 1 뷰포트
-            const VIEWPORT_AFTER_VISUAL_MIN = 0.5;  // 시각 블록 이후 최소 간격: 텍스트 기준 0.5 뷰포트
+            const VIEWPORT_GAP_BETWEEN_ADS = 1.0;
+            const VIEWPORT_AFTER_VISUAL_MIN = 0.5;
 
-            // 시각 블록 판별용 클래스 목록
             const VISUAL_BLOCK_CLASSES = [
-                'article-image',   // 본문 이미지 래퍼
-                'article-embed',   // YouTube 등 외부 임베드 래퍼
-                'dummy-data-box',  // 데이터/통계 박스
-                'visual-block',    // 공통 시각 블록 마커 (향후 확장용)
-                'data-table',      // 데이터 테이블 래퍼
-                'chart-box'        // 차트/그래프 래퍼
+                'article-image',
+                'article-embed',
+                'dummy-data-box',
+                'visual-block',
+                'data-table',
+                'chart-box'
             ];
 
-            // 시각 블록 판별 유틸
             const isVisualBlock = (el) => {
                 if (!el) return false;
-
-                // 클래스 기반
                 if (VISUAL_BLOCK_CLASSES.some(cls => el.classList.contains(cls))) {
                     return true;
                 }
-
-                // 태그 기반 (figure, table, iframe, video 등)
                 if (el.matches('figure, table, iframe, video')) {
                     return true;
                 }
-
                 return false;
             };
 
-            // 실제 본문 블록 수집
             const contentBlocks = Array.from(
                 articleBody.querySelectorAll(
                     'p, .article-image, .article-embed, .dummy-data-box, ' +
@@ -1406,14 +1118,11 @@
                 )
             );
 
-            // 텍스트 높이만 누적하여 앵커 정보 생성
             let cumulativeTextHeight = 0;
             const anchors = contentBlocks.map(el => {
                 const visual = isVisualBlock(el);
                 let textHeight = 0;
 
-                // 시각 블록(이미지/Embeds/데이터박스/테이블 등)의 높이는
-                // "뷰포트 계산"에서 제외 → 순수 텍스트 기준 거리만 본다.
                 if (!visual) {
                     const rect = el.getBoundingClientRect();
                     textHeight = rect.height || el.offsetHeight || 0;
@@ -1437,10 +1146,8 @@
                 ? anchors[anchors.length - 1].element
                 : null;
 
-            // 실제로 사용된 in-article 광고 슬롯 ID 기록
             const placedSlotIds = new Set();
 
-            // ---- 짧은 기사 예외 처리 ----
             if (isShortArticle && lastContentBlock) {
                 const firstSlotId = MC_IN_ARTICLE_SLOT_IDS[0];
                 const firstSlotEl = document.getElementById(firstSlotId);
@@ -1454,7 +1161,6 @@
                     placedSlotIds.add(firstSlotId);
                 }
 
-                // 나머지 MC 슬롯은 사용되지 않으므로 DOM에서 제거
                 MC_IN_ARTICLE_SLOT_IDS.slice(1).forEach(slotId => {
                     const el = document.getElementById(slotId);
                     if (el && el.parentElement) {
@@ -1462,7 +1168,6 @@
                     }
                 });
 
-                // GPT 슬롯 객체도 함께 정리
                 if (window.googletag && googletag.cmd) {
                     googletag.cmd.push(function () {
                         const allSlots = googletag.pubads().getSlots();
@@ -1482,18 +1187,15 @@
                 if (isShortArticle && lastContentBlock) return;
             }
 
-            // ---- 일반 기사 케이스 ----
             if (!isShortArticle && anchors.length > 0) {
-                // 마지막 블록 뒤에는 광고를 넣지 않기 위해, 마지막 앵커는 후보에서 제외
                 const anchorsForPlacement = anchors.length > 1 ? anchors.slice(0, -1) : [];
 
-                let lastAdTextHeight = 0;             // 마지막 광고 기준 텍스트 누적 높이
-                let lastVisualTextHeight = -Infinity; // 마지막 시각 블록 등장 시점(텍스트 기준)
-                let slotIndex = 0;                    // 사용할 MC 슬롯 인덱스
+                let lastAdTextHeight = 0;
+                let lastVisualTextHeight = -Infinity;
+                let slotIndex = 0;
 
                 const findNonAdPrevSibling = (el) => {
                     let prev = el.previousElementSibling;
-                    // 이전 형제 중 ad-slot은 건너뛰고 실제 콘텐츠 블록을 찾는다
                     while (prev && prev.classList.contains('ad-slot')) {
                         prev = prev.previousElementSibling;
                     }
@@ -1502,7 +1204,6 @@
 
                 const findNonAdNextSibling = (el) => {
                     let next = el.nextElementSibling;
-                    // 다음 형제 중 ad-slot은 건너뛰고 실제 콘텐츠 블록을 찾는다
                     while (next && next.classList.contains('ad-slot')) {
                         next = next.nextElementSibling;
                     }
@@ -1514,34 +1215,25 @@
 
                     const a = anchorsForPlacement[i];
 
-                    // 시각 블록(이미지/Embeds/데이터박스/테이블 등)인 경우:
-                    // 텍스트 높이는 누적 X, "여기서 시각 블록이 나왔다"는 기준만 기록
                     if (a.isVisual) {
                         lastVisualTextHeight = a.cumulativeTextHeight;
                         continue;
                     }
 
-                    // 이 텍스트 블록까지의 누적 텍스트 높이
                     const textSinceLastAd = a.cumulativeTextHeight - lastAdTextHeight;
                     const textSinceLastVisual = a.cumulativeTextHeight - lastVisualTextHeight;
 
-                    // 광고 간 최소 간격: 텍스트 기준 VIEWPORT_GAP_BETWEEN_ADS 뷰포트 이상
                     if (textSinceLastAd < viewportHeight * VIEWPORT_GAP_BETWEEN_ADS) continue;
-
-                    // 마지막 시각 블록 이후 최소 VIEWPORT_AFTER_VISUAL_MIN 뷰포트 텍스트 확보
                     if (textSinceLastVisual < viewportHeight * VIEWPORT_AFTER_VISUAL_MIN) continue;
 
-                    // 위/아래 인접 요소가 시각 블록이면 이번 위치는 스킵
                     const prevSibling = findNonAdPrevSibling(a.element);
                     const nextSibling = findNonAdNextSibling(a.element);
 
                     if ((prevSibling && isVisualBlock(prevSibling)) ||
                         (nextSibling && isVisualBlock(nextSibling))) {
-                        // 👉 "위/아래 중 하나라도 이미지/Embeds/데이터박스/테이블이라면 이번엔 참는다"
                         continue;
                     }
 
-                    // 위 조건을 모두 만족하면, 현재 텍스트 블록 앞에 광고 슬롯 삽입
                     const slotId = MC_IN_ARTICLE_SLOT_IDS[slotIndex];
                     const slotEl = document.getElementById(slotId);
 
@@ -1553,15 +1245,12 @@
                     articleBody.insertBefore(slotEl, a.element);
                     placedSlotIds.add(slotId);
 
-                    // 마지막 광고 기준 텍스트 누적 높이 갱신
                     lastAdTextHeight = a.cumulativeTextHeight;
                     slotIndex++;
                 }
 
-                // 사용되지 않은 MC in-article 슬롯 정리
                 const unusedSlotIds = MC_IN_ARTICLE_SLOT_IDS.filter(id => !placedSlotIds.has(id));
 
-                // DOM에서 제거
                 unusedSlotIds.forEach(slotId => {
                     const el = document.getElementById(slotId);
                     if (el && el.parentElement) {
@@ -1569,7 +1258,6 @@
                     }
                 });
 
-                // GPT 슬롯 객체도 destroySlots로 정리
                 if (window.googletag && googletag.cmd) {
                     googletag.cmd.push(function () {
                         const allSlots = googletag.pubads().getSlots();
@@ -1588,21 +1276,6 @@
             }
         }
 
-        // ==========================================================
-        // 함수 2. Lazy Load 대상 광고 슬롯 설정 및 Observer 생성
-        //
-        // - 역할:
-        //   · DOM 상의 .ad-slot / .native-ad-list-item 중
-        //     LAZY_AD_SLOT_IDS에 포함된 id를 가진 요소만 추립니다.
-        //   · pubads().getSlots()에서 GAM 슬롯 객체를 가져와
-        //     동일한 id를 가진 슬롯만 필터링합니다.
-        //   · IntersectionObserver를 생성해, 뷰포트 근처에 도달했을 때
-        //     display + refresh를 호출할 준비를 합니다.
-        //
-        // - 주의:
-        //   · 이 함수는 "대상 수집과 Observer 생성"까지만 담당합니다.
-        //   · 실제 관찰 시작은 startObservingLazySlots()에서 처리합니다.
-        // ==========================================================
         function setupLazyLoading() {
             const allAdSlots = document.querySelectorAll('.ad-slot, .native-ad-list-item');
             lazyAdSlotsHTML = [];
@@ -1642,7 +1315,6 @@
                             );
 
                             if (slotToRefresh) {
-                                // disableInitialLoad() 상태이므로 display + refresh로 최초 요청
                                 googletag.display(slotId);
                                 googletag.pubads().refresh([slotToRefresh]);
                                 console.log(
@@ -1657,22 +1329,6 @@
             }, options);
         }
 
-        // ==========================================================
-        // 함수 3. "이 시각 주요 뉴스" 내 Native Ad 슬롯 랜덤 배치
-        //
-        // - 우측 '이 시각 주요 뉴스' 목록 내에서:
-        //   · 첫 번째 기사(1번)는 항상 고정
-        //   · 나머지 기사 + Native 광고(BC_native_list_*)를 섞어서(random shuffle)
-        //     노출 순서를 랜덤화합니다.
-        //
-        // - 목적:
-        //   · Native 광고가 매번 다른 위치에 섞여 보이도록 하여
-        //     배너 블라인드/피로도를 줄이고 CTR 개선을 도모합니다.
-        //
-        // - 주의:
-        //   · 이 로직은 DOM 수준 재배치만 수행하며,
-        //     GAM 또는 비딩 로직에는 영향을 주지 않습니다.
-        // ==========================================================
         function shufflePopularNewsNativeAds() {
             const relatedList = document.querySelector('.related-list');
             if (!relatedList) return;
@@ -1682,11 +1338,9 @@
             const articleItems = allItems.filter(item => !isAd(item));
             const adItems = allItems.filter(item => isAd(item));
 
-            // 첫 번째 기사는 항상 고정
             const firstArticle = articleItems.shift();
             const remainingItems = [...articleItems, ...adItems];
 
-            // 간단한 Fisher–Yates 셔플
             for (let i = remainingItems.length - 1; i > 0; i--) {
                 const j = Math.floor(Math.random() * (i + 1));
                 [remainingItems[i], remainingItems[j]] = [remainingItems[j], remainingItems[i]];
@@ -1699,9 +1353,6 @@
             remainingItems.forEach(item => relatedList.appendChild(item));
         }
 
-        // ==========================================================
-        // 함수 4. Lazy Load 대상 슬롯 관찰 시작
-        // ==========================================================
         function startObservingLazySlots() {
             if (!lazyObserver || !lazyAdSlotsHTML || lazyAdSlotsHTML.length === 0) return;
             lazyAdSlotsHTML.forEach(slot => {
@@ -1709,31 +1360,11 @@
             });
         }
 
-        // ==========================================================
-        // DOMContentLoaded 시점에 주요 로직 실행
-        //
-        // - View GPT에서 DOMContentLoaded를 사용하는 이유:
-        //   · 기사 본문(.article-body) DOM 구조가 완전히 구성된 이후에
-        //     in-article 광고 위치를 계산해야 하기 때문입니다.
-        //   · 이미지/임베드 등의 높이는 레이아웃에 영향을 주지만,
-        //     이 로직에서는 "텍스트 기준 거리"만 누적하므로
-        //     DOM이 준비된 시점에 getBoundingClientRect()를 사용하는 것이 안정적입니다.
-        //
-        // - 실행 순서:
-        //   1) setupInArticleAds()           → 본문 내 in-article 동적 배치 + 미사용 슬롯 제거
-        //   2) setupLazyLoading()            → Lazy 대상 슬롯 수집 + GAM 슬롯 매핑 + Observer 생성
-        //   3) shufflePopularNewsNativeAds() → 우측 '이 시각 주요 뉴스' + Native 섞기
-        //   4) startObservingLazySlots()     → IntersectionObserver 관찰 시작
-        //
-        // - 주의:
-        //   · 이 시점에서 GAM의 슬롯 정의는 이미 완료(상단 cmd.push 블록)되어 있어야 하며,
-        //     Lazy Load는 display/refresh 호출 시점에만 네트워크 요청을 발생시킵니다.
-        // ==========================================================
         document.addEventListener('DOMContentLoaded', function () {
-            setupInArticleAds();             // 본문 in-article 광고 동적 주입
-            setupLazyLoading();              // Lazy Load 대상 수집 및 Observer 초기화
-            shufflePopularNewsNativeAds();   // 우측 '이 시각 주요 뉴스' 내 Native 광고 랜덤 배치
-            startObservingLazySlots();       // Lazy 대상 슬롯 관찰 시작
+            setupInArticleAds();
+            setupLazyLoading();
+            shufflePopularNewsNativeAds();
+            startObservingLazySlots();
         });
     </script>
 </body>
