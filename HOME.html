@@ -435,14 +435,20 @@
              *    - 이후 개발자가 display() + refresh()를 호출하는 시점에서만 요청이 발생하며,
              *      이 패턴이 Lazy Load/뷰포트 기반 로딩의 핵심 전제 조건이 됩니다.
              *
-             * 6) setCentering(true)
-             *    - 작은 사이즈의 광고가 큰 div 안에 들어갈 때, 중앙 정렬되도록 합니다.
-             *    - HOME/VIEW 모두 크기가 다양한 배너를 하나의 슬롯에 집행하는 경우가 많기 때문에,
-             *      화면 균형 측면에서 유용한 옵션입니다.
+             * 6) googletag.setConfig({ centering: true })
+             *    - (권장) PageSettingsConfig.centering을 통해 모든 슬롯의 가로 정렬을 중앙으로 설정합니다.
+             *    - 기존 PubAdsService.setCentering(true)는 지원 중단(Deprecated) 상태이므로,
+             *      View / HOME / Section / List GPT 전반에서 setConfig를 사용하는 패턴으로 통일하는 것이 좋습니다.
+             *    - 이미 .ad-slot이 flex 중앙 정렬이지만, 크리에이티브 크기가 슬롯보다 작을 때
+             *      GPT 레벨에서도 중앙 정렬을 보장해 주어 레이아웃 안정성이 올라갑니다.
              */
+
+            // ✅ 전역 Centering 설정 (PageSettingsConfig 기반)
+            googletag.setConfig({ centering: true });
+
             googletag.pubads().enableSingleRequest();
             googletag.pubads().collapseEmptyDivs(true);
-            googletag.pubads().setCentering(true);
+            // (구 방식) googletag.pubads().setCentering(true);  → setConfig({ centering: true })로 대체
             googletag.pubads().setPublisherProvidedId('PPID_DYNAMIC_HASHED_ID (SERVER_HASHED_ID)');
             
             // 🛑 전역 초기 로드 비활성화 (요청사항)
