@@ -78,21 +78,24 @@
         // - GAM의 slotRenderEnded 이벤트에 연결되는 공통 핸들러입니다.
         // - 역할:
         //   · 납품된 광고(비어 있지 않은 슬롯)에 한해 "Advertisement" 라벨을 자동으로 삽입합니다.
-        //   · 슬롯마다 HTML에 라벨을 직접 하드코딩하지 않고, 광고가 실제로 렌더링된 경우에만
+        //   · 슬롯마다 HTML에 라벨를 직접 하드코딩하지 않고, 광고가 실제로 렌더링된 경우에만
         //     라벨을 노출함으로써 "빈 슬롯에 라벨만 떠 있는 상황"을 피합니다.
         //
         // - 예외 처리:
         //   · BC_native_list_* 슬롯은 에디토리얼 뉴스 리스트와 자연스럽게 섞이는
-        //     Native 형태이므로, 리스트 UI에서 별도의 "Advertisement" 라벨 대신
-        //     좌측 번호 자리에는 "AD"가 노출되도록 CSS에서 처리합니다.
-        //     → 아래 CSS의 .related-list .native-ad-list-item::before 참고
+        //     Native 형태이므로, 개별 슬롯 상단에 별도 "Advertisement" 라벨을 붙이지 않습니다.
+        //     → 이 슬롯은 우측 '이 시각 주요 뉴스' 리스트 내에서
+        //       일반 기사 LI 사이에 자연스럽게 삽입되며,
+        //       CSS 카운터에서는 제외되어 번호 라벨이 붙지 않는 형태로만 동작합니다.
         // ***************************************************
         function addAdLabel(event) {
             const slotId = event.slot.getSlotElementId();
 
             // 💡 [예외] 우측 '이 시각 주요 뉴스' 내 Native 슬롯에는 라벨을 붙이지 않음
             //   - 이 슬롯은 기사 리스트 UI에 섞여 들어가며,
-            //     CSS 카운터와 "AD" 라벨로만 광고임을 표시하도록 설계했습니다.
+            //     CSS 카운터에서 제외되어 번호는 붙지 않고,
+            //     순수히 기사 사이에 끼워 넣는 형태로만 사용됩니다.
+            //     → 아래 CSS의 .related-list .native-ad-list-item::before 참고
             if (slotId === 'BC_native_list_1' || slotId === 'BC_native_list_2') {
                 return;
             }
@@ -159,6 +162,16 @@
             }
 
             // ------------------------------------------------------------------
+            // [광고 가로 중앙 정렬 설정 – setConfig({ centering: true })]
+            //
+            // - 기존 gpt_mobile.js에서 기본적으로 적용되던 "가로 중앙 정렬"을
+            //   GPT 최신 방식인 googletag.setConfig({ centering: true })로 활성화합니다.
+            // - 이 설정은 이후 display/refresh가 호출되는 광고 슬롯에만 적용되며,
+            //   크리에이티브가 슬롯보다 좁을 경우 슬롯 내부에서 수평 중앙 정렬되도록 합니다.
+            // ------------------------------------------------------------------
+            googletag.setConfig({ centering: true });
+
+            // ------------------------------------------------------------------
             // [페이지 레벨 키/값 설정 – 공통 타게팅]
             //
             // - setTargeting(key, value)는 GAM에서 사용할 수 있는
@@ -210,20 +223,6 @@
 
             // ✅ GAM 이벤트 리스너 추가
             googletag.pubads().addEventListener('slotRenderEnded', addAdLabel);
-
-            // ------------------------------------------------------------------
-            // [페이지 설정 config – centering]
-            //
-            // - PageSettingsConfig를 통해 광고 크리에이티브를
-            //   슬롯 기준 가로 중앙 정렬하도록 설정합니다.
-            // - 기존 gpt_mobile.js의 기본 가운데 정렬과 유사한 정책을
-            //   View/Home/Section/List GPT 전체에 일관되게 적용하기 위한 설정입니다.
-            // - display() / refresh() 이전에 한 번만 호출되면 되며,
-            //   이후에 요청되는 슬롯들에 대해 centering이 적용됩니다.
-            // ------------------------------------------------------------------
-            googletag.setConfig({
-                centering: true
-            });
 
             // ------------------------------------------------------------------
             // 0. Size Mapping 정의 – 반응형 광고 사이즈 정책
@@ -528,16 +527,10 @@
             //   · 모바일/태블릿 전용 슬롯 (데스크탑에서는 defineSlot 자체를 하지 않음)
             // - UI 정책:
             //   · 에디토리얼 기사 리스트와 동일한 한 줄 높이를 사용하고,
-            //     좌측 번호 영역에는 숫자 대신 "AD" 라벨이 노출됩니다.
-            //   · CSS 카운터에서 제외되므로 기사 번호(1~5)는 광고 유무와 관계없이
-            //     항상 자연스럽게 연속성을 유지합니다.
+            //     CSS 카운터에서는 제외되어 번호는 붙지 않으며,
+            //     일반 기사 LI 사이에 광고 LI가 자연스럽게 끼워지는 형태로 사용됩니다.
             //   · shufflePopularNewsNativeAds()에서 "기사 순서는 고정"된 상태에서
             //     광고만 기사 사이의 여러 위치 중 랜덤하게 섞입니다.
-            // - 크리에이티브 정책:
-            //   · size 배열에 'fluid'를 포함해 반응형 네이티브 템플릿을 "기본"으로 사용하고,
-            //     320x100 / 320x50 등 고정 크기는 백워드 컴패티빌리티용 fallback으로 유지합니다.
-            //   · CSS 레벨에서는 슬롯 내부 컨테이너를 width:100%로 두고,
-            //     실제 텍스트/이미지의 좌우 정렬은 크리에이티브 템플릿에서 제어하는 것을 권장합니다.
             // ------------------------------------------------------------------
             if (deviceCategory === 'mobile' || deviceCategory === 'tablet') {
                 const BC_native_list_1_slot = googletag.defineSlot(
@@ -795,8 +788,8 @@
         .native-ad-list-item {
             display: none; /* 기본값: 비노출 (특히 데스크탑) */
             align-items: center;
-            justify-content: flex-start; /* 네이티브는 기사 리스트와 동일하게 좌측 정렬 */
-            text-align: left;
+            justify-content: center;
+            text-align: center;
             border: none;
             background-color: transparent;
             color: inherit;
@@ -809,18 +802,6 @@
             overflow: visible;
             transition: none;
             list-style-type: none;
-        }
-
-        /* 네이티브 슬롯 내부 컨테이너: fluid + 100% 폭 기준
-           - 크리에이티브 템플릿에서 좌측 정렬 레이아웃을 구성할 수 있도록
-             슬롯 레벨에서는 width:100% 보장 및 불필요한 마진 제거 */
-        #BC_native_list_1 > div,
-        #BC_native_list_1 iframe,
-        #BC_native_list_2 > div,
-        #BC_native_list_2 iframe {
-            width: 100% !important;
-            max-width: 100% !important;
-            margin: 0 !important;
         }
 
         /* 기존 인기뉴스(좌측) 스타일 – 참고용 */
@@ -840,17 +821,18 @@
              · 숫자 번호가 붙은 단일 컬럼 리스트 (예시 스샷 스타일)
              · 각 항목 사이에 연한 회색 라인
              · 광고(Native) 항목은 리스트 안에 섞이되, 기사 카운트에는 포함 X
-               → 광고는 번호 대신 "AD" 라벨로 표시
+               → 광고는 번호나 "AD" 라벨 없이, 기사 LI 사이에 끼워지는 형태로만 노출
 
            - 구현 요약
              1) UL(.related-list)에 counter-reset: hotNewsRank 선언
              2) 기본 li::before 에서 counter(hotNewsRank)를 증가/출력
              3) 광고 LI(.native-ad-list-item)는
-                counter-increment: none + content: "AD" 로 재정의
-                → CSS 카운터 증가에서 제외되며, 기사 번호 1~5는 항상 연속 유지
+                counter-increment: none + content: "" 로 재정의
+                → CSS 카운터 증가에서 제외되며, 기사 번호 1~5는 광고 유무와 관계없이
+                  항상 자연스럽게 연속 유지
              4) JS shufflePopularNewsNativeAds():
                 · "기사 LI 순서"는 그대로 유지한 상태에서
-                  광고 LI(BC_native_list_1/2)를 기사 사이 여러 위치 중 랜덤하게 삽입
+                  광고 LI(BC_native_list_1/2)를 기사 사이의 여러 위치 중 랜덤하게 삽입
                 · 따라서 기사 카운트/노출 순서는 항상 고정되면서
                   광고 위치만 무작위로 바뀌는 구조입니다.
         ------------------------------------------------------------------ */
@@ -863,7 +845,7 @@
         }
         .related-list li {
             position: relative;
-            padding: 10px 0 12px 26px; /* 좌측 번호/AD 라벨 영역 확보 */
+            padding: 10px 0 12px 26px; /* 좌측 번호/라벨 영역 확보 */
             font-size: 14px;
             line-height: 1.5;
         }
@@ -884,17 +866,13 @@
             color: #111;
         }
 
-        /* Native 광고 LI: 카운터 증가 X, 텍스트는 "AD" */
+        /* Native 광고 LI:
+           - 카운터 증가 X (기사 개수에 영향 없음)
+           - 번호/AD 라벨 등 어떤 텍스트도 출력하지 않음
+           - 기사 LI 사이에 "비번호 LI" 형태로만 삽입 */
         .related-list .native-ad-list-item::before {
             counter-increment: none;  /* 기사 카운트에 영향 없음 */
-            content: "AD";
-            position: absolute;
-            left: 0;
-            top: 50%;
-            transform: translateY(-50%);
-            font-weight: 700;
-            font-size: 13px;
-            color: #888;
+            content: "";
         }
 
         .related-list li a {
@@ -1012,12 +990,9 @@
             .related-list { border-top-color: #333; }
             .related-list li + li { border-top-color: #333; }
 
-            /* ✅ 다크 모드에서 이 시각 주요 뉴스 번호 & AD 라벨 가독성 개선 */
+            /* 다크 모드에서 이 시각 주요 뉴스 번호 가독성 향상 */
             .related-list li::before {
-                color: #e5e5e5;
-            }
-            .related-list .native-ad-list-item::before {
-                color: #f0c040;
+                color: #f5f5f5;
             }
 
             .ad-mc-article {
@@ -1211,22 +1186,22 @@
                           · shufflePopularNewsNativeAds() 이후에도 기사 DOM 순서/번호는 항상 고정
                         - Native LI(BC_native_list_1/2):
                           · 기사 LI 사이의 여러 "틈(gap)" 중 랜덤 위치에 삽입
-                          · 좌측 번호 영역에는 숫자 대신 "AD" 라벨 표시
-                          · 기사 개수 카운트에는 포함되지 않음
+                          · 좌측 번호 영역에는 별도 번호나 "AD" 라벨을 표시하지 않음
+                          · 광고슬롯은 기사 개수 카운트에는 포함되지 않음
                     -->
                     <ul class="related-list">
                         <li><a href="#">금리 추가 인상 없을 듯... 가계 부담 완화 기대</a></li>
                         <li><a href="#">주요 기업, 하반기 채용 규모 전년 대비 20% 확대</a></li>
 
                         <!-- BC_native_list_1: 이 시각 주요 뉴스 목록 중간에 삽입되는 Native 광고/위젯 (모바일/태블릿 전용)
-                             - CSS 카운터에서는 제외되고, 좌측 라벨에 "AD" 표기 -->
+                             - CSS 카운터에서는 제외되고, 좌측 번호/라벨 없이 기사 LI 사이에 삽입 -->
                         <li id="BC_native_list_1" class="native-ad-list-item" data-googletag-enabled="false"></li>
 
                         <li><a href="#">정부, 청년 주거 정책 특별 대책 발표</a></li>
                         <li><a href="#">글로벌 증시, AI 기술주 실적에 따라 희비 교차</a></li>
 
                         <!-- BC_native_list_2: 이 시각 주요 뉴스 목록 중간에 삽입되는 Native 광고/위젯 (모바일/태블릿 전용)
-                             - CSS 카운터에서는 제외되고, 좌측 라벨에 "AD" 표기 -->
+                             - CSS 카운터에서는 제외되고, 좌측 번호/라벨 없이 기사 LI 사이에 삽입 -->
                         <li id="BC_native_list_2" class="native-ad-list-item" data-googletag-enabled="false"></li>
 
                         <li><a href="#">유럽 경제, 긴축 완화 시그널 포착</a></li>
@@ -1637,7 +1612,8 @@
         //   · 광고 LI(BC_native_list_1, BC_native_list_2)만
         //     기사 사이의 여러 후보 위치 중 랜덤하게 삽입
         //   · CSS 카운터 구조와 결합하여
-        //     기사 번호는 1~5로 연속 유지, 광고는 "AD"로만 표시
+        //     기사 번호는 1~5로 연속 유지, 광고 LI는 번호/AD 라벨 없이
+        //     "비번호 LI" 형태로만 삽입
         //
         // - 구현 방식
         //   1) UL(.related-list) 하위 LI를 기사/광고로 분리
@@ -1754,13 +1730,14 @@
         // - 실행 순서:
         //   1) setupInArticleAds()           → 본문 내 in-article 동적 배치 + 미사용 슬롯 제거
         //   2) setupLazyLoading()            → Lazy 대상 슬롯 수집 + GAM 슬롯 매핑 + Observer 생성
-        //   3) shufflePopularNewsNativeAds() → 우측 '이 시각 주요 뉴스' 내 Native 광고 랜덤 배치 (기사 순서 고정, 광고만 셔플)
+        //   3) shufflePopularNewsNativeAds() → 우측 '이 시각 주요 뉴스' 내 Native 광고 랜덤 배치
+        //                                      (기사 순서 고정, 광고만 셔플)
         //   4) startObservingLazySlots()     → IntersectionObserver 관찰 시작
         // ==========================================================
         document.addEventListener('DOMContentLoaded', function () {
             setupInArticleAds();             // 본문 in-article 광고 동적 주입
             setupLazyLoading();              // Lazy Load 대상 수집 및 Observer 초기화
-            shufflePopularNewsNativeAds();   // 우측 '이 시각 주요 뉴스' 내 Native 광고 랜덤 배치 (기사 순서 고정, 광고만 셔플)
+            shufflePopularNewsNativeAds();   // 우측 '이 시각 주요 뉴스' 내 Native 광고 랜덤 배치
             startObservingLazySlots();       // Lazy 대상 슬롯 관찰 시작
         });
     </script>
