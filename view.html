@@ -72,27 +72,6 @@
             window.matchMedia('(prefers-color-scheme: dark)').matches
             ? 'true' : 'false';
 
-        // ------------------------------------------------------------------
-        // [PageSettingsConfig – 페이지 공통 렌더링/레이아웃 정책]
-        //
-        // - GPT setConfig의 centering / collapseDiv 옵션을 한 곳에서 관리하기 위한 구조체입니다.
-        // - HOME GPT / SECTION GPT / LIST GPT와 동일한 정책을 사용해 View GPT도 일관 유지합니다.
-        //
-        //   · centering   : true
-        //       → GPT iframe을 슬롯(.ad-slot) 내부에서 수평 중앙 정렬
-        //   · collapseDiv : 'BEFORE_FETCH'
-        //       → 광고 요청 전까지는 div를 축소(0px) 상태로 유지했다가,
-        //         광고가 반환되면 확장
-        //
-        // - collapseDiv 설정은 googletag.setConfig({ collapseDiv: ... })로 전달하고,
-        //   레거시 API인 collapseEmptyDivs(true)도 병행 호출하여 하위 호환성을 확보합니다.
-        // ------------------------------------------------------------------
-        const PageSettingsConfig = {
-            centering: true,
-            // 지원되는 값: null, 'DISABLED', 'BEFORE_FETCH', 'ON_NO_FILL'
-            collapseDiv: 'BEFORE_FETCH'
-        };
-
         // ***************************************************
         // ✅ 광고 렌더링 완료 시 'Advertisement' 라벨을 삽입하는 함수 (GAM 이벤트 리스너)
         //
@@ -154,7 +133,7 @@
         //   · 페이지 레벨 타게팅 (setTargeting)
         //   · 사이즈 매핑(sizeMapping)
         //   · 슬롯 정의(defineSlot)
-        //   · GAM 기능 활성화(enableSingleRequest, collapseEmptyDivs, disableInitialLoad 등)
+        //   · GAM 기능 활성화(enableSingleRequest, disableInitialLoad 등)
         //   을 모두 설정합니다.
         // ------------------------------------------------------------------
         googletag.cmd.push(function () {
@@ -569,44 +548,29 @@
             }
 
             // ------------------------------------------------------------------
-            // 6. GAM 핵심 기능 활성화 + PageSettingsConfig 적용
+            // 6. GAM 핵심 기능 & PageSettingsConfig 설정
             //
             // - enableSingleRequest():
-            //   · 모든 슬롯 요청을 하나의 HTTP 호출로 묶어 전송합니다.
-            // - PageSettingsConfig.collapseDiv / collapseEmptyDivs():
-            //   · 크리에이티브가 할당되지 않은 div(노필)를 자동으로 접어
-            //     레이아웃 공백을 최소화합니다.
-            //   · collapseDiv: 'BEFORE_FETCH' 설정 + collapseEmptyDivs(true) 병행 사용
-            //     (신규 setConfig 기반 정책 + 레거시 API 하위 호환)
-            // - PageSettingsConfig.centering:
-            //   · centering: true → 광고 iframe을 슬롯 내부에서 수평 중앙 정렬
+            //   · 모든 슬롯 요청을 하나의 HTTP 호출로 묶어 전송(SRA).
+            //
+            // - googletag.setConfig({ centering, collapseDiv }):
+            //   · centering: true
+            //     → GPT iframe 크리에이티브를 슬롯 중앙 정렬.
+            //   · collapseDiv: 'BEFORE_FETCH'
+            //     → 슬롯은 처음에 접힌 상태(0px)로 시작, 광고가 반환되면 확장.
+            //     → 기존 collapseEmptyDivs(true) 대신 사용하는 신규 권장 방식.
+            //
             // - disableInitialLoad():
             //   · GPT의 기본 자동 로딩을 비활성화하고,
             //     display() + refresh()를 명시적으로 호출한 경우에만
             //     네트워크 요청이 발생하도록 제어합니다.
             // ------------------------------------------------------------------
+            googletag.setConfig({
+                centering: true,
+                collapseDiv: 'BEFORE_FETCH'
+            });
+
             googletag.pubads().enableSingleRequest();
-
-            // ✅ 페이지 공통 렌더링 정책 (Centering + collapseDiv)
-            // - 최신 GPT setConfig(PageSettingsConfig) + 레거시 API 병행 사용
-            if (typeof googletag.setConfig === 'function') {
-                googletag.setConfig({
-                    centering: !!PageSettingsConfig.centering,
-                    collapseDiv: PageSettingsConfig.collapseDiv
-                });
-            }
-
-            // 레거시 center 설정 (setConfig 미지원 환경 대비, 선택적)
-            if (PageSettingsConfig.centering && googletag.pubads().setCentering) {
-                googletag.pubads().setCentering(true);
-            }
-
-            // collapseDiv 모드가 활성화된 경우에만 레거시 collapseEmptyDivs 호출
-            if (PageSettingsConfig.collapseDiv && PageSettingsConfig.collapseDiv !== 'DISABLED') {
-                // true → "BEFORE_FETCH" 동작과 정합
-                googletag.pubads().collapseEmptyDivs(true);
-            }
-
             googletag.pubads().disableInitialLoad();
             googletag.enableServices();
 
@@ -741,7 +705,7 @@
            [광고 공통 컨테이너: .ad-slot]
 
            - 모든 광고 div(TC/MR/MC/BC)는 .ad-slot 클래스를 공유합니다.
-           - 배경/테두리는 기본적으로 투명 처리하고, collapseEmptyDivs 동작과 결합하여
+           - 배경/테두리는 기본적으로 투명 처리하고, collapseDiv( 'BEFORE_FETCH' )와 결합하여
              노필 시 자연스럽게 0px 높이로 접히도록 설계했습니다.
         ------------------------------------------------------------------ */
         .ad-slot {
@@ -856,6 +820,18 @@
              · 각 항목 사이에 연한 회색 라인
              · 광고(Native) 항목은 리스트 안에 섞이되, 기사 카운트에는 포함 X
                → 광고 LI는 번호/라벨 없이 콘텐츠만 노출 (BC_native_list_*)
+
+           - 구현 요약
+             1) UL(.related-list)에 counter-reset: hotNewsRank 선언
+             2) 기사 LI(.article-item)::before에서 counter(hotNewsRank)를 증가/출력
+             3) 광고 LI(.native-ad-list-item)는
+                counter-increment: none + content: "" 로 재정의
+                → CSS 카운터 증가에서 제외되며, 기사 번호 1~5는 항상 연속 유지
+             4) JS shufflePopularNewsNativeAds():
+                · "기사 LI 순서"는 그대로 유지한 상태에서
+                  광고 LI(BC_native_list_1/2)를 기사 사이의 여러 위치 중 랜덤하게 삽입
+                · 따라서 기사 카운트/노출 순서는 항상 고정되면서
+                  광고 위치만 무작위로 바뀌는 구조입니다.
         ------------------------------------------------------------------ */
         .related-list {
             list-style-type: none;
@@ -1028,6 +1004,11 @@
                 color: #f5f5f5;
                 box-shadow: 0 0 2px rgba(0, 0, 0, 0.8);
                 font-weight: normal;
+            }
+
+            /* ✅ 다크 모드에서 "이 시각 주요 뉴스" 번호 컬러 반전 */
+            .related-list li.article-item::before {
+                color: #f5f5f5;
             }
         }
     </style>
@@ -1205,7 +1186,7 @@
                           · CSS 카운터(hotNewsRank)에 의해 1~5 번호 자동 생성
                           · shufflePopularNewsNativeAds() 이후에도 기사 DOM 순서/번호는 항상 고정
                         - Native LI(BC_native_list_1/2, .native-ad-list-item):
-                          · 기사 LI 사이의 여러 "틈(gap)" 중 랜덤 위치에 삽입
+                          · 기사 LI 사이의 여러 후보 위치 중 랜덤 위치에 삽입
                           · 번호/라벨 없이 광고 슬롯만 LI 사이에 자연스럽게 노출
                           · 기사 개수 카운트에는 포함되지 않음
                     -->
@@ -1274,7 +1255,7 @@
         //
         // - disableInitialLoad()와의 관계:
         //   · 상단 GAM 설정에서 disableInitialLoad()를 호출했기 때문에,
-        //     display() + refresh()가 호출되기 전까지는 어떠한 광고 요청도 발생하지 않습니다.
+        //     display/refresh가 호출되기 전까지는 어떠한 광고 요청도 발생하지 않습니다.
         // ----------------------------------------------------------
         const LAZY_AD_SLOT_IDS = [
             'MR_side_rail_X',
