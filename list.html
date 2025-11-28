@@ -328,27 +328,18 @@
              *    - 여러 슬롯 요청을 한 번의 네트워크 콜로 묶어 레이턴시 감소 및
              *      라인 아이템 경쟁 로직을 일관되게 처리.
              *
-             * 3) collapseEmptyDivs(true)
-             *    - 광고가 집행되지 않은 슬롯의 div를 자동으로 접어서 레이아웃 공백을 줄입니다.
-             *    - 필요에 따라 특정 슬롯의 최소 높이(min-height)를 CSS로 강제해
-             *      “자리는 유지하되, 광고 없을 때는 비어 있는 상태로 보여주는” 패턴도 가능합니다.
-             *
-             * 4) googletag.setConfig({ centering: true })
-             *    - PageSettingsConfig.centering 옵션을 통해, 크리에이티브가 슬롯보다 작을 경우
-             *      가로 방향 중앙 정렬을 전역으로 적용합니다.
-             *    - 기존 PubAdsService.setCentering(centerAds) 대신 권장되는 방식이며,
-             *      display/refresh 이전에 호출해야 이후 요청된 슬롯에 반영됩니다.
+             * 3) PageSettingsConfig (setConfig)
+             *    - centering   : 슬롯 폭 대비 작은 크리에이티브를 수평 중앙 정렬.
+             *    - collapseDiv : 'BEFORE_FETCH' → 기존 collapseEmptyDivs(true)와 동등 동작.
              */
             googletag.pubads().disableInitialLoad();        // ★ 전역 초기 로드 비활성화
             googletag.pubads().enableSingleRequest();
-            googletag.pubads().collapseEmptyDivs(true);
 
-            // ✅ List GPT 전역 Centering 설정 (HOME / VIEW / SECTION과 정책 통일)
-            // - PageSettingsConfig 기반 설정으로, 이 호출 이후 요청되는 모든 슬롯에
-            //   "가로 가운데 정렬"이 적용됩니다.
-            // - BC Native 등 좌측 정렬이 필요한 특수 슬롯이 도입될 경우,
-            //   CSS(.ad-slot 변형) 또는 크리에이티브 내부 정렬로 예외 처리하는 것을 권장합니다.
-            googletag.setConfig({ centering: true });
+            // ✅ PageSettingsConfig: centering + collapseDiv 통합 설정
+            googletag.setConfig({
+                centering: true,
+                collapseDiv: 'BEFORE_FETCH'
+            });
 
             googletag.enableServices();
 
@@ -423,7 +414,8 @@
          * - 핵심 전략:
          *   1) 폭(width): 부모 컨테이너(메인, 사이드바 등)의 100%를 사용
          *   2) 높이(height/min-height): 강제하지 않고, 실제 크리에이티브/iframe 높이에 맡김
-         *      → collapseEmptyDivs(true)와 함께 광고 미집행 시 공백 최소화
+         *      → PageSettingsConfig.collapseDiv = 'BEFORE_FETCH'와 조합하여
+         *        광고 미집행 시 공백 최소화
          *   3) flex 컨테이너로 동작시켜 다양한 사이즈 배너를 중앙 정렬
          *   4) 상단 padding 10px으로 mk-ad-label(Advertisement) 라벨 공간 확보
          */

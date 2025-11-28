@@ -346,26 +346,19 @@
              *    - 여러 슬롯 요청을 하나의 네트워크 콜로 묶어 레이턴시를 줄이고,
              *      라인 아이템 간 경쟁/우선순위 평가를 일관되게 할 수 있습니다.
              *
-             * 3) collapseEmptyDivs(true)
-             *    - 광고가 채워지지 않은 슬롯의 div를 자동으로 접어(숨겨) 레이아웃 공백을 줄입니다.
-             *    - 필요 시 특정 슬롯은 CSS에서 최소 높이를 강제해 “자리만 유지”하게 할 수도 있습니다.
-             *
-             * 4) googletag.setConfig({ centering: true })
-             *    - PageSettingsConfig.centering 옵션을 통해, 크리에이티브가 슬롯보다 작을 경우
-             *      가로 방향 중앙 정렬을 전역으로 적용합니다.
-             *    - 기존 PubAdsService.setCentering(centerAds) 대신 권장되는 방식이며,
-             *      display/refresh 이전에 호출해야 이후 요청된 슬롯에 반영됩니다.
+             * 3) PageSettingsConfig (setConfig)
+             *    - centering   : 작은 광고 크리에이티브를 슬롯 내 수평 중앙 정렬.
+             *    - collapseDiv : 'BEFORE_FETCH' 설정 시, 초기에는 슬롯을 접고
+             *                    광고가 반환될 때 확장 → 기존 collapseEmptyDivs(true)와 동작 유사.
              */
             googletag.pubads().disableInitialLoad();        // ★ 전역 초기 로드 비활성화
             googletag.pubads().enableSingleRequest();
-            googletag.pubads().collapseEmptyDivs(true);
 
-            // ✅ Section GPT 전역 Centering 설정 (HOME / VIEW / LIST와 정책 통일)
-            // - PageSettingsConfig 기반 설정으로, 이 호출 이후 요청되는 모든 슬롯에
-            //   "가로 가운데 정렬"이 적용됩니다.
-            // - BC Native와 같이 좌측 정렬이 필요한 특수 슬롯이 도입될 경우,
-            //   CSS(.ad-slot 변형) 또는 크리에이티브 내부 정렬로 예외 처리하는 것을 권장합니다.
-            googletag.setConfig({ centering: true });
+            // ✅ PageSettingsConfig: centering + collapseDiv 한 번에 설정
+            googletag.setConfig({
+                centering: true,
+                collapseDiv: 'BEFORE_FETCH'
+            });
 
             googletag.enableServices();
 
@@ -446,7 +439,8 @@
          *   1) 폭(width): 부모 컨테이너(메인, 사이드바 등)의 100%를 사용
          *      → 실제 광고 크기 제약은 GAM sizeMapping + 상위 레이아웃(.sidebar min-width)에서 관리
          *   2) 높이(height/min-height): 강제하지 않고, 실제 크리에이티브/iframe 높이에 맡김
-         *      → collapseEmptyDivs(true)와 조합하여 광고 미노출 시 불필요한 공백 최소화
+         *      → PageSettingsConfig.collapseDiv = 'BEFORE_FETCH'와 조합하여
+         *        광고 미집행 시 불필요한 공백 최소화
          *   3) label(Advertisement) 공간만 padding-top으로 확보
          *   4) flex 컨테이너로 동작시켜, 다양한 사이즈의 배너를 중앙 정렬
          *
