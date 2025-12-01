@@ -626,11 +626,12 @@
         /* ------------------------------------------------------------------
            우측 관련 영역 (.related-area) – 데스크탑/모바일 공통 기본값
 
-           - 데스크탑:
-             · 아래 @media (min-width: 1025px)에서
-               flex-basis / min-width를 통해 최소 336px 폭 확보
-           - 모바일/태블릿:
-             · 아래 @media (max-width: 1024px)에서 width: 100%로 전환
+           - View GPT에서는 HOME/LIST 템플릿의 .sidebar와 동일한 역할을 수행합니다.
+           - 핵심 정책:
+             · 광고 폭 확보를 위해 .related-area 자체에는 padding을 주지 않고,
+               필요 시 내부 박스(.related-box 등)에서만 여백을 처리합니다.
+             · 이 파일에서는 .related-box에도 padding을 주지 않아
+               광고 레일 폭이 온전히 유지되도록 했습니다.
         ------------------------------------------------------------------ */
         .related-area {
             flex: 1;
@@ -638,6 +639,31 @@
             position: sticky;
             top: 20px;
             height: fit-content;
+            /* padding 없음 – 우측 레일 폭을 100% 광고에 사용하기 위한 공통 정책 */
+        }
+
+        /* ------------------------------------------------------------------
+           공통 Sidebar 레이아웃 가이드 (.sidebar / .sidebar-box)
+
+           - View GPT에는 .sidebar / .sidebar-box DOM 요소가 등장하지 않지만,
+             HOME / SECTION / LIST GPT와 CSS를 공유할 때를 대비해
+             "padding 0" 정책을 명시적으로 유지합니다.
+
+           - 핵심:
+             · .sidebar      : padding 0 → 우측 레일 전체 폭을 광고/콘텐츠가 그대로 사용
+             · .sidebar-box  : padding 없음, 여백은 내부 콘텐츠 요소에서만 처리
+        ------------------------------------------------------------------ */
+        .sidebar {
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        .sidebar-box {
+            background-color: #fff;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            padding: 0; /* ✅ 광고 슬롯이 직접 들어가는 컨테이너에는 padding을 주지 않는 공통 규칙 */
         }
 
         .article-body img {
@@ -917,6 +943,8 @@
                  · flex-basis: 336px (기본 폭)
                  · flex-shrink: 1 (필요 시 줄어들 수 있지만)
                  · min-width: 336px으로 실제 줄어드는 폭 제한
+               - padding은 사용하지 않고, margin/내부 박스에서만 여백 처리
+                 → 336px 폭 전체를 광고/콘텐츠가 그대로 사용할 수 있도록 함
             */
             .related-area {
                 flex: 0 1 336px;

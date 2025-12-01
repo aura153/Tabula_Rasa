@@ -380,14 +380,15 @@
          *
          * - 목표:
          *   1) 데스크탑에서 우측 사이드바 내 300px 폭 광고(300x250, 300x600 등)가
-         *      잘리지 않고 온전히 노출되도록 "콘텐츠 영역 폭"을 보장
+         *      잘리지 않고 온전히 노출되도록 "사이드 레일 폭"을 보장
          *   2) 모바일/태블릿에서는 우측 컬럼이 메인 아래로 내려가며 폭 100% 사용
          *
          * - 전략:
          *   - .main-content : flex: 1 1 auto; → 남는 영역을 유연하게 차지
          *   - .sidebar      : 
          *       · 데스크탑(≥1025px): flex: 0 0 340px; min-width: 340px
-         *          → padding 20px * 2를 고려하면 내부 콘텐츠 영역은 300px 확보
+         *          → padding 0 기준으로 레일 전체 폭을 340px 확보
+         *            (300x600 / 300x250 소재가 여유 있게 들어갈 수 있는 폭)
          *       · 모바일/태블릿(≤1024px): width:100%; flex:1 1 auto; min-width:0
          *          → 폭 100%를 사용하며, min-width 제약 제거
          */
@@ -397,10 +398,16 @@
         }
 
         .sidebar {
-            /* 폭/플렉스는 미디어쿼리에서 분기하고,
-               여기서는 박스 스타일(배경/패딩/테두리)만 정의 */
+            /* 
+             * [사이드바 공통 스타일]
+             * - 외곽 컨테이너에는 padding을 두지 않고, 폭만 340px 기준으로 확보합니다.
+             * - 텍스트/콘텐츠 여백은 .sidebar-box 내부의 개별 요소(h4, p 등)에서
+             *   margin/padding으로 제어하는 것을 권장합니다.
+             * - 광고 슬롯(.ad-slot)은 사이드바 폭(340px)을 그대로 활용하여,
+             *   300x600 / 300x250 등의 소재가 잘리지 않도록 합니다.
+             */
             background-color: #fff;
-            padding: 20px;
+            padding: 0;                 /* 🔧 기존 20px → 0으로 변경 */
             box-sizing: border-box;
             border: 1px solid #ddd;
             border-radius: 5px;
@@ -572,8 +579,8 @@
 
         /* ------------------------------
            데스크탑 레이아웃 (>= 1025px)
-           - 우측 사이드바 340px 확보 (패딩 포함)
-           - 내부 콘텐츠 영역은 300px 이상 확보 → 300x600/300x250 안전 노출
+           - 우측 사이드바 컨테이너 폭 340px 확보 (padding 0 기준)
+           - 300x600/300x250 등 세로형 광고가 잘리지 않도록 레일 폭을 여유 있게 확보
         ------------------------------ */
         @media (min-width: 1025px) {
             .sidebar {
@@ -609,7 +616,20 @@
             .article-thumb { width: 100%; height: 150px; margin-right: 0; margin-bottom: 10px; }
         }
         
-        .sidebar-box { background-color: #fff; padding: 15px; border: 1px solid #ddd; margin-bottom: 20px; border-radius: 5px; }
+        /*
+         * [콘텐츠 박스 · .sidebar-box]
+         * - 사이드/본문 공용 콘텐츠 박스 컨테이너입니다.
+         * - padding은 0으로 두고, 내부 요소(h3, ul 등) 단위에서 여백을 개별 제어하는 방향을 가정합니다.
+         *   → 광고/콘텐츠 혼합 활용 시 최대 폭을 확보하기 위한 설정입니다.
+         */
+        .sidebar-box { 
+            background-color: #fff; 
+            padding: 0;                 /* 🔧 요청에 따라 padding 제거 */
+            border: 1px solid #ddd; 
+            margin-bottom: 20px; 
+            border-radius: 5px; 
+        }
+
         .article-list { list-style: none; padding: 0; margin: 0; }
         .article-item { display: flex; padding: 15px 0; border-bottom: 1px solid #eee; align-items: flex-start; }
         .article-thumb { width: 120px; height: 80px; background-color: #ddd; flex-shrink: 0; margin-right: 15px; border-radius: 3px; }
@@ -657,7 +677,7 @@
                 
                 <h2 class="section-header">TODAY'S TOP NEWS LIST</h2>
                 
-                <section class="sidebar-box" style="padding: 20px;">
+                <section class="sidebar-box">
                     <article style="margin-bottom: 25px; padding-bottom: 15px; border-bottom: 2px solid #f0f0f0;">
                         <div style="width: 100%; height: 250px; background-color: #ccc; margin-bottom: 10px; border-radius: 5px;">[Feature Image Placeholder]</div>
                         <h3 style="font-size: 24px; color: #000; margin-bottom: 5px;">**[특집] 금리 인상 사이클 종료 임박? 시장 변동성 확대 분석**</h3>
@@ -704,8 +724,8 @@
             <div class="sidebar">
                 
                 <div class="sidebar-box">
-                    <h4>인기 뉴스 랭킹 (TOP 10)</h4>
-                    <ul class="ranking-list">
+                    <h4 style="padding: 15px 15px 10px 15px; margin: 0;">인기 뉴스 랭킹 (TOP 10)</h4>
+                    <ul class="ranking-list" style="padding: 0 15px 15px 15px;">
                         <li><a href="#">부동산: 9.1 대책 이후 시장 반응 분석</a></li>
                         <li><a href="#">증권: 개미 투자자들이 주목해야 할 섹터</a></li>
                         <li><a href="#">사회: 청년 인구 감소의 경제적 파급 효과</a></li>
@@ -730,17 +750,17 @@
                 </div>
 
                 <div class="sidebar-box">
-                    <h4>오늘의 사설</h4>
-                    <p style="font-size: 13px;">경제를 살리는 길, 규제 완화가 해답인가.</p>
+                    <h4 style="padding: 15px 15px 5px 15px; margin: 0;">오늘의 사설</h4>
+                    <p style="font-size: 13px; padding: 0 15px 15px 15px; margin: 0;">경제를 살리는 길, 규제 완화가 해답인가.</p>
                 </div>
             </div>
         </div>
         
         <div class="content-wrap" style="margin-top: 20px;">
             <div class="main-content">
-                <section class="sidebar-box" style="padding: 20px;">
-                    <h3 style="font-size: 20px; color: #000; margin-bottom: 10px;">Deep Dive: Global Economy</h3>
-                    <ul class="article-list">
+                <section class="sidebar-box">
+                    <h3 style="font-size: 20px; color: #000; margin: 0; padding: 15px 15px 10px 15px;">Deep Dive: Global Economy</h3>
+                    <ul class="article-list" style="padding: 0 15px 15px 15px;">
                         <li class="article-item">
                             <div class="article-thumb">[Image Placeholder]</div>
                             <div class="article-info"><h3>[심층] 미국, 긴축 정책 장기화 시사... 세계 경제 영향은?</h3></div>
@@ -759,8 +779,8 @@
             
             <div class="sidebar">
                 <div class="sidebar-box">
-                    <h4>매경 프리미엄 리포트</h4>
-                    <ul class="ranking-list" style="list-style-type: disc;">
+                    <h4 style="padding: 15px 15px 10px 15px; margin: 0;">매경 프리미엄 리포트</h4>
+                    <ul class="ranking-list" style="list-style-type: disc; padding: 0 30px 15px 35px; margin: 0;">
                         <li>미래차 배터리 패권 전쟁, 핵심 기술 분석</li>
                         <li>K-컬쳐 경제적 파급 효과 보고서</li>
                     </ul>
