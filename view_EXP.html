@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>View mockup</title>
+    
+    <script async src='https://securepubads.g.doubleclick.net/tag/js/gpt.js'></script>
+    <script>
+        window.googletag = window.googletag || {cmd: []};
+        
+        // --- 매일경제 GAM 360 공통 설정 ---
+        const AdUnitPath = '/7450/www.mk.co.kr/news/economy'; 
+        const isDarkMode = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'true' : 'false';
+        
+        // ✅ 광고 라벨 삽입 함수
+        function addAdLabel(event) {
+            const slotId = event.slot.getSlotElementId();
+            if (slotId === 'BC_native_list_1' || slotId === 'BC_native_list_2') return;
+
+            const slotElement = document.getElementById(slotId); 
+            if (event.isEmpty === false && slotElement) {
+                const outerSlot = slotElement.closest('.ad-slot'); 
+                if (!outerSlot) return;
+                if (outerSlot.querySelector('.mk-ad-label')) return; 
+
+                const labelElement = document.createElement('div');
+                labelElement.className = 'mk-ad-label';
+                labelElement.textContent = 'Advertisement';
+                outerSlot.insertBefore(labelElement, outerSlot.firstChild);
+                outerSlot.style.border = 'none'; 
+                outerSlot.style.backgroundColor = 'transparent';
+            }
+        }
+
+        googletag.cmd.push(function() {
+            // --- [1] 페이지 레벨 타게팅 및 디바이스 감지 ---
+            const userAgent = navigator.userAgent.toLowerCase();
+            let deviceCategory = 'desktop';
+            if (/mobile|android|iphone|ipad|ipod/.test(userAgent) || window.innerWidth <= 768) {
+                deviceCategory = 'mobile';
+            } else if (window.innerWidth <= 1024) {
+                deviceCategory = 'tablet';
+            }
+            
+            googletag.pubads().setTargeting('device_category', deviceCategory);
+            googletag.pubads().setTargeting('page_type', 'view'); 
+            googletag.pubads().setTargeting('section_front_nm', 'economy');
+            googletag.pubads().setTargeting('is_dark_mode', isDarkMode);
+            googletag.pubads().setTargeting('gpt_version', '2025'); 
+            googletag.pubads().setPublisherProvidedId('PPID_DYNAMIC_HASHED_ID');
+
+            // 동적 키-값 설정 (생략 가능)
+            googletag.pubads().setTargeting('domain', window.location.hostname);
+            
+            googletag.pubads().addEventListener('slotRenderEnded', addAdLabel);
+
+            // --- [2] Size Mapping 정의 (모바일 가로모드 대응) ---
+            // 아이폰 가로모드 등에서 Tablet 구간으로 잘못 매핑되는 것을 방지하기 위해
+            // deviceCategory가 'mobile'이면 강제로 모바일용 매핑을 사용하도록 분기합니다.
+
+            let mappingHorizontal, mappingSquare, mappingMedium;
+
+            if (deviceCategory === 'mobile') {
+                // 모바일 강제 매핑 (가로모드에서도 모바일 사이즈 유지)
+                mappingHorizontal = googletag.sizeMapping()
+                    .addSize([0, 0], [[336, 280], [300, 250], [320, 100], [320, 50], [2, 1], [1, 1], 'fluid'])
+                    .build();
+                mappingSquare = googletag.sizeMapping()
+                    .addSize([0, 0], [[336, 280], [300, 250], [2, 1], [1, 1], 'fluid'])
+                    .build();
+                mappingMedium = googletag.sizeMapping()
+                    .addSize([0, 0], [[336, 280], [300, 250], [320, 100], [320, 50], [2, 1], [1, 1], 'fluid'])
+                    .build();
+            } else {
+                // 데스크탑/태블릿용 반응형 매핑
+                mappingHorizontal = googletag.sizeMapping()
+                    .addSize([1024, 0], [[1200, 300], [1200, 100], [970, 250], [980, 120], [970, 90], [930, 180], [728, 90], [2, 1], [1, 1], 'fluid'])
+                    .addSize([768, 0], [[750, 300], [750, 200], [728, 90], [480, 320], [336, 280], [300, 250], [2, 1], [1, 1], 'fluid'])
+                    .addSize([0, 0], [[336, 280], [300, 250], [320, 480], [320, 100], [2, 1], [1, 1], 'fluid'])
+                    .build();
+                
+                mappingSquare = googletag.sizeMapping()
+                    .addSize([1024, 0], [[300, 600], [336, 280], [2, 1], [1, 1], 'fluid'])
+                    .addSize([768, 0], [[336, 280], [300, 250], [2, 1], [1, 1], 'fluid'])
+                    .addSize([0, 0], [[336, 280], [300, 250], [320, 480], [320, 100], [2, 1], [1, 1], 'fluid'])
+                    .build();
+
+                mappingMedium = googletag.sizeMapping()
+                    .addSize([1024, 0], [[480, 320], [336, 280], [300, 250], [250, 250], [320, 100], [320, 50], [2, 1], [1, 1], 'fluid'])
+                    .addSize([768, 0], [[480, 320], [336, 280], [300, 250], [250, 250], [320, 100], [320, 50], [2, 1], [1, 1], 'fluid'])
+                    .addSize([0, 0], [[336, 280], [300, 250], [320, 480], [320, 100], [2, 1], [1, 1], 'fluid'])
+                    .build();
+            }
+
+            // --- [3] 광고 슬롯 정의 ---
+            
+            // 3-1. Eager Load 슬롯 (데스크탑 전용)
+            const TC_slot = googletag.defineSlot(AdUnitPath, [[1, 1]], 'TC_billboard_X') 
+                .defineSizeMapping(mappingHorizontal) 
+                .setTargeting('div_id', 'TC_billboard_X')
+                .setTargeting('position', 'TC')
+                .setTargeting('ad_area_type', 'ATF')
+                .setTargeting('load_type', 'eager')
+                .addService(googletag.pubads());
+
+            const MR_slot = googletag.defineSlot(AdUnitPath, [[1, 1]], 'MR_side_rail_X')
+                .defineSizeMapping(mappingSquare) 
+                .setTargeting('div_id', 'MR_side_rail_X')
+                .setTargeting('position', 'MR')
+                .setTargeting('ad_area_type', 'ATF') 
+                .setTargeting('load_type', 'eager')
+                .addService(googletag.pubads());
+
+            // 3-2. Lazy Load 슬롯 (BC 및 Native)
+            const BC_byline_slot = googletag.defineSlot(AdUnitPath, [[1, 1]], 'BC_byline_rectangle') 
+                .defineSizeMapping(mappingMedium)
+                .setTargeting('div_id', 'BC_byline_rectangle')
+                .setTargeting('position', 'BC')
+                .setTargeting('ad_area_type', 'below_byline')
+                .setTargeting('load_type', 'lazy')
+                .addService(googletag.pubads());
+
+            const BC_billboard_slot = googletag.defineSlot(AdUnitPath, [[1, 1]], 'BC_billboard_rectangle') 
+                .defineSizeMapping(mappingHorizontal)
+                .setTargeting('div_id', 'BC_billboard_rectangle') 
+                .setTargeting('position', 'BC')
+                .setTargeting('ad_area_type', 'below_comments')
+                .setTargeting('load_type', 'lazy')
+                .addService(googletag.pubads());
+
+            const BC_native_1_slot = googletag.defineSlot(AdUnitPath, [[1, 1]], 'BC_native_list_1') 
+                .setTargeting('div_id', 'BC_native_list_1')
+                .setTargeting('position', 'BC')
+                .setTargeting('ad_area_type', 'below_popular_news')
+                .setTargeting('load_type', 'lazy')
+                .addService(googletag.pubads());
+
+            const BC_native_2_slot = googletag.defineSlot(AdUnitPath, [[1, 1]], 'BC_native_list_2') 
+                .setTargeting('div_id', 'BC_native_list_2')
+                .setTargeting('position', 'BC')
+                .setTargeting('ad_area_type', 'below_popular_news')
+                .setTargeting('load_type', 'lazy')
+                .addService(googletag.pubads());
+
+            // --- [4] GAM 서비스 활성화 (Initial Load 차단) ---
+            googletag.pubads().enableSingleRequest(); 
+            googletag.pubads().collapseEmptyDivs(true);
+            googletag.pubads().disableInitialLoad(); // ✅ 자동 요청 차단 (핵심)
+            googletag.enableServices();
+
+            // --- [5] 슬롯 등록 및 초기 호출 제어 ---
+            googletag.cmd.push(function() {
+                // 5-1. 모든 슬롯을 시스템에 등록 (요청은 안 함)
+                googletag.display('TC_billboard_X');
+                googletag.display('MR_side_rail_X');
+                googletag.display('BC_byline_rectangle');
+                googletag.display('BC_billboard_rectangle');
+                googletag.display('BC_native_list_1');
+                googletag.display('BC_native_list_2');
+
+                // 5-2. Eager Load 슬롯 (데스크탑만) 즉시 요청
+                if (deviceCategory === 'desktop') {
+                    googletag.pubads().refresh([TC_slot, MR_slot]);
+                }
+                
+                // 5-3. Lazy Load 슬롯 Observer 등록
+                const lazySlots = document.querySelectorAll('#BC_byline_rectangle, #BC_billboard_rectangle, #BC_native_list_1, #BC_native_list_2');
+                lazySlots.forEach(slot => observer.observe(slot));
+            });
+        });
+
+        // --- [6] Intersection Observer (뷰어빌리티 최적화) ---
+        // rootMargin을 200%로 대폭 늘려 미리 로드되도록 설정
+        const observer = new IntersectionObserver(function(entries, self) {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    const slotId = entry.target.id;
+                    googletag.cmd.push(function() {
+                        const slot = googletag.pubads().getSlots().find(s => s.getSlotElementId() === slotId);
+                        if (slot) {
+                            googletag.pubads().refresh([slot]);
+                            console.log(`✅ [Lazy Load] Refreshed: ${slotId}`);
+                        }
+                    });
+                    self.unobserve(entry.target);
+                }
+            });
+        }, { rootMargin: '0px 0px 200% 0px', threshold: 0 }); // 뷰어빌리티 경고 해결을 위한 200% 여백
+    </script>
+    <style>
+        /* 스타일은 기존과 동일하게 유지 */
+        body { font-family: 'Malgun Gothic', 'Dotum', Arial, sans-serif; margin: 0; padding: 0; background-color: #fff; color: #333; }
+        a { text-decoration: none; color: inherit; }
+        .container { max-width: 1200px; margin: 0 auto; padding: 0 15px; }
+        nav { background-color: #f9f9f9; border-bottom: 1px solid #333; margin-bottom: 20px;}
+        .nav-list { list-style: none; padding: 0; margin: 0; display: flex; justify-content: flex-start; } 
+        .nav-list li { padding: 15px 15px; font-size: 14px; color: #555; }
+        .nav-list .current { color: #c00; font-weight: bold; }
+        
+        .like-share-section { margin-bottom: 20px; }
+        .content-wrap { display: flex; gap: 25px; margin-bottom: 30px; z-index: 5; }
+        .article-area { flex: 3; min-width: 0; z-index: 5; } 
+        .related-area { flex: 1; min-width: 280px; max-width: 300px; z-index: 5; position: sticky; top: 20px; height: fit-content; } 
+        
+        .article-body img { max-width: 100%; height: auto; }
+        .article-header h1 { font-size: 32px; line-height: 1.3; margin: 20px 0 10px 0; font-weight: 700; }
+        .article-byline { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #eee; padding-bottom: 15px; margin-bottom: 20px; font-size: 14px; color: #777; }
+        .article-body { font-size: 17px; line-height: 1.8; word-break: keep-all; margin-bottom: 40px; }
+        .article-body p { margin-bottom: 1.5em; text-indent: 1em; } 
+        .article-image { text-align: center; margin: 25px 0; }
+        .dummy-data-box { background-color: #f9f9f9; border: 1px solid #eee; padding: 20px; margin: 30px 0; border-radius: 5px; font-size: 15px; line-height: 1.6; }
+
+        .ad-slot { background-color: transparent; color: transparent; text-align: center; display: flex; align-items: center; justify-content: center; margin: 0 auto; font-size: 14px; font-weight: bold; box-sizing: border-box; border: none; transition: background-color 0.5s ease; width: 100%; height: auto; min-height: 1px; position: relative; z-index: 10; }
+        .ad-mc-article, .native-ad-list-item { background-color: #f9f9f9; color: #ccc; opacity: 0.8; border: 1px solid #ccc; }
+        
+        #TC_billboard_X, #MR_side_rail_X, #BC_byline_rectangle, #BC_billboard_rectangle { min-height: 1px; height: auto; } 
+        
+        .ad-loaded { background-color: #c00 !important; color: #fff; opacity: 1; box-shadow: 0 0 15px rgba(192, 0, 0, 0.5); }
+        .mk-ad-label { position: absolute; top: -15px; left: 50%; transform: translateX(-50%); z-index: 100; padding: 0; background-color: transparent; color: #5A5A5A; font-size: 12px; font-weight: 700; text-transform: uppercase; line-height: 1; white-space: nowrap; }
+
+        .related-box { margin-bottom: 20px; }
+        .comment-section { margin-bottom: 20px; }
+        
+        .native-ad-list-item { display: flex; align-items: center; justify-content: center; text-align: center; border: none; background-color: transparent; color: inherit; padding: 0; margin: 0; font-weight: normal; font-size: 15px; min-height: 1px; height: auto; overflow: visible; transition: none; list-style-type: none; }
+        
+        .popular-news-list { list-style-type: disc; padding-left: 20px; }
+        .popular-news-list li { padding: 12px 0; border-bottom: 1px solid #f0f0f0; }
+        .popular-news-list .native-ad-list-item { list-style-type: none; padding-left: 0; min-height: 1px; height: auto; padding: 12px 0; }
+
+        .ad-tc, .ad-mr { display: none; }
+        @media (min-width: 1025px) { .ad-tc { display: flex; } #MR_side_rail_X { display: flex; } } 
+        @media (max-width: 1024px) { .content-wrap {flex-direction: column;} .related-area {min-width: 100%; max-width: none;} }
+        
+        @media (prefers-color-scheme: dark) {
+            body { background-color: #1a1a1a; color: #e0e0e0; } a { color: #ccc; } 
+            nav { background-color: #1a1a1a; border-bottom-color: #444; margin-bottom: 20px;} .nav-list li { color: #ccc; } header { background-color: #1a1a1a; border-bottom-color: #444; } .logo { color: #fff !important; } 
+            .article-header h1 { color: #e0e0e0; } .article-byline { border-bottom-color: #333; color: #999; } .article-body, .article-body p { color: #ccc; } .article-area h2, .extra-content-section h3, .related-box h4 { color: #e0e0e0 !important; } .dummy-data-box { background-color: #222; border-color: #444; color: #ccc; } .comment-section h3 { color: #e0e0e0; } .comment-item { border-bottom-color: #333 !important; }
+            .related-box, .related-list { background-color: #1a1a1a !important; } .extra-content-section { border-top-color: #444; } .extra-content-section h3 { border-left-color: #c00 !important; } .popular-news-list li { border-bottom-color: #333; } .shorts-item { background-color: #222; } .native-ad-list-item { background-color: transparent; border: none; color: inherit; min-height: 25px; height: auto; } 
+            .ad-mc-article, .native-ad-list-item { background-color: #333; color: #ccc; }
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="container">
+             <div style="font-size: 20px; font-weight: bold; padding: 10px 0;" class="logo">View GPT</div>
+        </div>
+    </header>
+
+    <nav>
+        <div class="container">
+            <ul class="nav-list">
+                <li>HOME</li>
+                <li class="current">경제</li>
+                <li>IT/과학</li>
+                <li>부동산</li>
+                <li>오피니언</li>
+            </ul>
+        </div>
+    </nav>
+    
+    <div class="container">
+        
+        <div id="TC_billboard_X" class="ad-slot ad-tc"></div>
+
+        <div class="content-wrap">
+            <div class="article-area">
+                
+                <header class="article-header">
+                    <h1>글로벌 AI 반도체 시장 격변, K-칩스 초격차 전략 시급</h1>
+                </header>
+                <div class="article-byline">
+                    <span class="journalist">김기자 (kim.j@mk.com)</span>
+                    <span class="datetime">입력 2025.10.31. 10:00:00</span>
+                </div>
+                
+                <div class="article-body">
+                    <p><strong>[서론]</strong> 최근 인공지능(AI) 산업의 폭발적인 성장과 함께 AI 반도체 시장을 선점하기 위한 글로벌 경쟁이 격화되고 있습니다. 특히 거대 기술 기업들(빅테크)이 자체 칩 개발에 속도를 내면서, 전통적인 반도체 강국인 우리나라에도 변화와 위협이 동시에 다가오고 있습니다. 한국 반도체 기업들은 메모리 분야의 압도적인 우위를 바탕으로 비메모리 분야까지 영역을 확장하여 **'K-칩스' 초격차 전략**을 시급히 마련해야 한다는 목소리가 높습니다。</p>
+                    
+                    <div class="article-image">
+                        <img src="https://placehold.co/800x400/333/fff?text=기술+심층+분석+자료" alt="기술 분석 자료 이미지">
+                        <p style="font-size: 13px; color: #888; margin-top: 5px;">기술 동향 및 투자 규모 분석 그래프</p>
+                    </div>
+
+                    <p><strong>[본문 1: 시장 재편과 한국의 위치]</strong> AI 반도체 시장은 CPU, GPU 등 기존 프로세서와는 달리 대규모 병렬 연산에 최적화된 NPU를 중심으로 재편되고 있습니다. 이 NPU의 성능과 효율성이 미래 AI 서비스의 성패를 좌우할 핵심 요소로 떠오르면서, 각국은 막대한 자본과 인력을 투입하고 있습니다. 한국의 경우, 메모리 분야에서는 독보적인 기술력을 자랑하지만, 시스템 반도체와 NPU 분야에서는 아직 선두 주자들을 따라잡아야 하는 상황입니다。 </p>
+                    <p>새로운 시장의 진입은 언제나 기회와 위험을 동시에 내포합니다. 국내 기업들이 기존의 메모리 제조 역량에 안주하지 않고, 고성능 컴퓨팅 및 엣지 AI 분야의 맞춤형 반도체 개발에 전력을 기울여야 합니다. 특히 글로벌 빅테크 기업들이 자체적으로 AI 칩을 설계하는 트렌드를 고려할 때, 한국 파운드리 기업들은 이들과의 긴밀한 협력을 통해 첨단 공정을 선제적으로 제공하는 '전략적 파트너' 역할을 강화해야 합니다. 이를 위해 초미세 공정 기술 로드맵을 가속화하고, 차세대 소재 및 패키징 기술에 대한 투자를 확대하는 것이 필수적입니다.</p>
+                    <p>전문가들은 현재의 기술 경쟁 구도가 과거의 메모리 치킨 게임과는 완전히 다른 양상을 보인다고 분석합니다. 단순히 생산량을 늘리는 것이 아니라, 얼마나 빠르게 고도화된 설계 및 파운드리 기술을 결합하느냐가 승패를 가르는 열쇠라는 것입니다. 이로 인해 반도체 설계 인력에 대한 수요가 급증하고 있으며, 국내외 대학의 관련 학과들은 정원 확대 요구를 받고 있습니다. 특히 첨단 패키징 기술이 중요성이 부각되고 있으며, 칩과 메모리를 통합하는 첨단 패키징 기술이 없이는 NPU의 연산 속도를 끌어올리기 어렵기 때문입니다. 이 내용이 첫 번째 본문 광고 전에 **약 1 뷰포트 높이**를 확보합니다。</p>
+                    
+                    <div class="dummy-data-box">
+                        <h4>📊 데이터 분석: AI 칩 시장 규모 전망 (2025~2030)</h4>
+                        <p>2025년 500억 달러에서 2030년 2,000억 달러 규모로 연평균 30% 이상 성장 예상. (출처: 글로벌 리서치 기관)</p>
+                        <p>주요 성장 동력: 클라우드 AI 서비스, 엣지 AI 디바이스, 자율주행 차량용 칩. 이 박스 역시 뷰포트 확보에 기여합니다。</p>
+                    </div>
+
+                    <div id="ad-slot-mc-2" class="ad-slot ad-mc-article">
+                        광고 영역 1-4: MC_article_rectangle_2 @news/economy (본문 내)
+                    </div>
+
+                    <p>전문가들은 현재의 기술 경쟁 구도가 과거의 메모리 치킨 게임과는 완전히 다른 양상을 보인다고 분석합니다. 단순히 생산량을 늘리는 것이 아니라, 얼마나 빠르게 고도화된 설계 및 파운드리 기술을 결합하느냐가 승패를 가르는 열쇠라는 것입니다. 이로 인해 반도체 설계 인력에 대한 수요가 급증하고 있으며, 국내외 대학의 관련 학과들은 정원 확대 요구를 받고 있습니다. 특히 첨단 패키징 기술이 중요성이 부각되고 있으며, 칩과 메모리를 통합하는 첨단 패키징 기술이 없이는 NPU의 연산 속도를 끌어올리기 어렵기 때문입니다. 이 내용이 첫 번째 본문 광고 전에 **약 1 뷰포트 높이**를 확보합니다。</p>
+                    <p>새로운 시장의 진입은 언제나 기회와 위험을 동시에 내포합니다. 국내 기업들이 기존의 메모리 제조 역량에 안주하지 않고, 고성능 컴퓨팅 및 엣지 AI 분야의 맞춤형 반도체 개발에 전력을 기울여야 합니다. 특히 글로벌 빅테크 기업들이 자체적으로 AI 칩을 설계하는 트렌드를 고려할 때, 한국 파운드리 기업들은 이들과의 긴밀한 협력을 통해 첨단 공정을 선제적으로 제공하는 '전략적 파트너' 역할을 강화해야 합니다. **이를 위해 초미세 공정 기술 로드맵을 가속화하고, 차세대 소재 및 패키징 기술에 대한 투자를 확대하는 것이 필수적입니다.**</p>
+
+                    <div id="ad-slot-mc-3" class="ad-slot ad-mc-article">
+                        광고 영역 1-5: MC_article_rectangle_3 @news/economy (본문 내)
+                    </div>
+
+                    <p><strong>[본문 3: 글로벌 경쟁과 결론]</strong> 글로벌 시장의 요구에 발맞춰 한국의 주요 반도체 기업들은 파운드리(위탁생산) 부문에서 초미세 공정을 경쟁적으로 도입하며 NPU 생산 능력을 강화하고 있습니다. 또한, 고대역폭 메모리(HBM)와 같은 차세대 메모리 기술을 AI 반도체와 결합하여 고성능을 구현하는 데 집중하고 있습니다. 이러한 혁신적인 접근 방식이 성공한다면, 한국은 AI 반도체 생태계에서 매우 중요한 위치를 차지할 수 있을 것으로 기대됩니다. 앞으로 2~3년이 AI 반도체 시장의 향방을 가를 중요한 시점이 될 것입니다。</p>
+                    
+                    <p>글로벌 인공지능 시장은 끊임없이 진화하고 있으며, 특히 하드웨어 분야에서는 엔비디아와 AMD, 그리고 구글, 아마존 같은 빅테크 기업들이 자체 칩 개발에 막대한 투자를 진행하고 있습니다. 이러한 경쟁 구도는 한국 반도체 산업에 새로운 기회와 동시에 위협을 제공합니다. 국내 기업들은 메모리 기술력뿐만 아니라, 시스템 반도체 설계 및 파운드리 역량을 고도화하여 칩 제조 생태계 전반의 경쟁력을 확보해야 합니다. 이는 단순히 기술 개발을 넘어, 글로벌 공급망 내에서 필수 불가결한 파트너로 자리매김하는 전략적 목표를 필요로 합니다.
+                    </p>
+                    <p>반도체 산업의 미래는 '데이터 처리 속도'와 '전력 효율성'에 달려 있습니다. 특히 AI 서버의 전력 소모 문제는 환경적, 경제적 이슈로 부상하고 있어, 저전력 NPU 개발 경쟁이 심화되고 있습니다. 한국은 팹리스(설계), 파운드리(제조), 메모리(HBM)를 아우르는 수직적 협력 구조를 강화하여, 이 세 분야를 결합한 최적의 AI 반도체 솔루션을 세계 시장에 공급할 수 있는 잠재력을 극대화해야 합니다. 이를 위해 초미세 공정 기술 로드맵을 가속화하고, 차세대 소재 및 패키징 기술에 대한 투자를 확대하는 것이 필수적이다。</p>
+                    
+                    <div id="ad-slot-mc-4" class="ad-slot ad-mc-article">
+                        광고 영역 1-6: MC_article_rectangle_4 @news/economy (본문 내)
+                    </div>
+
+                    <p>정부는 AI 반도체 개발의 전주기적 지원을 위해 대규모 국가 연구개발(R&D) 프로젝트를 추진하고, 민간 투자 리스크를 완화하기 위한 세제 혜택 및 금융 지원을 확대해야 합니다. 특히 시스템 반도체 분야는 인프라 구축에 막대한 초기 비용이 들기 때문에, 공공 파운드리 시설의 개방 및 활용도를 높여 중소 팹리스 기업의 진입 장벽을 낮추는 것도 중요합니다. 또한, 국제 표준 선점을 위해 주요 기술 동맹에 적극적으로 참여하고, 수출 규제 등 글로벌 공급망의 불확실성에 대비하는 외교적 역량도 강화해야 합니다.
+                    </p>
+                    <p>AI 반도체가 미래 산업의 핵심 동력인 만큼, 반도체 제조뿐만 아니라 소프트웨어 및 알고리즘과의 결합을 통한 '토털 솔루션' 제공 능력을 갖추는 것이 필수입니다. 국내 기업들은 NPU 성능을 최적화하는 전용 AI 소프트웨어 플랫폼을 구축하고, 고객사의 다양한 요구사항에 빠르게 대응할 수 있는 유연성을 확보해야 합니다. 이러한 노력들이 결실을 맺는다면, 한국은 AI 반도체 분야에서 명실상부한 기술 강국으로 도약할 수 있을 것입니다。</p>
+                    
+                    <div id="ad-slot-mc-5" class="ad-slot ad-mc-article">
+                        광고 영역 1-7: MC_article_rectangle_5 @news/economy (본문 내)
+                    </div>
+
+                    <p>새로운 기술의 물결은 멈추지 않습니다. 인공지능의 발전 속도에 발맞춰, 양자 컴퓨팅, 뉴로모픽 칩 등 차세대 반도체 기술에 대한 선도적인 연구가 병행되어야 합니다. 정부와 민간은 장기적인 관점에서 기초 과학 연구에 대한 투자를 강화하고, 실패를 용인하는 혁신적인 연구 문화를 조성함으로써, 미래 반도체 기술의 '씨앗'을 뿌려야 합니다. 이러한 선순환 구조를 통해 한국은 단순히 패스트 팔로워가 아닌, 기술 혁신을 주도하는 리더 국가로 자리매김할 수 있을 것입니다。</p>
+                    <p>궁극적으로, 고성능 컴퓨팅(HPC)과 엣지 디바이스(Edge Device)를 위한 저전력 고효율 NPU 개발이 핵심 과제입니다. 서버급 AI 칩뿐만 아니라, 모바일, 자율주행, IoT 등 다양한 분야에서 맞춤형 칩 수요가 증가하고 있기 때문입니다. 이를 위해 정부 차원의 R&D 지원과 함께, 국내 반도체 학과 및 연구소의 인력 양성 프로그램 확대가 시급합니다. 인재 확보야말로 장기적인 '초격차'를 유지할 수 있는 근본적인 힘입니다。</p>
+                    <p>최근에는 칩렛(Chiplet) 기술과 첨단 패키징(Advanced Packaging) 기술의 중요성이 더욱 부각되고 있습니다. 서로 다른 기능을 하는 반도체를 하나의 패키지에 통합하여 성능을 극대화하는 이 기술은 AI 칩의 성능을 결정하는 핵심 요소가 되었습니다. 한국 기업들은 HBM과 같은 독보적인 메모리 기술을 활용하여, 칩렛 기반의 고성능 AI 반도체 솔루션을 세계 시장에 선제적으로 제시해야 합니다. 이는 메모리 강국에서 AI 반도체 강국으로 도약하는 중요한 분기점이 될 것입니다。</p>
+                    <p>또한, AI 반도체 스타트업 생태계 활성화가 필요합니다. 대기업의 파운드리 역량과 유망 스타트업의 혁신적인 NPU 설계 아이디어가 결합될 때 시너지가 발생합니다. 정부는 스타트업이 초기 개발 단계에서 겪는 테스트베드 접근성 문제나 자금 조달 문제를 해소하는 데 집중해야 합니다. 궁극적으로, 한국이 AI 반도체 분야에서 글로벌 리더십을 확보하기 위해서는 민간의 혁신 의지와 정부의 전략적 지원이 유기적으로 결합되는 'K-칩스 동맹'이 필수적입니다. 향후 5년이 한국 반도체 산업의 미래 50년을 좌우할 중요한 시기가 될 것입니다. [끝]</p>
+                </div>
+
+                <div class="like-share-section">
+                    <p>이 기사가 마음에 들었다면, 좋아요를 눌러주세요。</p>
+                    <div class="like-share-button">👍 좋아요 (128)</div>
+                </div>
+
+                <div id="BC_byline_rectangle" class="ad-slot ad-bc-byline">
+                    
+                </div>
+
+                <div class="comment-section">
+                    <h3>전체 댓글 리스트 (158개)</h3>
+                    <div class="comment-item"><p><strong>독자A</strong>: 정말 중요한 내용입니다. 인재 육성이 핵심이죠!</p><p style="text-align: right; color: #aaa;">2025.10.31</p></div>
+                    <div class="comment-item"><p><strong>독자B</strong>: 파운드리 기술의 경쟁력 확보가 시급합니다。</p><p style="text-align: right; color: #aaa;">2025.10.31</p></div>
+                    <div class="comment-item"><p><strong>독자C</strong>: 본문 내 광고 배치가 깔끔하네요。</p><p style="text-align: right; color: #aaa;">2025.10.31</p></div>
+                    <div class="comment-item"><p><strong>독자D</strong>: AI 반도체 개발은 미래 산업의 핵심 동력입니다.</p><p style="text-align: right; color: #aaa;">2025.10.31</p></div>
+                    <div class="comment-item" style="border-bottom: none;"><p><strong>독자E</strong>: 국내 기업들의 적극적인 투자가 필요합니다.</p><p style="text-align: right; color: #aaa;">2025.10.31</p></div>
+                    <div style="text-align: center; margin-top: 10px; font-weight: bold; color: #0056b3; cursor: pointer;">
+                        전체 댓글 보기 (더보기)
+                    </div>
+                </div>
+                
+                <div id="BC_billboard_rectangle" class="ad-slot ad-bc-comment">
+                    
+                </div>
+
+                <div class="extra-content-section">
+                    
+                    <h3>🔥 인기뉴스</h3>
+                    <ul class="popular-news-list">
+                        <li><span class="rank">1</span><span class="title">주식 시장, 금리 인상 종료 기대감에 강세 마감</span></li>
+                        
+                        <li id="BC_native_list_1" class="native-ad-list-item">
+                            
+                        </li>
+                        
+                        <li><span class="rank">2</span><span class="title">대규모 신도시 개발 계획 발표, 지역 부동산 시장 요동</span></li>
+                        
+                        <li id="BC_native_list_2" class="native-ad-list-item">
+                            
+                        </li>
+                        
+                        <li><span class="rank">3</span><span class="title">세계 경제, 고금리 시대 장기화 우려</span></li>
+                        <li><span class="rank">4</span><span class="title">부동산 시장, 급매물 소진되며 거래량 회복세</span></li>
+                        <li><span class="rank">5</span><span class="title">AI 기술, 제조업 혁신 주도... 생산성 획기적 개선</span></li>
+                        <li><span class="rank">6</span><span class="title">국내 스타트업, 시리즈 C 투자 유치 성공</span></li>
+                        <li><span class="rank">7</span><span class="title">친환경 에너지 전환, 정부 정책 추진 가속화</span></li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="related-area">
+                
+                <div class="related-box">
+                    <h4>**이 시각 주요 뉴스** (10개로 확장)</h4>
+                    <ul class="related-list">
+                        <li><a href="#">1. 금리 추가 인상 없을 듯... 가계 부담 완화 기대</a></li>
+                        <li><a href="#">2. 주요 기업, 하반기 채용 규모 전년 대비 20% 확대</a></li>
+                        <li><a href="#">3. 정부, 청년 주거 정책 특별 대책 발표</a></li>
+                        <li><a href="#">4. 글로벌 증시, AI 기술주 실적에 따라 희비 교차</a></li>
+                        <li><a href="#">5. 유럽 경제, 긴축 완화 시그널 포착</a></li>
+                        <li><a href="#">6. 유가 급등세 둔화, 에너지 시장 안정 기대</a></li>
+                        <li><a href="#">7. 국내 스타트업, 시리즈 C 투자 유치 성공</a></li>
+                        <li><a href="#">8. 파운드리 공정, 초미세화 경쟁 가속</a></li>
+                        <li><a href="#">9. 비트코인, 변동성 장세 지속 전망</a></li>
+                        <li><a href="#">10. 신기술 도입으로 인한 노동 시장 변화</a></li>
+                    </ul>
+                </div>
+                
+                <div id="MR_side_rail_X" class="ad-slot ad-mr">
+                    </div>
+            </div>
+        </div>
+    </div>
+
+    <footer>
+        <p style="text-align: center; padding: 15px; background-color: #f7f7f7; color: #777; margin-top: 0; border-top: 1px solid #eee;">
+            &copy; 2025 News View Mockup.
+        </p>
+    </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            
+            const popularList = document.querySelector('.popular-news-list');
+            if (popularList) {
+                // ... (Shuffle logic) ...
+                const allItems = Array.from(popularList.children);
+                const isAd = (item) => item.id && item.id.startsWith('BC_native');
+                const articleItems = allItems.filter(item => !isAd(item));
+                const adItems = allItems.filter(item => isAd(item));
+                const firstArticle = articleItems.shift(); 
+                const remainingItems = [...articleItems, ...adItems];
+
+                for (let i = remainingItems.length - 1; i > 0; i--) {
+                    const j = Math.floor(Math.random() * (i + 1));
+                    [remainingItems[i], remainingItems[j]] = [remainingItems[j], remainingItems[i]]; 
+                }
+
+                popularList.innerHTML = '';
+                if (firstArticle) {
+                     popularList.appendChild(firstArticle);
+                }
+                remainingItems.forEach(item => popularList.appendChild(item));
+                // ... (end of Shuffle logic) ...
+            }
+            
+        });
+    </script>
+</body>
+</html>
