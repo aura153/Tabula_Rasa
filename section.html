@@ -406,14 +406,14 @@
          * - 전략:
          *   - .main-content : flex: 1 1 auto; → 남는 영역을 유연하게 차지
          *   - .sidebar      : 
-         *       · 데스크탑(≥1025px): flex: 0 0 340px; min-width: 340px
-         *          → padding 0 기준으로 레일 전체 폭을 340px 확보
-         *            (300x600 / 300x250 소재가 여유 있게 들어갈 수 있는 폭)
+         *       · 데스크탑(≥1025px): flex: 0 0 300px; min-width: 300px
+         *          → padding 0 기준으로 레일 전체 폭을 300px 확보
+         *            (300x600 / 300x250 소재가 거의 딱 맞게 들어가는 폭)
          *       · 모바일/태블릿(≤1024px): width:100%; flex:1 1 auto; min-width:0
          *          → 폭 100%를 사용하며, min-width 제약 제거
          *
          * - 결과:
-         *   - 데스크탑에서는 우측 레일에서 300px 폭 소재를 안정적으로 수용
+         *   - 데스크탑에서는 우측 레일에서 300px 폭 소재를 기준으로 안정적으로 수용
          *   - 모바일/태블릿에서는 HOME/VIEW와 동일하게, 우측 컬럼이 본문 아래로 내려가는 구조
          */
         .main-content {
@@ -424,13 +424,13 @@
         .sidebar {
             /* 
              * [사이드바 공통 스타일]
-             * - 외곽 컨테이너에는 padding을 두지 않고, 폭만 340px 기준으로 확보합니다.
+             * - 외곽 컨테이너에는 padding을 두지 않고, 폭만 300px 기준으로 확보합니다.
              * - 텍스트/콘텐츠 여백은 .sidebar-box 등 내부 요소에서 padding으로 제어합니다.
-             * - 광고 슬롯(.ad-slot)은 사이드바 폭(340px)을 그대로 활용하여,
-             *   300x600 / 300x250 등의 소재가 잘리지 않도록 합니다.
+             * - 광고 슬롯(.ad-slot)은 사이드바 폭을 그대로 활용하여,
+             *   300x600 / 300x250 등의 소재가 자연스럽게 노출되도록 합니다.
              */
             background-color: #fff;
-            padding: 0;                 /* 🔧 기존 20px → 0으로 변경 */
+            padding: 0;                 /* 🔧 외곽 컨테이너는 padding 0 유지 */
             box-sizing: border-box;
             border: 1px solid #ddd;
             border-radius: 5px;
@@ -603,7 +603,6 @@
                 background-color: transparent; 
                 color: #A0A0A0;   /* 라이트(#5A5A5A) → 다크(#A0A0A0)로 반전 */
                 border: none;
-                font-weight: normal;
             }
 
             /* 광고 슬롯은 배경/테두리 투명 유지 (레이아웃 왜곡 방지) */
@@ -616,13 +615,13 @@
 
         /* ------------------------------
            데스크탑 레이아웃 (>= 1025px)
-           - 우측 사이드바 컨테이너 폭 340px 확보 (padding 0 기준)
-           - 300x600/300x250 등 세로형 광고가 잘리지 않도록 레일 폭을 여유 있게 확보
+           - 우측 사이드바 컨테이너 폭 300px 확보 (padding 0 기준)
+           - 300x600/300x250 등 세로형 광고가 기준 폭 300px 안에서 노출
         ------------------------------ */
         @media (min-width: 1025px) {
             .sidebar {
-                flex: 0 0 340px;
-                min-width: 340px;
+                flex: 0 0 300px;
+                min-width: 300px;
             }
         }
         
