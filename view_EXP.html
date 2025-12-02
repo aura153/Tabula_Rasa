@@ -2025,46 +2025,32 @@
         //   5) bindScrollFallbackOnce()      → 첫 스크롤 시 강제 로드 Fallback 준비
         //   6) setTimeout 기반 Fallback      → 일정 시간 동안 아무 슬롯도 트리거되지 않은 경우 강제 로드
         // ==========================================================
-        function onReady(callback) {
-            if (document.readyState === 'loading') {
-            document.addEventListener('DOMContentLoaded', callback);
-            } else {
-            // 이미 DOMContentLoaded가 지난 상태라면 즉시 실행
-            callback();
-            }
-        }
+onReady(function () {
+  console.log('[ViewGPT] DOMContentLoaded (or already ready). viewport = ...');
+  setupInArticleAds();
+  setupLazyLoading();
+  shufflePopularNewsNativeAds();
+  startObservingLazySlots();
 
-            console.log(
-                '[ViewGPT] DOMContentLoaded. viewport =',
-                window.innerWidth, 'x', window.innerHeight
-            );
+  // 3초 fallback 타이머
+  setTimeout(function () {
+    if (!window.__viewgpt_lazy_slot_triggered_once__) {
+      console.log('[Lazy][fallback] timeout_3s_no_lazy_slot_fired ...');
+      forceLoadRemainingLazySlots('timeout_3s_no_lazy_slot_fired');
+    }
+  }, 3000);
 
-            setupInArticleAds();            // 본문 in-article 광고 동적 주입
-            setupLazyLoading();             // Lazy Load 대상 수집 및 Observer 초기화
-            shufflePopularNewsNativeAds();  // 우측 '이 시각 주요 뉴스' 내 Native 광고 랜덤 배치 (기사 순서 고정, 광고만 셔플)
-            startObservingLazySlots();      // Lazy 대상 슬롯 관찰 시작
-            bindScrollFallbackOnce();       // 첫 스크롤 기반 Fallback 바인딩
+  // 첫 스크롤 fallback
+  let firstScrollHandled = false;
+  window.addEventListener('scroll', function () {
+    if (!firstScrollHandled && !window.__viewgpt_lazy_slot_triggered_once__) {
+      firstScrollHandled = true;
+      console.log('[Lazy][fallback] First scroll detected. Trigger forceLoadRemainingLazySlots().');
+      forceLoadRemainingLazySlots('scroll_fallback_first_scroll');
+    }
+  }, { passive: true });
+});
 
-            // ⏱ 타임아웃 기반 Fallback:
-            // - 특정 환경에서 IntersectionObserver 콜백이 전혀 호출되지 않아
-            //   firedSlots.size === 0 인 상태가 계속되는 경우를 대비.
-            // - 3초는 예시 값이며, 실제 운영 시에는 페이지 특성에 맞게 조정 가능.
-            setTimeout(function () {
-                if (lazyState.firedSlots.size === 0) {
-                    console.warn(
-                        '[Lazy][fallback] No lazy slot has been triggered within 3s after DOMContentLoaded. ' +
-                        'Trigger forceLoadRemainingLazySlots().'
-                    );
-                    forceLoadRemainingLazySlots('timeout_3s_no_lazy_slot_fired');
-                } else {
-                    console.log(
-                        '[Lazy][fallback] Some lazy slots already triggered within 3s. ' +
-                        'No timeout-based force load needed. firedSlots =',
-                        Array.from(lazyState.firedSlots)
-                    );
-                }
-            }, 3000);
-        });
     </script>
 </body>
 </html>
