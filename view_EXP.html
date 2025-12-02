@@ -2025,7 +2025,15 @@
         //   5) bindScrollFallbackOnce()      → 첫 스크롤 시 강제 로드 Fallback 준비
         //   6) setTimeout 기반 Fallback      → 일정 시간 동안 아무 슬롯도 트리거되지 않은 경우 강제 로드
         // ==========================================================
-        document.addEventListener('DOMContentLoaded', function () {
+        function onReady(callback) {
+            if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', callback);
+            } else {
+            // 이미 DOMContentLoaded가 지난 상태라면 즉시 실행
+            callback();
+            }
+        }
+
             console.log(
                 '[ViewGPT] DOMContentLoaded. viewport =',
                 window.innerWidth, 'x', window.innerHeight
