@@ -1,0 +1,2013 @@
+<!DOCTYPE html> 
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>View GPT (Dynamic In-Article + Lazy Load)</title>
+
+    <!--
+        [공통 개념 안내 – GAM 적용 전반 메커니즘]
+
+        이 View GPT 스크립트는 "기사 상세 페이지(View)"에 대한
+        Google Ad Manager(GAM) 광고 구현 표준 템플릿입니다.
+
+        - 향후 HOME GPT / SECTION GPT / LIST GPT와 함께
+          "GAM 적용 가이드"에서 공통 메커니즘을 문서화할 예정입니다.
+        - 이 파일에는 View 페이지 특화 로직(본문 in-article 동적 주입,
+          우측 '이 시각 주요 뉴스' 섹션 내 Native 랜덤 배치 등)이 포함됩니다.
+        - 공통 개념(AdUnitPath, device_category, sizeMapping,
+          eager vs lazy Load, 페이지/슬롯 타게팅, IntersectionObserver 기반 Lazy Load 등)은
+          다른 GPT 템플릿에서도 동일한 패턴으로 재사용 가능합니다.
+    -->
+    <script async src="https://securepubads.g.doubleclick.net/tag/js/gpt.js"></script>
+    <script>
+        // ------------------------------------------------------------------
+        // [GAM 전역 네임스페이스 초기화]
+        //
+        // - window.googletag: GAM(Google Publisher Tag)에서 사용하는 전역 객체입니다.
+        // - cmd 배열:
+        //   · GPT 라이브러리가 완전히 로드되기 전까지 실행해야 하는 설정 함수들을
+        //     큐에 쌓아두는 역할을 합니다.
+        //   · 외부 스크립트(gpt.js)가 로드되면, cmd에 쌓인 함수들을 순차적으로 실행합니다.
+        //   · 따라서, googletag 관련 코드는 항상 googletag.cmd.push(function() { ... }) 안에
+        //     작성해야 합니다. (로드 타이밍 이슈 방지)
+        // ------------------------------------------------------------------
+        window.googletag = window.googletag || { cmd: [] };
+
+        // ------------------------------------------------------------------
+        // 1. 광고 단위 경로 (Ad Unit Path)
+        //
+        // - AdUnitPath는 GAM 인벤토리 상의 광고 단위(Ad Unit)를 식별하는 "경로"입니다.
+        //   예: /네트워크코드/사이트/섹션
+        //   여기서는 /7450/www.mk.co.kr/news/economy 를 사용합니다.
+        //
+        // - 인벤토리 구조가 바뀌는 경우 예시:
+        //   · /7450/www.mk.co.kr/news/politics
+        //   · /7450/www.mk.co.kr/news/stock
+        //   · /7450/www.mk.co.kr/view/home (View 전용 하위 단위 등)
+        //
+        // - 실제 운영 시에는:
+        //   · CMS/템플릿 엔진에서 page_type(view/home/section/list),
+        //     section(economy/politics/stock 등),
+        //     혹은 서브 섹션 값을 기준으로
+        //   · 서버 측에서 AdUnitPath를 동적으로 생성하여
+        //     이 JS 템플릿에 주입해 주는 방식이 권장됩니다.
+        //
+        //   예시(의사 코드):
+        //     const AdUnitPath = `/7450/www.mk.co.kr/${page_type}/${section}`;
+        //
+        // - 이 View GPT 데모에서는 경제 섹션 View 페이지 예시로 고정 값 사용.
+        // ------------------------------------------------------------------
+        const AdUnitPath = '/7450/www.mk.co.kr/news/economy';
+
+        // ------------------------------------------------------------------
+        // 다크 모드 여부 감지
+        //
+        // - 'prefers-color-scheme: dark' 미디어쿼리 결과를 기반으로
+        //   is_dark_mode 키를 GAM에 전달합니다.
+        // - 광고주/캠페인이 다크 모드용 크리에이티브를 집행할 수 있도록
+        //   타게팅에 활용할 수 있습니다.
+        // ------------------------------------------------------------------
+        const isDarkMode = window.matchMedia &&
+            window.matchMedia('(prefers-color-scheme: dark)').matches
+            ? 'true' : 'false';
+
+        // ==================================================================
+        // [View GPT 공통 로그 유틸리티 세트 (Log Set)]
+        //
+        // - 목적:
+        //   · 개발/QA 환경에서 View GPT 동작(디바이스 판별, GAM 초기화, in-article 배치,
+        //     Lazy Load, Native 셔플 등)을 일관된 포맷으로 로그로 남기기 위한 헬퍼입니다.
+        //   · console.log()를 직접 사용하는 대신 logDebug/logInfo/logWarn/logError 래퍼를
+        //     사용하여, 운영 환경에서 손쉽게 로그 레벨/활성화 여부를 제어할 수 있습니다.
+        //
+        // - 사용 방법:
+        //   · LOG_CONFIG.enabled = false
+        //       → 전체 로그 비활성화 (배포 후 노이즈 제거용)
+        //   · LOG_CONFIG.level   = 'info'
+        //       → info 이상만 출력 (debug 로그는 무시)
+        //   · logDebug('메시지', 추가데이터1, 추가데이터2, ...);
+        //   · logInfo('메시지');
+        //   · logWarn('주의 메시지');
+        //   · logError('에러 메시지', err);
+        //
+        // - 주의:
+        //   · sendToServer 옵션은 기본 false이며, 필요 시 회사 표준 로깅 엔드포인트와
+        //     연동하는 코드(Beacon/XHR 등)를 이 블록 내부에 추가하면 됩니다.
+        //   · CSP 관점에서 eval, new Function 등은 사용하지 않습니다.
+        // ==================================================================
+        var LOG_CONFIG = {
+            enabled: true,          // 전체 로그 on/off
+            prefix: '[ViewGPT]',    // 로그 앞에 붙는 공통 접두어
+            level: 'debug',         // 'debug' | 'info' | 'warn' | 'error' | 'none'
+            sendToServer: false     // true 로 변경 시, 서버 로깅 연동 코드 추가 가능 (현재 미사용)
+        };
+
+        var LOG_LEVEL_WEIGHT = {
+            debug: 10,
+            info: 20,
+            warn: 30,
+            error: 40,
+            none: 100
+        };
+
+        /**
+         * 내부용: 현재 LOG_CONFIG.level 기준으로 해당 level 로그를 출력해도 되는지 여부 판단
+         */
+        function canLog(level) {
+            if (!LOG_CONFIG.enabled) return false;
+            var current = LOG_LEVEL_WEIGHT[LOG_CONFIG.level] || LOG_LEVEL_WEIGHT.debug;
+            var target = LOG_LEVEL_WEIGHT[level] || LOG_LEVEL_WEIGHT.debug;
+            return target >= current;
+        }
+
+        /**
+         * [DEBUG] 레벨 로그
+         * - 상세 디버깅용. QA/개발 환경에서만 활용하는 것을 권장.
+         */
+        function logDebug(message, ...args) {
+            if (!canLog('debug')) return;
+            if (window.console && console.debug) {
+                console.debug(LOG_CONFIG.prefix + ' [DEBUG] ' + message, ...args);
+            } else if (window.console && console.log) {
+                console.log(LOG_CONFIG.prefix + ' [DEBUG] ' + message, ...args);
+            }
+        }
+
+        /**
+         * [INFO] 레벨 로그
+         * - 주요 상태/흐름 확인용. 운영 환경에서도 허용 가능한 수준의 정보에 사용.
+         */
+        function logInfo(message, ...args) {
+            if (!canLog('info')) return;
+            if (window.console && console.info) {
+                console.info(LOG_CONFIG.prefix + ' [INFO] ' + message, ...args);
+            } else if (window.console && console.log) {
+                console.log(LOG_CONFIG.prefix + ' [INFO] ' + message, ...args);
+            }
+        }
+
+        /**
+         * [WARN] 레벨 로그
+         * - 비정상은 아니지만 주의가 필요한 상황 로깅용.
+         */
+        function logWarn(message, ...args) {
+            if (!canLog('warn')) return;
+            if (window.console && console.warn) {
+                console.warn(LOG_CONFIG.prefix + ' [WARN] ' + message, ...args);
+            } else if (window.console && console.log) {
+                console.log(LOG_CONFIG.prefix + ' [WARN] ' + message, ...args);
+            }
+        }
+
+        /**
+         * [ERROR] 레벨 로그
+         * - 예외 상황/오류 로깅용.
+         * - 필요 시 이 지점에서 서버 로깅 연동도 함께 수행할 수 있습니다.
+         */
+        function logError(message, ...args) {
+            if (!canLog('error')) return;
+            if (window.console && console.error) {
+                console.error(LOG_CONFIG.prefix + ' [ERROR] ' + message, ...args);
+            } else if (window.console && console.log) {
+                console.log(LOG_CONFIG.prefix + ' [ERROR] ' + message, ...args);
+            }
+
+            // ▼ 필요 시 서버 전송 로직을 여기에 추가 (예: navigator.sendBeacon 등)
+            // if (LOG_CONFIG.sendToServer) {
+            //     try {
+            //         // 회사 공통 에러 로깅 엔드포인트로 전송하는 코드
+            //     } catch (e) {
+            //         // 로깅 자체 실패에 대한 2차 로그는 남기지 않음
+            //     }
+            // }
+        }
+
+        // ***************************************************
+        // ✅ 광고 렌더링 완료 시 'Advertisement' 라벨을 삽입하는 함수 (GAM 이벤트 리스너)
+        //
+        // - GAM의 slotRenderEnded 이벤트에 연결되는 공통 핸들러입니다.
+        // - 역할:
+        //   · 납품된 광고(비어 있지 않은 슬롯)에 한해 "Advertisement" 라벨을 자동으로 삽입합니다.
+        //   · 슬롯마다 HTML에 라벨을 직접 하드코딩하지 않고, 광고가 실제로 렌더링된 경우에만
+        //     라벨을 노출함으로써 "빈 슬롯에 라벨만 떠 있는 상황"을 피합니다.
+        //
+        // - 예외 처리:
+        //   · BC_native_list_* 슬롯은 에디토리얼 뉴스 리스트와 자연스럽게 섞이는
+        //     Native 형태이므로, 리스트 UI에서 별도 "Advertisement" 라벨을 붙이지 않습니다.
+        //     → 아래 CSS의 .related-list .native-ad-list-item 관련 정의 참고
+        //       (번호 카운트에서는 제외하지만 화면상 별도 "AD" 라벨은 노출하지 않음)
+        // ***************************************************
+        function addAdLabel(event) {
+            const slotId = event.slot.getSlotElementId();
+
+            // 💡 [예외] 우측 '이 시각 주요 뉴스' 내 Native 슬롯에는 라벨을 붙이지 않음
+            //   - 이 슬롯은 기사 리스트 UI에 섞여 들어가며,
+            //     광고임을 표시하는 역할은 리스트 맥락(간격/위치)으로만 처리합니다.
+            if (slotId === 'BC_native_list_1' || slotId === 'BC_native_list_2') {
+                return;
+            }
+
+            const slotElement = document.getElementById(slotId);
+
+            // - event.isEmpty === false: GAM이 이 슬롯에 실제 크리에이티브를 반환했다는 의미입니다.
+            // - slotElement 존재 여부: DOM 상에 해당 id를 가진 요소가 실제 존재하는지 이중 확인합니다.
+            if (event.isEmpty === false && slotElement) {
+                const outerSlot = slotElement.closest('.ad-slot');
+                if (!outerSlot) return;
+
+                // 이미 라벨이 존재하면 중복 삽입 방지
+                if (outerSlot.querySelector('.mk-ad-label')) return;
+
+                const labelElement = document.createElement('div');
+                labelElement.className = 'mk-ad-label';
+                labelElement.textContent = 'Advertisement';
+
+                // 광고 div의 가장 위에 라벨 요소를 삽입합니다.
+                outerSlot.insertBefore(labelElement, outerSlot.firstChild);
+
+                // 슬롯 테두리/배경은 투명 처리(디자인 레벨에서 컨트롤)
+                outerSlot.style.border = 'none';
+                outerSlot.style.backgroundColor = 'transparent';
+
+                logDebug(`✅ [Ad Label] Label added for ${slotId}`);
+            }
+        }
+        // ***************************************************
+
+        // ------------------------------------------------------------------
+        // [GAM 초기화 블록]
+        //
+        // - googletag.cmd.push(function() { ... }) 내부는
+        //   GPT 라이브러리 로딩 완료 후 한 번 실행됩니다.
+        // - 이 안에서:
+        //   · 페이지 레벨 타게팅 (setTargeting)
+        //   · 사이즈 매핑(sizeMapping)
+        //   · 슬롯 정의(defineSlot)
+        //   · GAM 기능 활성화(enableSingleRequest, disableInitialLoad 등)
+        //   을 모두 설정합니다.
+        // ------------------------------------------------------------------
+        googletag.cmd.push(function () {
+
+            logDebug('[GAM Init] View GPT init callback 진입');
+
+            // --- [1] device_category 결정 (페이지 레벨 공통 타게팅) -----------------
+            //
+            // - UA + viewport 폭을 함께 사용해 3단계로 구분합니다.
+            //   · desktop : 기본값
+            //   · mobile  : 모바일 UA 또는 width <= 768
+            //   · tablet  : 태블릿으로 추정되는 중간 구간(width <= 1024)
+            //
+            // - 이 값은:
+            //   · 슬롯 정의 여부(if 조건)
+            //   · 타게팅 값(device_category)
+            //   두 군데에서 모두 활용됩니다.
+            // ------------------------------------------------------------------
+            const userAgent = navigator.userAgent.toLowerCase();
+            let deviceCategory = 'desktop';
+            if (/mobile|android|iphone|ipad|ipod/.test(userAgent) || window.innerWidth <= 768) {
+                deviceCategory = 'mobile';
+            } else if (window.innerWidth <= 1024) {
+                deviceCategory = 'tablet';
+            }
+
+            logInfo('[GAM Init] device_category 확정', {
+                deviceCategory,
+                ua: userAgent,
+                viewport: `${window.innerWidth}x${window.innerHeight}`
+            });
+
+            // ------------------------------------------------------------------
+            // [페이지 레벨 키/값 설정 – 공통 타게팅]
+            //
+            // - setTargeting(key, value)는 GAM에서 사용할 수 있는
+            //   "타게팅 파라미터"를 설정합니다.
+            // - pubads().setTargeting()으로 지정한 값은
+            //   이 페이지에서 로드되는 모든 슬롯에 기본으로 붙습니다.
+            //
+            // - 아래 값들은 View GPT 공통 예시이며,
+            //   실제 운영 시에는 CMS/백엔드에서 동적으로 치환해야 합니다.
+            // ------------------------------------------------------------------
+            googletag.pubads().setTargeting('device_category', deviceCategory);
+
+            // 기본 예시(고정 값)
+            googletag.pubads().setTargeting('page_type', 'view');
+            googletag.pubads().setTargeting('section_front_nm', 'economy');
+            googletag.pubads().setTargeting('is_dark_mode', isDarkMode);
+            googletag.pubads().setTargeting('gpt_version', '2025');
+            googletag.pubads().setPublisherProvidedId('PPID_DYNAMIC_HASHED_ID (SERVER_HASHED_ID)');
+            //  - setPublisherProvidedId(PPID):
+            //    · 퍼블리셔가 서버 측에서 해시 처리한 1st-party ID를 넘기는 용도입니다.
+            //    · 개인 식별 정보는 모두 서버에서 해시/익명화한 뒤 전달해야 합니다.
+
+            // ▼▼▼ 동적 입력 키-값 ▼▼▼
+            // - 실제 기사 데이터로 치환 필요
+            googletag.pubads().setTargeting('domain', window.location.hostname);
+            googletag.pubads().setTargeting('url', window.location.href);
+            googletag.pubads().setTargeting('referer', document.referrer);
+            googletag.pubads().setTargeting('web_type', 'responsive');
+            googletag.pubads().setTargeting('section_home_nm', '');
+            googletag.pubads().setTargeting('section_list_nm', '동적입력');
+            googletag.pubads().setTargeting('SOURCE_ID', '동적입력');
+            googletag.pubads().setTargeting('source_type', '동적입력');
+            googletag.pubads().setTargeting('MIDDLE_CODE_ENG_NM', '동적입력');
+            googletag.pubads().setTargeting('CODE_ID', '동적입력');
+            googletag.pubads().setTargeting('article_num', '동적입력');
+            googletag.pubads().setTargeting('title', '동적입력');
+            googletag.pubads().setTargeting('title_slug', '동적입력');
+            googletag.pubads().setTargeting('url_slug', '동적입력');
+            googletag.pubads().setTargeting('publish_date', '동적입력');
+            googletag.pubads().setTargeting('journalist', '동적입력');
+            googletag.pubads().setTargeting('keywords', '동적입력');
+            googletag.pubads().setTargeting('ticker_name', '동적입력');
+            googletag.pubads().setTargeting('has_video', '동적입력');
+            googletag.pubads().setTargeting('is_app_viewer', '동적입력');
+            googletag.pubads().setTargeting('login_type', '동적입력');
+            googletag.pubads().setTargeting('login_status', '동적입력');
+            googletag.pubads().setTargeting('brandsensitive', '동적입력');
+            // ▲▲▲ 동적 입력 키-값 ▲▲▲
+
+            logDebug('[GAM Targeting] 페이지 레벨 타게팅 세팅 완료', {
+                domain: window.location.hostname,
+                page_type: 'view',
+                section_front_nm: 'economy',
+                device_category: deviceCategory
+            });
+
+            // ✅ GAM 이벤트 리스너 추가
+            googletag.pubads().addEventListener('slotRenderEnded', addAdLabel);
+
+            // ------------------------------------------------------------------
+            // 0. Size Mapping 정의 – 반응형 광고 사이즈 정책
+            //
+            // - 이 View GPT에서는 3가지 대표 매핑을 사용합니다.
+            //   · sizeMapping_horizontal        : 상단 TC / BC 빌보드 등 가로형
+            //   · sizeMapping_siderail_square   : 우측 MR 사이드 레일 사각형/스카이
+            //   · sizeMapping_article_horizontal: 본문 in-article / 중형 직사각형
+            //
+            // - addSize([뷰포트 최소 크기], [허용 광고 사이즈 배열]) 방식으로
+            //   여러 구간을 정의한 뒤 build()로 최종 객체를 생성합니다.
+            // ------------------------------------------------------------------
+            const sizeMapping_horizontal = googletag.sizeMapping()
+                .addSize([1024, 0], [
+                    [1200, 300], [1200, 100], [970, 250], [980, 120], [970, 90], [930, 180],
+                    [750, 300], [750, 200], [728, 90],
+                    [2, 1], [1, 1], 'fluid'
+                ])
+                .addSize([768, 0], [
+                    [750, 300], [750, 200], [728, 90],
+                    [480, 320], [336, 280], [300, 250],
+                    [2, 1], [1, 1], 'fluid'
+                ])
+                .addSize([0, 0], [
+                    [336, 280], [300, 250], [320, 480],
+                    [320, 100], [320, 50],
+                    [2, 1], [1, 1], 'fluid'
+                ])
+                .build();
+
+            const sizeMapping_siderail_square = googletag.sizeMapping()
+                .addSize([1024, 0], [
+                    [336, 280], [300, 600], [300, 250], [250, 250], [200, 200],
+                    [2, 1], [1, 1], 'fluid'
+                ])
+                .addSize([768, 0], [
+                    [480, 320], [336, 280],
+                    [320, 100], [320, 50],
+                    [300, 250], [250, 250], [200, 200],
+                    [2, 1], [1, 1], 'fluid'
+                ])
+                .addSize([0, 0], [
+                    [336, 280], [320, 480],
+                    [320, 100], [320, 50],
+                    [300, 250], [250, 250], [200, 200],
+                    [2, 1], [1, 1], 'fluid'
+                ])
+                .build();
+
+            const sizeMapping_article_horizontal = googletag.sizeMapping()
+                .addSize([1024, 0], [
+                    [480, 320], [336, 280],
+                    [320, 100], [320, 50],
+                    [300, 250],
+                    // 300x25x 시리즈: 라인아이템/캠페인 분리를 위한 미세 구분용 사이즈
+                    [300, 251], [300, 252], [300, 253], [300, 254], [300, 255], [300, 256], [300, 257], [300, 258],
+                    [250, 250],
+                    [2, 1], [1, 1], 'fluid'
+                ])
+                .addSize([768, 0], [
+                    [480, 320], [336, 280],
+                    [320, 100], [320, 50],
+                    [300, 250],
+                    [300, 251], [300, 252], [300, 253], [300, 254], [300, 255], [300, 256], [300, 257], [300, 258],
+                    [250, 250], [200, 200],
+                    [2, 1], [1, 1], 'fluid'
+                ])
+                .addSize([0, 0], [
+                    [336, 280], [320, 480],
+                    [320, 100], [320, 50],
+                    [300, 250],
+                    [300, 251], [300, 252], [300, 253], [300, 254], [300, 255], [300, 256], [300, 257], [300, 258],
+                    [250, 250], [200, 200],
+                    [2, 1], [1, 1], 'fluid'
+                ])
+                .build();
+
+            logDebug('[GAM Init] SizeMapping 세트 정의 완료', {
+                horizontal: true,
+                siderail_square: true,
+                article_horizontal: true
+            });
+
+            // ------------------------------------------------------------------
+            // 5. 광고 슬롯 변수 초기화
+            //
+            // - DOM의 div id와 JS 변수명, GAM 슬롯 id를 한 세트로 관리합니다.
+            //   · 예: TC_billboard_X (div id / GAM slot id) ↔ TC_billboard_X_slot (JS 변수)
+            //
+            // - 유지보수 시 항상 이 규칙을 지키면 검색/디버깅이 쉬워집니다.
+            // ------------------------------------------------------------------
+            let TC_billboard_X_slot = null;
+            let MR_side_rail_X_slot = null;
+            let MC_article_rectangle_1_slot = null;
+            let MC_article_rectangle_2_slot = null;
+            let MC_article_rectangle_3_slot = null;
+            let MC_article_rectangle_4_slot = null;
+            let MC_article_rectangle_5_slot = null;
+            let MC_article_rectangle_6_slot = null;
+            let MC_article_rectangle_7_slot = null;
+            let MC_article_rectangle_8_slot = null;
+
+            // ------------------------------------------------------------------
+            // 5-1. [Desktop 전용] TC_billboard_X (Eager Load, ATF)
+            //
+            // - 상단 빌보드 영역.
+            // - 데스크탑에서만 정의하며, 페이지 로드 직후 1회 eager refresh 합니다.
+            // ------------------------------------------------------------------
+            if (deviceCategory === 'desktop') {
+                TC_billboard_X_slot = googletag.defineSlot(AdUnitPath, [
+                    [1200, 300], [1200, 100],
+                    [980, 120], [970, 250], [970, 90], [930, 180],
+                    [750, 300], [750, 200],
+                    [480, 320], [728, 90],
+                    [320, 100], [320, 50],
+                    [1, 1], 'fluid'
+                ], 'TC_billboard_X')
+                    .defineSizeMapping(sizeMapping_horizontal)
+                    .setTargeting('div_id', 'TC_billboard_X')
+                    .setTargeting('position', 'TC')
+                    .setTargeting('ad_area_type', 'ATF')
+                    .setTargeting('default_exposure', '')
+                    .setTargeting('load_type', 'eager')
+                    .addService(googletag.pubads());
+
+                logDebug('[Slot Defined] TC_billboard_X (desktop 전용)', TC_billboard_X_slot);
+            }
+
+            // ------------------------------------------------------------------
+            // 5-2. [Desktop 전용] MR_side_rail_X (Lazy Load, ATF)
+            //
+            // - 우측 레일 MR 광고.
+            // - 데스크탑 전용이며 Lazy Load 대상입니다.
+            // ------------------------------------------------------------------
+            if (deviceCategory === 'desktop') {
+                MR_side_rail_X_slot = googletag.defineSlot(AdUnitPath, [
+                    [336, 280], [300, 600], [300, 250], [250, 250], [200, 200],
+                    [2, 1], [1, 1], 'fluid'
+                ], 'MR_side_rail_X')
+                    .defineSizeMapping(sizeMapping_siderail_square)
+                    .setTargeting('div_id', 'MR_side_rail_X')
+                    .setTargeting('position', 'MR')
+                    .setTargeting('ad_area_type', 'ATF')
+                    .setTargeting('default_exposure', '')
+                    .setTargeting('load_type', 'lazy')
+                    .addService(googletag.pubads());
+
+                logDebug('[Slot Defined] MR_side_rail_X (desktop 전용)', MR_side_rail_X_slot);
+            }
+
+            // ------------------------------------------------------------------
+            // 5-3 ~ 5-10. MC in-article 슬롯 (모두 Lazy Load)
+            //
+            // - MC_article_rectangle_1 ~ 8:
+            //   · 기사 본문 내(in-article)에 동적으로 배치되는 광고 슬롯 풀입니다.
+            //   · 초기 DOM 구조상으로는 .article-body 내부에 순서대로 존재하지만,
+            //     setupInArticleAds()에서 기사 길이/시각 블록 위치를 기준으로
+            //     실제 위치가 재조정되거나, 사용되지 않은 슬롯은 DOM/GAM에서 제거됩니다.
+            //
+            // - ad_area_type = 'in_article' 로 별도 태깅하여
+            //   리포팅/타게팅에서 in-article 재고만 필터링할 수 있도록 했습니다.
+            // ------------------------------------------------------------------
+            MC_article_rectangle_1_slot = googletag.defineSlot(
+                AdUnitPath,
+                [[480, 320], [336, 280], [320, 480], [300, 250], [300, 251], [250, 250], [200, 200], [1, 1], 'fluid'],
+                'MC_article_rectangle_1'
+            )
+                .defineSizeMapping(sizeMapping_article_horizontal)
+                .setTargeting('div_id', 'MC_article_rectangle_1')
+                .setTargeting('position', 'MC')
+                .setTargeting('ad_area_type', 'in_article')
+                .setTargeting('default_exposure', '')
+                .setTargeting('load_type', 'lazy')
+                .addService(googletag.pubads());
+
+            MC_article_rectangle_2_slot = googletag.defineSlot(
+                AdUnitPath,
+                [[480, 320], [336, 280], [320, 480], [300, 250], [300, 252], [250, 250], [200, 200], [1, 1], 'fluid'],
+                'MC_article_rectangle_2'
+            )
+                .defineSizeMapping(sizeMapping_article_horizontal)
+                .setTargeting('div_id', 'MC_article_rectangle_2')
+                .setTargeting('position', 'MC')
+                .setTargeting('ad_area_type', 'in_article')
+                .setTargeting('default_exposure', '')
+                .setTargeting('load_type', 'lazy')
+                .addService(googletag.pubads());
+
+            MC_article_rectangle_3_slot = googletag.defineSlot(
+                AdUnitPath,
+                [[480, 320], [336, 280], [320, 480], [300, 250], [300, 253], [250, 250], [200, 200], [1, 1], 'fluid'],
+                'MC_article_rectangle_3'
+            )
+                .defineSizeMapping(sizeMapping_article_horizontal)
+                .setTargeting('div_id', 'MC_article_rectangle_3')
+                .setTargeting('position', 'MC')
+                .setTargeting('ad_area_type', 'in_article')
+                .setTargeting('default_exposure', '')
+                .setTargeting('load_type', 'lazy')
+                .addService(googletag.pubads());
+
+            MC_article_rectangle_4_slot = googletag.defineSlot(
+                AdUnitPath,
+                [[480, 320], [336, 280], [320, 480], [300, 250], [300, 254], [250, 250], [200, 200], [1, 1], 'fluid'],
+                'MC_article_rectangle_4'
+            )
+                .defineSizeMapping(sizeMapping_article_horizontal)
+                .setTargeting('div_id', 'MC_article_rectangle_4')
+                .setTargeting('position', 'MC')
+                .setTargeting('ad_area_type', 'in_article')
+                .setTargeting('default_exposure', '')
+                .setTargeting('load_type', 'lazy')
+                .addService(googletag.pubads());
+
+            MC_article_rectangle_5_slot = googletag.defineSlot(
+                AdUnitPath,
+                [[480, 320], [336, 280], [320, 480], [300, 250], [300, 255], [250, 250], [200, 200], [1, 1], 'fluid'],
+                'MC_article_rectangle_5'
+            )
+                .defineSizeMapping(sizeMapping_article_horizontal)
+                .setTargeting('div_id', 'MC_article_rectangle_5')
+                .setTargeting('position', 'MC')
+                .setTargeting('ad_area_type', 'in_article')
+                .setTargeting('default_exposure', '')
+                .setTargeting('load_type', 'lazy')
+                .addService(googletag.pubads());
+
+            MC_article_rectangle_6_slot = googletag.defineSlot(
+                AdUnitPath,
+                [[480, 320], [336, 280], [320, 480], [300, 250], [300, 256], [250, 250], [200, 200], [1, 1], 'fluid'],
+                'MC_article_rectangle_6'
+            )
+                .defineSizeMapping(sizeMapping_article_horizontal)
+                .setTargeting('div_id', 'MC_article_rectangle_6')
+                .setTargeting('position', 'MC')
+                .setTargeting('ad_area_type', 'in_article')
+                .setTargeting('default_exposure', '')
+                .setTargeting('load_type', 'lazy')
+                .addService(googletag.pubads());
+
+            MC_article_rectangle_7_slot = googletag.defineSlot(
+                AdUnitPath,
+                [[480, 320], [336, 280], [320, 480], [300, 250], [300, 257], [250, 250], [200, 200], [1, 1], 'fluid'],
+                'MC_article_rectangle_7'
+            )
+                .defineSizeMapping(sizeMapping_article_horizontal)
+                .setTargeting('div_id', 'MC_article_rectangle_7')
+                .setTargeting('position', 'MC')
+                .setTargeting('ad_area_type', 'in_article')
+                .setTargeting('default_exposure', '')
+                .setTargeting('load_type', 'lazy')
+                .addService(googletag.pubads());
+
+            MC_article_rectangle_8_slot = googletag.defineSlot(
+                AdUnitPath,
+                [[480, 320], [336, 280], [320, 480], [300, 250], [300, 258], [250, 250], [200, 200], [1, 1], 'fluid'],
+                'MC_article_rectangle_8'
+            )
+                .defineSizeMapping(sizeMapping_article_horizontal)
+                .setTargeting('div_id', 'MC_article_rectangle_8')
+                .setTargeting('position', 'MC')
+                .setTargeting('ad_area_type', 'in_article')
+                .setTargeting('default_exposure', '')
+                .setTargeting('load_type', 'lazy')
+                .addService(googletag.pubads());
+
+            logDebug('[Slot Defined] MC in-article 슬롯 풀 정의 완료 (1~8)');
+
+            // ------------------------------------------------------------------
+            // 5-11. BC_byline_rectangle (Lazy Load, 기사 byline 하단)
+            // ------------------------------------------------------------------
+            const BC_byline_rectangle_slot = googletag.defineSlot(
+                AdUnitPath,
+                [[480, 320], [336, 280], [320, 480], [300, 250], [250, 250], [200, 200], [320, 100], [320, 50], [1, 1], 'fluid'],
+                'BC_byline_rectangle'
+            )
+                .defineSizeMapping(sizeMapping_horizontal)
+                .setTargeting('div_id', 'BC_byline_rectangle')
+                .setTargeting('position', 'BC')
+                .setTargeting('ad_area_type', 'below_byline')
+                .setTargeting('default_exposure', '')
+                .setTargeting('load_type', 'lazy')
+                .addService(googletag.pubads());
+
+            logDebug('[Slot Defined] BC_byline_rectangle', BC_byline_rectangle_slot);
+
+            // ------------------------------------------------------------------
+            // 5-12. BC_billboard_rectangle (Lazy Load, 댓글 하단)
+            // ------------------------------------------------------------------
+            const BC_billboard_rectangle_slot = googletag.defineSlot(
+                AdUnitPath,
+                [
+                    [1200, 300], [1200, 100],
+                    [980, 120], [970, 250], [970, 90], [930, 180],
+                    [750, 300], [750, 200], [728, 90],
+                    [480, 320], [336, 280], [320, 480],
+                    [300, 250], [250, 250], [200, 200],
+                    [320, 100], [320, 50],
+                    [1, 1], 'fluid'
+                ],
+                'BC_billboard_rectangle'
+            )
+                .defineSizeMapping(sizeMapping_horizontal)
+                .setTargeting('div_id', 'BC_billboard_rectangle')
+                .setTargeting('position', 'BC')
+                .setTargeting('ad_area_type', 'below_comments')
+                .setTargeting('load_type', 'lazy')
+                .addService(googletag.pubads());
+
+            logDebug('[Slot Defined] BC_billboard_rectangle', BC_billboard_rectangle_slot);
+
+            // ------------------------------------------------------------------
+            // 5-13, 5-14. BC_native_list_1/2 (Lazy Load, "이 시각 주요 뉴스" 영역 Native)
+            //
+            // - 위치:
+            //   · 우측 컬럼의 '**이 시각 주요 뉴스** (10개로 확장)' 리스트 내부.
+            // - 디바이스 정책:
+            //   · 모바일/태블릿 전용 슬롯 (데스크탑에서는 defineSlot 자체를 하지 않음)
+            // - UI 정책:
+            //   · 에디토리얼 기사 리스트와 동일한 한 줄 높이를 사용하되,
+            //     광고 LI 자체에는 번호/라벨을 표시하지 않습니다.
+            //     (기사 LI 사이에 자연스럽게 삽입되는 형태)
+            //   · CSS 카운터에서 제외되므로 기사 번호(1~5)는 광고 유무와 관계없이
+            //     항상 자연스럽게 연속성을 유지합니다.
+            //   · shufflePopularNewsNativeAds()에서 "기사 순서는 고정"된 상태에서
+            //     광고만 기사 사이의 여러 위치 중 랜덤하게 섞입니다.
+            // ------------------------------------------------------------------
+            if (deviceCategory === 'mobile' || deviceCategory === 'tablet') {
+                const BC_native_list_1_slot = googletag.defineSlot(
+                    AdUnitPath,
+                    [[320, 100], [320, 50], [1, 1], 'fluid'],
+                    'BC_native_list_1'
+                )
+                    .setTargeting('div_id', 'BC_native_list_1')
+                    .setTargeting('position', 'BC')
+                    .setTargeting('ad_area_type', 'in_related_news')
+                    .setTargeting('default_exposure', 'hidden')
+                    .setTargeting('load_type', 'lazy')
+                    .addService(googletag.pubads());
+
+                const BC_native_list_2_slot = googletag.defineSlot(
+                    AdUnitPath,
+                    [[320, 100], [320, 50], [2, 1], 'fluid'],
+                    'BC_native_list_2'
+                )
+                    .setTargeting('div_id', 'BC_native_list_2')
+                    .setTargeting('position', 'BC')
+                    .setTargeting('ad_area_type', 'in_related_news')
+                    .setTargeting('default_exposure', 'hidden')
+                    .setTargeting('load_type', 'lazy')
+                    .addService(googletag.pubads());
+
+                logDebug('[Slot Defined] BC_native_list_1/2 (mobile/tablet 전용)', {
+                    BC_native_list_1_slot,
+                    BC_native_list_2_slot
+                });
+            } else {
+                logDebug('[Slot Skipped] BC_native_list_1/2 – desktop 환경에서는 슬롯 정의 안 함');
+            }
+
+            // ------------------------------------------------------------------
+            // 6. GAM 핵심 기능 & PageSettingsConfig 설정
+            //
+            // - enableSingleRequest():
+            //   · 모든 슬롯 요청을 하나의 HTTP 호출로 묶어 전송(SRA).
+            //
+            // - googletag.setConfig({ centering, collapseDiv }):
+            //   · centering: true
+            //     → GPT iframe 크리에이티브를 슬롯 중앙 정렬.
+            //   · collapseDiv: 'BEFORE_FETCH'
+            //     → 슬롯은 처음에 접힌 상태(0px)로 시작, 광고가 반환되면 확장.
+            //     → 기존 collapseEmptyDivs(true) 대신 사용하는 신규 권장 방식.
+            //
+            // - disableInitialLoad():
+            //   · GPT의 기본 자동 로딩을 비활성화하고,
+            //     display() + refresh()를 명시적으로 호출한 경우에만
+            //     네트워크 요청이 발생하도록 제어합니다.
+            // ------------------------------------------------------------------
+            googletag.setConfig({
+                centering: true,
+                collapseDiv: 'BEFORE_FETCH'
+            });
+
+            googletag.pubads().enableSingleRequest();
+            googletag.pubads().disableInitialLoad();
+            googletag.enableServices();
+
+            const totalDefinedSlots = googletag.pubads().getSlots().length;
+            logInfo('[GAM Init] enableServices() 완료', {
+                totalDefinedSlots,
+                disableInitialLoad: true,
+                singleRequest: true,
+                collapseDiv: 'BEFORE_FETCH'
+            });
+
+            // ------------------------------------------------------------------
+            // [Eager Load 처리] – 데스크탑 TC_billboard_X
+            //
+            // - TC_billboard_X_slot이 정의된 경우에만 refresh()를 호출합니다.
+            // - display()는 body 쪽 TC_billboard_X div 안의 스크립트에서 실행됩니다.
+            // ------------------------------------------------------------------
+            googletag.cmd.push(function () {
+                if (TC_billboard_X_slot) {
+                    logInfo('[GAM Init] TC_billboard_X eager refresh 호출');
+                    googletag.pubads().refresh([TC_billboard_X_slot]);
+                } else {
+                    logDebug('[GAM Init] TC_billboard_X_slot 미정의 (desktop이 아닌 환경)');
+                }
+            });
+        });
+    </script>
+
+    <style>
+        /* [기존 View Mockup 스타일 유지]
+           - 이 영역은 기사 본문/레이아웃 전반에 대한 스타일을 정의합니다.
+           - 광고 관련 CSS는 별도 주석으로 설명을 덧붙였습니다.
+        */
+        body {
+            font-family: 'Malgun Gothic', 'Dotum', Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #fff;
+            color: #333;
+        }
+        a { text-decoration: none; color: inherit; }
+        .container { max-width: 1200px; margin: 0 auto; padding: 0 15px; }
+        nav { background-color: #f9f9f9; border-bottom: 1px solid #333; margin-bottom: 20px; }
+        .nav-list { list-style: none; padding: 0; margin: 0; display: flex; justify-content: flex-start; }
+        .nav-list li { padding: 15px 15px; font-size: 14px; color: #555; }
+        .nav-list .current { color: #c00; font-weight: bold; }
+
+        .like-share-section {
+            margin-bottom: 20px;
+        }
+
+        .content-wrap {
+            display: flex;
+            gap: 25px;
+            margin-bottom: 30px;
+            z-index: 5;
+        }
+        .article-area {
+            flex: 3;
+            min-width: 0;
+            z-index: 5;
+        }
+
+        /* ------------------------------------------------------------------
+           우측 관련 영역 (.related-area) – 데스크탑/모바일 공통 기본값
+
+           - View GPT에서는 HOME/LIST 템플릿의 .sidebar와 동일한 역할을 수행합니다.
+           - 핵심 정책:
+             · 광고 폭 확보를 위해 .related-area 자체에는 padding을 주지 않고,
+               필요 시 내부 박스(.related-box 등)에서만 여백을 처리합니다.
+             · 이 파일에서는 .related-box에도 padding을 주지 않아
+               광고 레일 폭이 온전히 유지되도록 했습니다.
+        ------------------------------------------------------------------ */
+        .related-area {
+            flex: 1;
+            z-index: 5;
+            position: sticky;
+            top: 20px;
+            height: fit-content;
+            /* padding 없음 – 우측 레일 폭을 100% 광고에 사용하기 위한 공통 정책 */
+        }
+
+        /* ------------------------------------------------------------------
+           공통 Sidebar 레이아웃 가이드 (.sidebar / .sidebar-box)
+
+           - View GPT에는 .sidebar / .sidebar-box DOM 요소가 등장하지 않지만,
+             HOME / SECTION / LIST GPT와 CSS를 공유할 때를 대비해
+             "padding 0" 정책을 명시적으로 유지합니다.
+
+           - 핵심:
+             · .sidebar      : padding 0 → 우측 레일 전체 폭을 광고/콘텐츠가 그대로 사용
+             · .sidebar-box  : padding 없음, 여백은 내부 콘텐츠 요소에서만 처리
+        ------------------------------------------------------------------ */
+        .sidebar {
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        .sidebar-box {
+            background-color: #fff;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            padding: 0; /* ✅ 광고 슬롯이 직접 들어가는 컨테이너에는 padding을 주지 않는 공통 규칙 */
+        }
+
+        .article-body img {
+            max-width: 100%;
+            height: auto;
+        }
+
+        .article-header h1 {
+            font-size: 32px;
+            line-height: 1.3;
+            margin: 20px 0 10px 0;
+            font-weight: 700;
+        }
+        .article-byline {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 15px;
+            margin-bottom: 20px;
+            font-size: 14px;
+            color: #777;
+        }
+
+        .article-body { font-size: 17px; line-height: 1.8; word-break: keep-all; margin-bottom: 40px; }
+        .article-body p { margin-bottom: 1.5em; text-indent: 1em; }
+        .article-image { text-align: center; margin: 25px 0; }
+
+        /* 데이터 박스 */
+        .dummy-data-box {
+            background-color: #f9f9f9;
+            border: 1px solid #eee;
+            padding: 20px;
+            margin: 30px 0;
+            border-radius: 5px;
+            font-size: 15px;
+            line-height: 1.6;
+        }
+
+        /* YouTube 등 Embeds */
+        .article-embed {
+            margin: 25px 0;
+        }
+        .embed-wrapper {
+            position: relative;
+            padding-bottom: 56.25%; /* 16:9 */
+            height: 0;
+            overflow: hidden;
+            max-width: 100%;
+        }
+        .embed-wrapper iframe {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+        }
+        .embed-caption {
+            font-size: 13px;
+            color: #888;
+            margin-top: 5px;
+        }
+
+        /* ------------------------------------------------------------------
+           [광고 공통 컨테이너: .ad-slot]
+
+           - 모든 광고 div(TC/MR/MC/BC)는 .ad-slot 클래스를 공유합니다.
+           - 배경/테두리는 기본적으로 투명 처리하고, collapseDiv( 'BEFORE_FETCH' )와 결합하여
+             노필 시 자연스럽게 0px 높이로 접히도록 설계했습니다.
+        ------------------------------------------------------------------ */
+        .ad-slot {
+            background-color: transparent;
+            color: transparent;
+            text-align: center;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto;
+            font-size: 14px;
+            font-weight: bold;
+            box-sizing: border-box;
+            border: none;
+            transition: background-color 0.5s ease;
+            width: 100%;    /* 부모 컨테이너(기사 본문/우측 컬럼/바이라인 등)의 폭을 100% 사용 */
+            height: auto;   /* 높이는 실제 크리에이티브/iframe에 의해 결정 */
+            position: relative;
+            z-index: 10;
+            padding-top: 10px; /* 라벨/크리에이티브와 상단 요소 간 최소 간격 확보 */
+        }
+
+        /* in-article 및 테스트 시각화를 위한 임시 스타일 */
+        .ad-mc-article {
+            background-color: #f9f9f9;
+            color: #ccc;
+            opacity: 0.8;
+            border: 1px solid #ccc;
+        }
+
+        /* 광고 로딩 여부를 눈으로 확인하고 싶을 때 부여하는 클래스 (옵션) */
+        .ad-loaded {
+            background-color: #c00 !important;
+            color: #fff;
+            opacity: 1;
+            box-shadow: 0 0 15px rgba(192, 0, 0, 0.5);
+        }
+
+        /* ------------------------------------------------------------------
+           [Advertisement 라벨 스타일: .mk-ad-label]
+
+           - addAdLabel()에서 동적으로 생성되는 라벨의 스타일입니다.
+           - 공통 View/Home/Section/List에서 재사용할 수 있는 형태로 정의했습니다.
+        ------------------------------------------------------------------ */
+        .mk-ad-label {
+            position: absolute;
+            top: -15px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 100;
+            padding: 0;
+            background-color: transparent;
+            color: #5A5A5A;
+            font-size: 13px;
+            font-weight: normal;
+            text-transform: uppercase;
+            line-height: 1;
+            white-space: nowrap;
+        }
+
+        .related-box {
+            margin-bottom: 20px;
+        }
+
+        .comment-section {
+            margin-bottom: 20px;
+        }
+
+        /* ------------------------------------------------------------------
+           Native 광고용 LI 컨테이너 (.native-ad-list-item)
+
+           - 우측 '이 시각 주요 뉴스' 리스트 내에
+             기사 LI와 함께 섞여 들어가는 Native 슬롯입니다.
+           - "모바일/태블릿 전용" 노출 정책:
+             · 기본(display: none)으로 두고,
+               @media (max-width: 1024px)에서만 display: flex로 노출합니다.
+        ------------------------------------------------------------------ */
+        .native-ad-list-item {
+            display: none; /* 기본값: 비노출 (특히 데스크탑) */
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            border: none;
+            background-color: transparent;
+            color: inherit;
+            padding: 0;
+            margin: 0;
+            font-weight: normal;
+            font-size: 15px;
+            width: 100%;   /* 부모 UL(li) 폭을 그대로 사용 */
+            height: auto;
+            overflow: visible;
+            transition: none;
+            list-style-type: none;
+        }
+
+        /* 기존 인기뉴스(좌측) 스타일 – 참고용 */
+        .popular-news-list {
+            list-style-type: disc;
+            padding-left: 20px;
+        }
+        .popular-news-list li {
+            padding: 12px 0;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        /* ------------------------------------------------------------------
+           이 시각 주요 뉴스 리스트 스타일링 (.related-list)
+
+           - 요구사항
+             · 숫자 번호가 붙은 단일 컬럼 리스트 (예시 스샷 스타일)
+             · 각 항목 사이에 연한 회색 라인
+             · 광고(Native) 항목은 리스트 안에 섞이되, 기사 카운트에는 포함 X
+               → 광고 LI는 번호/라벨 없이 콘텐츠만 노출 (BC_native_list_*)
+        ------------------------------------------------------------------ */
+        .related-list {
+            list-style-type: none;
+            padding-left: 0;
+            margin: 0;
+            counter-reset: hotNewsRank;
+            border-top: 1px solid #e5e5e5;
+        }
+        .related-list li {
+            position: relative;
+            padding: 10px 0 12px 0; /* 기본: 좌측 패딩 없음, 세로 여백만 */
+            font-size: 14px;
+            line-height: 1.5;
+        }
+        .related-list li + li {
+            border-top: 1px solid #e5e5e5;
+        }
+
+        /* 기사 LI(번호 표시 대상)에만 번호/좌측 패딩 적용 */
+        .related-list li.article-item {
+            padding-left: 26px; /* 좌측 번호 영역 확보 */
+        }
+
+        /* 기본: 기사 LI(.article-item)에 대해서만 카운터 증가 + 숫자 노출 */
+        .related-list li.article-item::before {
+            counter-increment: hotNewsRank;
+            content: counter(hotNewsRank);
+            position: absolute;
+            left: 0;
+            top: 50%;
+            transform: translateY(-50%);
+            font-weight: 700;
+            font-size: 16px;
+            color: #111;
+        }
+
+        /* Native 광고 LI: 카운터 증가 X, 화면상 라벨/번호 없음 */
+        .related-list .native-ad-list-item::before {
+            counter-increment: none;  /* 기사 카운트에 영향 없음 */
+            content: "";
+        }
+
+        .related-list li a {
+            font-size: 14px;
+            line-height: 1.5;
+            display: block;
+        }
+
+        /* Native LI도 기사와 동일한 세로 간격만 유지하고, 좌측 패딩은 0 */
+        .related-list .native-ad-list-item {
+            padding: 10px 0 12px 0;
+        }
+
+        .related-list li a:hover {
+            text-decoration: underline;
+        }
+
+        /* ------------------------------------------------------------------
+           디바이스별 광고 노출 제어 – .ad-tc, .ad-mr
+           - ad-tc: 상단 TC 빌보드 그룹
+           - ad-mr: 우측 MR 사이드 레일 그룹
+        ------------------------------------------------------------------ */
+        .ad-tc,
+        .ad-mr {
+            display: none;
+        }
+
+        /* ------------------------------
+           데스크탑 레이아웃 (>= 1025px)
+           - 우측 컬럼 최소 336px 확보
+           - MR_side_rail_X 노출
+        ------------------------------ */
+        @media (min-width: 1025px) {
+            .ad-tc {
+                display: flex;
+            }
+            #MR_side_rail_X {
+                display: flex;
+            }
+
+            /* 우측 컬럼: 최소 336px 확보
+               - flex: 0 1 336px;
+                 · flex-basis: 336px (기본 폭)
+                 · flex-shrink: 1 (필요 시 줄어들 수 있지만)
+                 · min-width: 336px으로 실제 줄어드는 폭 제한
+               - padding은 사용하지 않고, margin/내부 박스에서만 여백 처리
+                 → 336px 폭 전체를 광고/콘텐츠가 그대로 사용할 수 있도록 함
+            */
+            .related-area {
+                flex: 0 1 336px;
+                min-width: 336px;
+                width: auto;
+            }
+
+            /* 기사 본문 영역은 나머지 가용 폭을 유연하게 사용 */
+            .article-area {
+                flex: 1 1 auto;
+                min-width: 0;
+            }
+        }
+
+        /* ------------------------------
+           태블릿/모바일 레이아웃 (<= 1024px)
+           - 우측 컬럼 아래로 내려오고 폭 100%
+           - Native LI(BC_native_list_1/2) 노출
+        ------------------------------ */
+        @media (max-width: 1024px) {
+            .content-wrap {
+                flex-direction: column;
+            }
+            .related-area {
+                width: 100%;
+                max-width: none;
+                position: static;
+            }
+
+            /* 모바일/태블릿에서만 Native 광고 리스트 아이템 노출 */
+            .native-ad-list-item {
+                display: flex;
+            }
+        }
+
+        /* ------------------------------------------------------------------
+           다크 모드 지원
+           - 광고 슬롯(.ad-slot)은 가능한 한 투명하게 유지하여
+             크리에이티브 디자인을 방해하지 않는 방향으로 설정했습니다.
+        ------------------------------------------------------------------ */
+        @media (prefers-color-scheme: dark) {
+            body { background-color: #1a1a1a; color: #e0e0e0; }
+            a { color: #ccc; }
+            nav { background-color: #1a1a1a; border-bottom-color: #444; margin-bottom: 20px; }
+            .nav-list li { color: #ccc; }
+            header { background-color: #1a1a1a; border-bottom-color: #444; }
+            .logo { color: #fff !important; }
+
+            .article-header h1 { color: #e0e0e0; }
+            .article-byline { border-bottom-color: #333; color: #999; }
+            .article-body,
+            .article-body p { color: #ccc; }
+            .article-area h2,
+            .extra-content-section h3,
+            .related-box h4 { color: #e0e0e0 !important; }
+            .dummy-data-box { background-color: #222; border-color: #444; color: #ccc; }
+            .comment-section h3 { color: #e0e0e0; }
+            .comment-item { border-bottom-color: #333 !important; }
+
+            .related-box,
+            .related-list { background-color: #1a1a1a !important; }
+            .extra-content-section { border-top-color: #444; }
+            .extra-content-section h3 { border-left-color: #c00 !important; }
+            .popular-news-list li { border-bottom-color: #333; }
+            .shorts-item { background-color: #222; }
+            .native-ad-list-item {
+                background-color: transparent;
+                border: none;
+                color: inherit;
+            }
+
+            .related-list { border-top-color: #333; }
+            .related-list li + li { border-top-color: #333; }
+
+            .ad-mc-article {
+                background-color: #333;
+                color: #ccc;
+            }
+
+            .embed-caption { color: #aaa; }
+
+            /* ✅ 다크 모드에서 광고 라벨 대비 강화 */
+            .mk-ad-label {
+                background-color: rgba(0, 0, 0, 0.7);
+                color: #f5f5f5;
+                box-shadow: 0 0 2px rgba(0, 0, 0, 0.8);
+                font-weight: normal;
+            }
+
+            /* ✅ 다크 모드에서 "이 시각 주요 뉴스" 번호 컬러 반전 */
+            .related-list li.article-item::before {
+                color: #f5f5f5;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="container">
+            <div style="font-size: 20px; font-weight: bold; padding: 10px 0;" class="logo">View GPT</div>
+        </div>
+    </header>
+
+    <nav>
+        <div class="container">
+            <ul class="nav-list">
+                <li>HOME</li>
+                <li class="current">경제</li>
+                <li>IT/과학</li>
+                <li>부동산</li>
+                <li>오피니언</li>
+            </ul>
+        </div>
+    </nav>
+
+    <div class="container">
+
+        <!--
+            TC_billboard_X: 상단 빌보드 영역
+            - display()는 여기서, refresh()는 상단 GAM 초기화 블록에서 수행합니다.
+            - 데스크탑 전용 슬롯이며, eager 로딩 대상입니다.
+        -->
+        <div id="TC_billboard_X" class="ad-slot ad-tc">
+            <script>
+                googletag.cmd.push(function () {
+                    if (typeof TC_billboard_X_slot !== 'undefined' && TC_billboard_X_slot !== null) {
+                        googletag.display('TC_billboard_X');
+                    }
+                });
+            </script>
+        </div>
+
+        <div class="content-wrap">
+            <div class="article-area">
+
+                <header class="article-header">
+                    <h1>글로벌 AI 반도체 시장 격변, K-칩스 초격차 전략 시급</h1>
+                </header>
+                <div class="article-byline">
+                    <span class="journalist">김기자 (kim.j@mk.com)</span>
+                    <span class="datetime">입력 2025.10.31. 10:00:00</span>
+                </div>
+
+                <div class="article-body">
+                    <p><strong>[서론]</strong> 최근 인공지능(AI) 산업의 폭발적인 성장과 함께 AI 반도체 시장을 선점하기 위한 글로벌 경쟁이 격화되고 있습니다. 특히 거대 기술 기업들(빅테크)이 자체 칩 개발에 속도를 내면서, 전통적인 반도체 강국인 우리나라에도 변화와 위협이 동시에 다가오고 있습니다. 한국 반도체 기업들은 메모리 분야의 압도적인 우위를 바탕으로 비메모리 분야까지 영역을 확장하여 <strong>'K-칩스' 초격차 전략</strong>을 시급히 마련해야 한다는 목소리가 높습니다。</p>
+
+                    <div class="article-image">
+                        <img src="https://placehold.co/800x400/333/fff?text=기술+심층+분석+자료" alt="기술 분석 자료 이미지">
+                        <p style="font-size: 13px; color: #888; margin-top: 5px;">기술 동향 및 투자 규모 분석 그래프</p>
+                    </div>
+
+                    <p><strong>[본문 1: 시장 재편과 한국의 위치]</strong> AI 반도체 시장은 CPU, GPU 등 기존 프로세서와는 달리 대규모 병렬 연산에 최적화된 NPU를 중심으로 재편되고 있습니다. 이 NPU의 성능과 효율성이 미래 AI 서비스의 성패를 좌우할 핵심 요소로 떠오르면서, 각국은 막대한 자본과 인력을 투입하고 있습니다. 한국의 경우, 메모리 분야에서는 독보적인 기술력을 자랑하지만, 시스템 반도체와 NPU 분야에서는 아직 선두 주자들을 따라잡아야 하는 상황입니다。</p>
+                    <p>새로운 시장의 진입은 언제나 기회와 위험을 동시에 내포합니다. 국내 기업들이 기존의 메모리 제조 역량에 안주하지 않고, 고성능 컴퓨팅 및 엣지 AI 분야의 맞춤형 반도체 개발에 전력을 기울여야 합니다. 특히 글로벌 빅테크 기업들이 자체적으로 AI 칩을 설계하는 트렌드를 고려할 때, 한국 파운드리 기업들은 이들과의 긴밀한 협력을 통해 첨단 공정을 선제적으로 제공하는 '전략적 파트너' 역할을 강화해야 합니다. 이를 위해 초미세 공정 기술 로드맵을 가속화하고, 차세대 소재 및 패키징 기술에 대한 투자를 확대하는 것이 필수적입니다.</p>
+                    <p>전문가들은 현재의 기술 경쟁 구도가 과거의 메모리 치킨 게임과는 완전히 다른 양상을 보인다고 분석합니다. 단순히 생산량을 늘리는 것이 아니라, 얼마나 빠르게 고도화된 설계 및 파운드리 기술을 결합하느냐가 승패를 가르는 열쇠라는 것입니다. 이로 인해 반도체 설계 인력에 대한 수요가 급증하고 있으며, 국내외 대학의 관련 학과들은 정원 확대 요구를 받고 있습니다. 특히 첨단 패키징 기술이 중요성이 부각되고 있으며, 칩과 메모리를 통합하는 첨단 패키징 기술이 없이는 NPU의 연산 속도를 끌어올리기 어렵기 때문입니다. 이 내용이 첫 번째 본문 광고 전에 <strong>약 1 뷰포트 높이</strong>를 확보합니다。</p>
+
+                    <div class="dummy-data-box">
+                        <h4>📊 데이터 분석: AI 칩 시장 규모 전망 (2025~2030)</h4>
+                        <p>2025년 500억 달러에서 2030년 2,000억 달러 규모로 연평균 30% 이상 성장 예상. (출처: 글로벌 리서치 기관)</p>
+                        <p>주요 성장 동력: 클라우드 AI 서비스, 엣지 AI 디바이스, 자율주행 차량용 칩. 이 박스 역시 뷰포트 확보에 기여합니다。</p>
+                    </div>
+
+                    <!-- MC_article_rectangle_* 슬롯들은 동적 주입 대상
+                         - 초기에는 본문 내 미리 배치되어 있으나,
+                           setupInArticleAds()에서 기사 길이/시각 블록을 고려해
+                           위치가 재조정되거나 삭제될 수 있습니다. -->
+                    <div id="MC_article_rectangle_1" class="ad-slot ad-mc-article"></div>
+
+                    <p>전문가들은 현재의 기술 경쟁 구도가 과거의 메모리 치킨 게임과는 완전히 다른 양상을 보인다고 분석합니다. 단순히 생산량을 늘리는 것이 아니라, 얼마나 빠르게 고도화된 설계 및 파운드리 기술을 결합하느냐가 승패를 가르는 열쇠라는 것입니다. 이로 인해 반도체 설계 인력에 대한 수요가 급증하고 있으며, 국내외 대학의 관련 학과들은 정원 확대 요구를 받고 있습니다. 특히 첨단 패키징 기술이 중요성이 부각되고 있으며, 칩과 메모리를 통합하는 첨단 패키징 기술이 없이는 NPU의 연산 속도를 끌어올리기 어렵기 때문입니다. 이 내용이 첫 번째 본문 광고 전에 <strong>약 1 뷰포트 높이</strong>를 확보합니다。</p>
+                    <p>새로운 시장의 진입은 언제나 기회와 위험을 동시에 내포합니다. 국내 기업들이 기존의 메모리 제조 역량에 안주하지 않고, 고성능 컴퓨팅 및 엣지 AI 분야의 맞춤형 반도체 개발에 전력을 기울여야 합니다. 특히 글로벌 빅테크 기업들이 자체적으로 AI 칩을 설계하는 트렌드를 고려할 때, 한국 파운드리 기업들은 이들과의 긴밀한 협력을 통해 첨단 공정을 선제적으로 제공하는 '전략적 파트너' 역할을 강화해야 합니다. 이를 위해 초미세 공정 기술 로드맵을 가속화하고, 차세대 소재 및 패키징 기술에 대한 투자를 확대하는 것이 필수적입니다。</p>
+
+                    <p><strong>[본문 3: 글로벌 경쟁과 결론]</strong> 글로벌 시장의 요구에 발맞춰 한국의 주요 반도체 기업들은 파운드리(위탁생산) 부문에서 초미세 공정을 경쟁적으로 도입하며 NPU 생산 능력을 강화하고 있습니다. 또한, 고대역폭 메모리(HBM)와 같은 차세대 메모리 기술을 AI 반도체와 결합하여 고성능을 구현하는 데 집중하고 있습니다. 이러한 혁신적인 접근 방식이 성공한다면, 한국은 AI 반도체 생태계에서 매우 중요한 위치를 차지할 수 있을 것으로 기대됩니다. 앞으로 2~3년이 AI 반도체 시장의 향방을 가를 중요한 시점이 될 것입니다。</p>
+
+                    <div id="MC_article_rectangle_2" class="ad-slot ad-mc-article"></div>
+
+                    <p>글로벌 인공지능 시장은 끊임없이 진화하고 있으며, 특히 하드웨어 분야에서는 엔비디아와 AMD, 그리고 구글, 아마존 같은 빅테크 기업들이 자체 칩 개발에 막대한 투자를 진행하고 있습니다. 이러한 경쟁 구도는 한국 반도체 산업에 새로운 기회와 동시에 위협을 제공합니다. 국내 기업들은 메모리 기술력뿐만 아니라, 시스템 반도체 설계 및 파운드리 역량을 고도화하여 칩 제조 생태계 전반의 경쟁력을 확보해야 합니다. 이는 단순히 기술 개발을 넘어, 글로벌 공급망 내에서 필수 불가결한 파트너로 자리매김하는 전략적 목표를 필요로 합니다.</p>
+                    <p>반도체 산업의 미래는 '데이터 처리 속도'와 '전력 효율성'에 달려 있습니다. 특히 AI 서버의 전력 소모 문제는 환경적, 경제적 이슈로 부상하고 있어, 저전력 NPU 개발 경쟁이 심화되고 있습니다. 한국은 팹리스(설계), 파운드리(제조), 메모리(HBM)를 아우르는 수직적 협력 구조를 강화하여, 이 세 분야를 결합한 최적의 AI 반도체 솔루션을 세계 시장에 공급할 수 있는 잠재력을 극대화해야 합니다. 이는 단순히 기술 개발을 넘어, 글로벌 공급망 내에서 필수 불가결한 파트너로 자리매김하는 전략적 목표를 필요로 합니다. 이를 위해 초미세 공정 기술 로드맵을 가속화하고, 차세대 소재 및 패키징 기술에 대한 투자를 확대하는 것이 필수적이다.</p>
+
+                    <div id="MC_article_rectangle_3" class="ad-slot ad-mc-article"></div>
+
+                    <p>정부는 AI 반도체 개발의 전주기적 지원을 위해 대규모 국가 연구개발(R&D) 프로젝트를 추진하고, 민간 투자 리스크를 완화하기 위한 세제 혜택 및 금융 지원을 확대해야 합니다. 특히 시스템 반도체 분야는 인프라 구축에 막대한 초기 비용이 들기 때문에, 공공 파운드리 시설의 개방 및 활용도를 높여 중소 팹리스 기업의 진입 장벽을 낮추는 것도 중요합니다. 또한, 국제 표준 선점을 위해 주요 기술 동맹에 적극적으로 참여하고, 수출 규제 등 글로벌 공급망의 불확실성에 대비하는 외교적 역량도 강화해야 합니다.</p>
+                    <p>AI 반도체가 미래 산업의 핵심 동력인 만큼, 반도체 제조뿐만 아니라 소프트웨어 및 알고리즘과의 결합을 통한 '토털 솔루션' 제공 능력을 갖추는 것이 필수입니다. 국내 기업들은 NPU 성능을 최적화하는 전용 AI 소프트웨어 플랫폼을 구축하고, 고객사의 다양한 요구사항에 빠르게 대응할 수 있는 유연성을 확보해야 합니다. 이러한 노력들이 결실을 맺는다면, 한국은 AI 반도체 분야에서 명실상부한 기술 강국으로 도약할 수 있을 것입니다：</p>
+
+                    <!-- ✅ YouTube Embeds (시각 블록)
+                         - setupInArticleAds()에서 "시각 블록"으로 인식하는 대상입니다.
+                         - 시각 블록 주변에는 광고가 너무 촘촘히 붙지 않도록
+                           별도의 간격 규칙이 적용됩니다. -->
+                    <div class="article-embed">
+                        <div class="embed-wrapper">
+                            <iframe
+                                src="https://www.youtube.com/embed/F0XOK4n6-e4"
+                                title="YouTube 영상: AI 반도체 시장 분석"
+                                frameborder="0"
+                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                                referrerpolicy="strict-origin-when-cross-origin"
+                                allowfullscreen>
+                            </iframe>
+                        </div>
+                        <p class="embed-caption">관련 영상: 글로벌 AI 반도체 시장 동향</p>
+                    </div>
+
+                    <div id="MC_article_rectangle_4" class="ad-slot ad-mc-article"></div>
+
+                    <p>새로운 기술의 물결은 멈추지 않습니다. 인공지능의 발전 속도에 발맞춰, 양자 컴퓨팅, 뉴로모픽 칩 등 차세대 반도체 기술에 대한 선도적인 연구가 병행되어야 합니다. 정부와 민간은 장기적인 관점에서 기초 과학 연구에 대한 투자를 강화하고, 실패를 용인하는 혁신적인 연구 문화를 조성함으로써, 미래 반도체 기술의 '씨앗'을 뿌려야 합니다. 이러한 선순환 구조를 통해 한국은 단순히 패스트 팔로워가 아닌, 기술 혁신을 주도하는 리더 국가로 자리매김할 수 있을 것입니다。</p>
+                    <p>궁극적으로, 고성능 컴퓨팅(HPC)과 엣지 디바이스(Edge Device)를 위한 저전력 고효율 NPU 개발이 핵심 과제입니다. 서버급 AI 칩뿐만 아니라, 모바일, 자율주행, IoT 등 다양한 분야에서 맞춤형 칩 수요가 증가하고 있기 때문입니다. 이를 위해 정부 차원의 R&D 지원과 함께, 국내 반도체 학과 및 연구소의 인력 양성 프로그램 확대가 시급합니다. 인재 확보야말로 장기적인 '초격차'를 유지할 수 있는 근본적인 힘입니다。</p>
+                    <p>최근에는 칩렛(Chiplet) 기술과 첨단 패키징(Advanced Packaging) 기술의 중요성이 더욱 부각되고 있습니다. 서로 다른 기능을 하는 반도체를 하나의 패키지에 통합하여 성능을 극대화하는 이 기술은 AI 칩의 성능을 결정하는 핵심 요소가 되었습니다. 한국 기업들은 HBM과 같은 독보적인 메모리 기술을 활용하여, 칩렛 기반의 고성능 AI 반도체 솔루션을 세계 시장에 선제적으로 제시해야 합니다. 이는 메모리 강국에서 AI 반도체 강국으로 도약하는 중요한 분기점이 될 것입니다。</p>
+                    <p>또한, AI 반도체 스타트업 생태계 활성화가 필요합니다. 대기업의 파운드리 역량과 유망 스타트업의 혁신적인 NPU 설계 아이디어가 결합될 때 시너지가 발생합니다. 정부는 스타트업이 초기 개발 단계에서 겪는 테스트베드 접근성 문제나 자금 조달 문제를 해소하는 데 집중해야 합니다. 궁극적으로, 한국이 AI 반도체 분야에서 글로벌 리더십을 확보하기 위해서는 민간의 혁신 의지와 정부의 전략적 지원이 유기적으로 결합되는 'K-칩스 동맹'이 필수적입니다. 향후 5년이 한국 반도체 산업의 미래 50년을 좌우할 중요한 시기가 될 것입니다.</p>
+
+                    <p><strong>[본문 4: 미래 전망과 정책 방향]</strong> AI 반도체 시장의 승자는 기술력과 더불어 '생태계 확장' 능력에 따라 결정될 것입니다. 단순히 칩의 성능을 높이는 것을 넘어, 그 칩을 활용할 수 있는 소프트웨어 플랫폼과 개발자 커뮤니티를 얼마나 빠르게 구축하느냐가 중요합니다. 엔비디아의 CUDA 생태계처럼, 한국형 AI 칩도 자체적인 소프트웨어 인프라를 구축하고, 국내외 개발자들에게 개방하여 활용도를 높여야 합니다. 이를 위해, 국내 기업들은 오픈소스 기반의 AI 플랫폼 개발에 적극 참여하고, 협력사들과의 데이터 공유 및 공동 개발을 위한 협의체를 구성하는 것이 시급합니다.</p>
+                    <p>또한, 국제적인 협력과 외교적 노력이 뒷받침되어야 합니다. 미국과 중국 간의 기술 패권 경쟁이 심화되는 상황에서, 한국은 특정 국가에 종속되지 않고 안정적인 공급망을 유지할 수 있는 '전략적 자율성'을 확보해야 합니다. 핵심 소재, 부품, 장비(소부장)에 대한 국산화율을 높이는 동시에, 미국, 유럽 등 우방국과의 반도체 동맹을 강화하여 기술 표준 및 수출 규제 대응 능력을 키워야 합니다. 이는 단기적인 성과보다는 장기적인 국가 안보 및 산업 경쟁력 차원에서 접근해야 할 문제입니다.</p>
+                    <p>교육 시스템의 혁신도 필수적입니다. AI 반도체 산업이 요구하는 융합적 사고와 실무 능력을 갖춘 인재를 양성하기 위해, 대학 교육 과정에 AI, 반도체 설계, 소프트웨어 코딩을 통합하는 새로운 커리큘럼 도입이 절실합니다. 정부는 계약학과, 특성화 대학원 등 인력 양성 프로그램을 확대하고, 기업들에게 인재 채용 및 교육에 대한 강력한 인센티브를 제공해야 합니다. 결국, 반도체는 '사람'이 만드는 것이며, 우수한 인재만이 미래의 기술 패권을 쥘 수 있는 열쇠입니다。</p>
+
+                    <!-- MC_article_rectangle_5 ~ 8: 동적 재배치 대상 -->
+                    <div id="MC_article_rectangle_5" class="ad-slot ad-mc-article"></div>
+                    <div id="MC_article_rectangle_6" class="ad-slot ad-mc-article"></div>
+                    <div id="MC_article_rectangle_7" class="ad-slot ad-mc-article"></div>
+                    <div id="MC_article_rectangle_8" class="ad-slot ad-mc-article"></div>
+
+                    <p>최종적으로, AI 반도체 분야에서의 한국의 성공은 <strong>'속도'와 '협력'</strong>에 달려 있습니다. 혁신 기술 개발의 속도를 높이고, 정부-대기업-스타트업 간의 유기적인 협력 체계를 구축하여, 글로벌 시장의 변화에 기민하게 대응해야 합니다. 2020년대 후반은 한국 반도체 산업이 메모리 강국을 넘어 <strong>AI 칩 생태계의 핵심 리더</strong>로 도약할 마지막 기회입니다. [끝]</p>
+                </div>
+
+                <div class="like-share-section">
+                    <p>이 기사가 마음에 들었다면, 좋아요를 눌러주세요。</p>
+                    <div class="like-share-button">👍 좋아요 (128)</div>
+                </div>
+
+                <!-- BC_byline_rectangle: 기사 byline 하단 광고 영역 (Lazy Load 대상) -->
+                <div id="BC_byline_rectangle" class="ad-slot ad-bc-byline" data-googletag-enabled="false"></div>
+
+                <div class="comment-section">
+                    <h3>전체 댓글 리스트 (158개)</h3>
+                    <div class="comment-item"><p><strong>독자A</strong>: 정말 중요한 내용입니다. 인재 육성이 핵심이죠!</p><p style="text-align: right; color: #aaa;">2025.10.31</p></div>
+                    <div class="comment-item"><p><strong>독자B</strong>: 파운드리 기술의 경쟁력 확보가 시급합니다。</p><p style="text-align: right; color: #aaa;">2025.10.31</p></div>
+                    <div class="comment-item"><p><strong>독자C</strong>: 본문 내 광고 배치가 깔끔하네요。</p><p style="text-align: right; color: #aaa;">2025.10.31</p></div>
+                    <div class="comment-item"><p><strong>독자D</strong>: AI 반도체 개발은 미래 산업의 핵심 동력입니다.</p><p style="text-align: right; color: #aaa;">2025.10.31</p></div>
+                    <div class="comment-item" style="border-bottom: none;"><p><strong>독자E</strong>: 국내 기업들의 적극적인 투자가 필요합니다.</p><p style="text-align: right; color: #aaa;">2025.10.31</p></div>
+                    <div style="text-align: center; margin-top: 10px; font-weight: bold; color: #0056b3; cursor: pointer;">
+                        전체 댓글 보기 (더보기)
+                    </div>
+                </div>
+
+                <!-- BC_billboard_rectangle: 댓글 하단 빌보드 광고 (Lazy Load 대상) -->
+                <div id="BC_billboard_rectangle" class="ad-slot ad-bc-comment" data-googletag-enabled="false"></div>
+
+                <div class="extra-content-section">
+                    <h3>🔥 인기뉴스</h3>
+                    <ul class="popular-news-list">
+                        <li><span class="rank">1</span><span class="title">주식 시장, 금리 인상 종료 기대감에 강세 마감</span></li>
+                        <li><span class="rank">2</span><span class="title">대규모 신도시 개발 계획 발표, 지역 부동산 시장 요동</span></li>
+                        <li><span class="rank">3</span><span class="title">세계 경제, 고금리 시대 장기화 우려</span></li>
+                        <li><span class="rank">4</span><span class="title">부동산 시장, 급매물 소진되며 거래량 회복세</span></li>
+                        <li><span class="rank">5</span><span class="title">AI 기술, 제조업 혁신 주도... 생산성 획기적 개선</span></li>
+                        <li><span class="rank">6</span><span class="title">국내 스타트업, 시리즈 C 투자 유치 성공</span></li>
+                        <li><span class="rank">7</span><span class="title">친환경 에너지 전환, 정부 정책 추진 가속화</span></li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="related-area">
+
+                <div class="related-box">
+                    <h4>**이 시각 주요 뉴스** (10개로 확장)</h4>
+                    <!--
+                        이 시각 주요 뉴스 리스트 구성:
+
+                        - 기사 LI(5개, .article-item):
+                          · CSS 카운터(hotNewsRank)에 의해 1~5 번호 자동 생성
+                          · shufflePopularNewsNativeAds() 이후에도 기사 DOM 순서/번호는 항상 고정
+                        - Native LI(BC_native_list_1/2, .native-ad-list-item):
+                          · 기사 LI 사이의 여러 후보 위치 중 랜덤 위치에 삽입
+                          · 번호/라벨 없이 광고 슬롯만 LI 사이에 자연스럽게 노출
+                          · 기사 개수 카운트에는 포함되지 않음
+                    -->
+                    <ul class="related-list">
+                        <li class="article-item"><a href="#">금리 추가 인상 없을 듯... 가계 부담 완화 기대</a></li>
+                        <li class="article-item"><a href="#">주요 기업, 하반기 채용 규모 전년 대비 20% 확대</a></li>
+
+                        <!-- BC_native_list_1: 이 시각 주요 뉴스 목록 중간에 삽입되는 Native 광고/위젯 (모바일/태블릿 전용)
+                             - CSS 카운터에서는 제외되며, 화면상 번호/AD 라벨 없이 광고 크리에이티브만 노출 -->
+                        <li id="BC_native_list_1" class="native-ad-list-item" data-googletag-enabled="false"></li>
+
+                        <li class="article-item"><a href="#">정부, 청년 주거 정책 특별 대책 발표</a></li>
+                        <li class="article-item"><a href="#">글로벌 증시, AI 기술주 실적에 따라 희비 교차</a></li>
+
+                        <!-- BC_native_list_2: 이 시각 주요 뉴스 목록 중간에 삽입되는 Native 광고/위젯 (모바일/태블릿 전용)
+                             - CSS 카운터에서는 제외되며, 화면상 번호/AD 라벨 없이 광고 크리에이티브만 노출 -->
+                        <li id="BC_native_list_2" class="native-ad-list-item" data-googletag-enabled="false"></li>
+
+                        <li class="article-item"><a href="#">유럽 경제, 긴축 완화 시그널 포착</a></li>
+                    </ul>
+                </div>
+
+                <!-- MR_side_rail_X: 우측 레일 광고 (데스크탑 전용, Lazy Load 대상) -->
+                <div id="MR_side_rail_X" class="ad-slot ad-mr" data-googletag-enabled="false">
+                    <script>
+                        googletag.cmd.push(function () {
+                            if (typeof MR_side_rail_X_slot !== 'undefined' && MR_side_rail_X_slot !== null) {
+                                googletag.display('MR_side_rail_X');
+                            }
+                        });
+                    </script>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer>
+        <p style="text-align: center; padding: 15px; background-color: #f7f7f7; color: #777; margin-top: 0; border-top: 1px solid #eee;">
+            &copy; 2025 News View Mockup.
+        </p>
+    </footer>
+
+    <script>
+        // ----------------------------------------------------------
+        // [Lazy Load 인프라: 공통 메커니즘 설명 + 로그 세트 활용]
+        //
+        // - 이 블록은 View/Home/Section/List GPT에서 공통으로 사용할 수 있는
+        //   IntersectionObserver 기반 Lazy Load 구현 패턴입니다.
+        //
+        // - 구성 요소:
+        //   · LAZY_AD_SLOT_IDS     : Lazy 대상 광고 div id 리스트
+        //   · lazyAdSlotsHTML      : DOM에서 관찰할 실제 요소 목록
+        //   · lazyGamSlots         : GAM에 정의된 슬롯 객체 목록
+        //   · lazyObserver         : IntersectionObserver 인스턴스
+        //
+        // - 동작 흐름:
+        //   1) DOMContentLoaded 시:
+        //      · setupInArticleAds() → 본문 내 in-article 슬롯 재배치
+        //      · setupLazyLoading()  → LAZY_AD_SLOT_IDS 기반으로 관찰 대상 수집 + GAM 슬롯 매핑
+        //      · shufflePopularNewsNativeAds() → 우측 '이 시각 주요 뉴스' + Native 랜덤 섞기
+        //      · startObservingLazySlots()     → IntersectionObserver 관찰 시작
+        //
+        //   2) 사용자가 스크롤해서 광고 div가 뷰포트 근처에 도달하면:
+        //      · observer 콜백에서 해당 slotId에 대해
+        //        googletag.display(slotId) + pubads().refresh([slot]) 호출
+        //
+        //   3) 한 번 로드된 슬롯은 unobserve 처리하여 중복 호출 방지
+        //
+        // - disableInitialLoad()와의 관계:
+        //   · 상단 GAM 설정에서 disableInitialLoad()를 호출했기 때문에,
+        //     display/refresh가 호출되기 전까지는 어떠한 광고 요청도 발생하지 않습니다.
+        //
+        // - 로그 세트 활용:
+        //   · logDebug / logInfo 를 적절히 섞어
+        //     "어느 단계에서 어떤 슬롯이 실제 로딩되었는지" 추적할 수 있도록 했습니다.
+        // ----------------------------------------------------------
+        const LAZY_AD_SLOT_IDS = [
+            'MR_side_rail_X',
+            'MC_article_rectangle_1',
+            'MC_article_rectangle_2',
+            'MC_article_rectangle_3',
+            'MC_article_rectangle_4',
+            'MC_article_rectangle_5',
+            'MC_article_rectangle_6',
+            'MC_article_rectangle_7',
+            'MC_article_rectangle_8',
+            'BC_byline_rectangle',
+            'BC_billboard_rectangle',
+            'BC_native_list_1',
+            'BC_native_list_2'
+        ];
+
+        let lazyAdSlotsHTML = []; // IntersectionObserver가 관찰할 DOM 요소 목록
+        let lazyGamSlots = [];    // GAM에 정의된 슬롯 객체 목록
+        let lazyObserver = null;  // IntersectionObserver 인스턴스
+
+        // ==========================================================
+        // 함수 1. 본문 in-article 광고 동적 주입
+        //
+        // [핵심 개념 정리]
+        // - 목적:
+        //   · 기사마다 본문 길이/구성이 달라져도,
+        //     in-article 광고가 "적절한 간격"으로 노출되도록 동적으로 위치를 계산합니다.
+        //
+        // - 기준:
+        //   · "텍스트 높이"만을 누적하여, 순수 텍스트 기준 거리로 뷰포트 간격을 계산합니다.
+        //   · 이미지/영상/데이터박스 등 시각 블록은 거리 계산에서는 제외하되,
+        //     "이후 광고 최소 간격"을 따로 적용합니다.
+        //
+        // - 규칙:
+        //   1) 짧은 기사(totalTextHeight < 1 뷰포트):
+        //      · 가장 마지막 본문 블록 뒤에 MC_article_rectangle_1 하나만 삽입
+        //      · 나머지 in-article 슬롯(MC_article_rectangle_2~8)은 DOM 제거 + GAM 슬롯 destroy
+        //
+        //   2) 일반 기사:
+        //      · 광고 간 최소 간격: VIEWPORT_GAP_BETWEEN_ADS (1.0 뷰포트)
+        //      · 마지막 시각 블록 이후 최소 간격: VIEWPORT_AFTER_VISUAL_MIN (0.5 뷰포트)
+        //      · 시각 블록(이미지/영상/데이터박스/테이블 등) 바로 위/아래에는 광고를 붙이지 않음
+        //        (독자 경험 보호)
+        //
+        // - 기사 내용 변경 시:
+        //   · 이 JS는 "현재 렌더된 .article-body DOM 상태"를 기준으로만 계산합니다.
+        //   · CMS에서 본문 구조가 변하거나 문단이 늘어나는 경우에도,
+        //     페이지 로딩 시점에 다시 계산되므로 새로운 본문 구조에 맞게 배치됩니다.
+        //
+        // - 로그 활용 포인트:
+        //   · short article 분기 진입 / 미사용 슬롯 destroy 결과
+        //   · 일반 기사 케이스에서 실제 사용된 MC 슬롯 id 목록
+        // ==========================================================
+        function setupInArticleAds() {
+            logDebug('[In-Article] setupInArticleAds() 시작');
+
+            const MC_IN_ARTICLE_SLOT_IDS = [
+                'MC_article_rectangle_1',
+                'MC_article_rectangle_2',
+                'MC_article_rectangle_3',
+                'MC_article_rectangle_4',
+                'MC_article_rectangle_5',
+                'MC_article_rectangle_6',
+                'MC_article_rectangle_7',
+                'MC_article_rectangle_8'
+            ];
+
+            const articleBody = document.querySelector('.article-body');
+            if (!articleBody) {
+                logWarn('[In-Article] .article-body 를 찾지 못해 in-article 배치를 스킵합니다.');
+                return;
+            }
+
+            const viewportHeight = window.innerHeight || 800;
+
+            // in-article 광고 간격 정책 (뷰포트 기준)
+            const VIEWPORT_GAP_BETWEEN_ADS = 1.0;   // 광고 간 최소 간격: 텍스트 기준 1 뷰포트
+            const VIEWPORT_AFTER_VISUAL_MIN = 0.5;  // 시각 블록 이후 최소 간격: 텍스트 기준 0.5 뷰포트
+
+            // 시각 블록 판별용 클래스 목록
+            const VISUAL_BLOCK_CLASSES = [
+                'article-image',   // 본문 이미지 래퍼
+                'article-embed',   // YouTube 등 외부 임베드 래퍼
+                'dummy-data-box',  // 데이터/통계 박스
+                'visual-block',    // 공통 시각 블록 마커 (향후 확장용)
+                'data-table',      // 데이터 테이블 래퍼
+                'chart-box'        // 차트/그래프 래퍼
+            ];
+
+            // 시각 블록 판별 유틸
+            const isVisualBlock = (el) => {
+                if (!el) return false;
+
+                // 클래스 기반
+                if (VISUAL_BLOCK_CLASSES.some(cls => el.classList.contains(cls))) {
+                    return true;
+                }
+
+                // 태그 기반 (figure, table, iframe, video 등)
+                if (el.matches('figure, table, iframe, video')) {
+                    return true;
+                }
+
+                return false;
+            };
+
+            // 실제 본문 블록 수집
+            const contentBlocks = Array.from(
+                articleBody.querySelectorAll(
+                    'p, .article-image, .article-embed, .dummy-data-box, ' +
+                    'figure, table, iframe, video, .data-table, .chart-box'
+                )
+            );
+
+            // 텍스트 높이만 누적하여 앵커 정보 생성
+            let cumulativeTextHeight = 0;
+            const anchors = contentBlocks.map(el => {
+                const visual = isVisualBlock(el);
+                let textHeight = 0;
+
+                // 시각 블록(이미지/Embeds/데이터박스/테이블 등)의 높이는
+                // "뷰포트 계산"에서 제외 → 순수 텍스트 기준 거리만 본다.
+                if (!visual) {
+                    const rect = el.getBoundingClientRect();
+                    textHeight = rect.height || el.offsetHeight || 0;
+                    cumulativeTextHeight += textHeight;
+                }
+
+                return {
+                    element: el,
+                    isVisual: visual,
+                    textHeight,
+                    cumulativeTextHeight
+                };
+            });
+
+            const totalTextHeight = anchors.length > 0
+                ? anchors[anchors.length - 1].cumulativeTextHeight
+                : 0;
+
+            const isShortArticle = totalTextHeight < viewportHeight;
+            const lastContentBlock = anchors.length > 0
+                ? anchors[anchors.length - 1].element
+                : null;
+
+            // 실제로 사용된 in-article 광고 슬롯 ID 기록
+            const placedSlotIds = new Set();
+
+            // ---- 짧은 기사 예외 처리 ----
+            if (isShortArticle && lastContentBlock) {
+                logInfo('[In-Article] 짧은 기사 감지 – MC_article_rectangle_1 하나만 사용', {
+                    totalTextHeight,
+                    viewportHeight
+                });
+
+                const firstSlotId = MC_IN_ARTICLE_SLOT_IDS[0];
+                const firstSlotEl = document.getElementById(firstSlotId);
+
+                if (firstSlotEl) {
+                    if (lastContentBlock.nextSibling) {
+                        articleBody.insertBefore(firstSlotEl, lastContentBlock.nextSibling);
+                    } else {
+                        articleBody.appendChild(firstSlotEl);
+                    }
+                    placedSlotIds.add(firstSlotId);
+                }
+
+                // 나머지 MC 슬롯은 사용되지 않으므로 DOM에서 제거
+                MC_IN_ARTICLE_SLOT_IDS.slice(1).forEach(slotId => {
+                    const el = document.getElementById(slotId);
+                    if (el && el.parentElement) {
+                        el.parentElement.removeChild(el);
+                    }
+                });
+
+                // GPT 슬롯 객체도 함께 정리
+                if (window.googletag && googletag.cmd) {
+                    googletag.cmd.push(function () {
+                        const allSlots = googletag.pubads().getSlots();
+                        const unused = allSlots.filter(slot =>
+                            MC_IN_ARTICLE_SLOT_IDS.slice(1).includes(slot.getSlotElementId())
+                        );
+                        if (unused.length > 0) {
+                            googletag.destroySlots(unused);
+                            logDebug(
+                                '[In-Article] Short article – destroy 대상 MC 슬롯',
+                                unused.map(s => s.getSlotElementId())
+                            );
+                        }
+                    });
+                }
+
+                // 짧은 기사 케이스는 여기서 종료
+                return;
+            }
+
+            // ---- 일반 기사 케이스 ----
+            if (!isShortArticle && anchors.length > 0) {
+                // 마지막 블록 뒤에는 광고를 넣지 않기 위해, 마지막 앵커는 후보에서 제외
+                const anchorsForPlacement = anchors.length > 1 ? anchors.slice(0, -1) : [];
+
+                let lastAdTextHeight = 0;             // 마지막 광고 기준 텍스트 누적 높이
+                let lastVisualTextHeight = -Infinity; // 마지막 시각 블록 등장 시점(텍스트 기준)
+                let slotIndex = 0;                    // 사용할 MC 슬롯 인덱스
+
+                const findNonAdPrevSibling = (el) => {
+                    let prev = el.previousElementSibling;
+                    // 이전 형제 중 ad-slot은 건너뛰고 실제 콘텐츠 블록을 찾는다
+                    while (prev && prev.classList.contains('ad-slot')) {
+                        prev = prev.previousElementSibling;
+                    }
+                    return prev;
+                };
+
+                const findNonAdNextSibling = (el) => {
+                    let next = el.nextElementSibling;
+                    // 다음 형제 중 ad-slot은 건너뛰고 실제 콘텐츠 블록을 찾는다
+                    while (next && next.classList.contains('ad-slot')) {
+                        next = next.nextElementSibling;
+                    }
+                    return next;
+                };
+
+                for (let i = 0; i < anchorsForPlacement.length; i++) {
+                    if (slotIndex >= MC_IN_ARTICLE_SLOT_IDS.length) break;
+
+                    const a = anchorsForPlacement[i];
+
+                    // 시각 블록(이미지/Embeds/데이터박스/테이블 등)인 경우:
+                    // 텍스트 높이는 누적 X, "여기서 시각 블록이 나왔다"는 기준만 기록
+                    if (a.isVisual) {
+                        lastVisualTextHeight = a.cumulativeTextHeight;
+                        continue;
+                    }
+
+                    // 이 텍스트 블록까지의 누적 텍스트 높이
+                    const textSinceLastAd = a.cumulativeTextHeight - lastAdTextHeight;
+                    const textSinceLastVisual = a.cumulativeTextHeight - lastVisualTextHeight;
+
+                    // 광고 간 최소 간격: 텍스트 기준 VIEWPORT_GAP_BETWEEN_ADS 뷰포트 이상
+                    if (textSinceLastAd < viewportHeight * VIEWPORT_GAP_BETWEEN_ADS) continue;
+
+                    // 마지막 시각 블록 이후 최소 VIEWPORT_AFTER_VISUAL_MIN 뷰포트 텍스트 확보
+                    if (textSinceLastVisual < viewportHeight * VIEWPORT_AFTER_VISUAL_MIN) continue;
+
+                    // 위/아래 인접 요소가 시각 블록이면 이번 위치는 스킵
+                    const prevSibling = findNonAdPrevSibling(a.element);
+                    const nextSibling = findNonAdNextSibling(a.element);
+
+                    if ((prevSibling && isVisualBlock(prevSibling)) ||
+                        (nextSibling && isVisualBlock(nextSibling))) {
+                        // 👉 "위/아래 중 하나라도 이미지/Embeds/데이터박스/테이블이라면 이번엔 참는다"
+                        continue;
+                    }
+
+                    // 위 조건을 모두 만족하면, 현재 텍스트 블록 앞에 광고 슬롯 삽입
+                    const slotId = MC_IN_ARTICLE_SLOT_IDS[slotIndex];
+                    const slotEl = document.getElementById(slotId);
+
+                    if (!slotEl) {
+                        slotIndex++;
+                        continue;
+                    }
+
+                    articleBody.insertBefore(slotEl, a.element);
+                    placedSlotIds.add(slotId);
+
+                    // 마지막 광고 기준 텍스트 누적 높이 갱신
+                    lastAdTextHeight = a.cumulativeTextHeight;
+                    slotIndex++;
+                }
+
+                // 사용되지 않은 MC in-article 슬롯 정리
+                const unusedSlotIds = MC_IN_ARTICLE_SLOT_IDS.filter(id => !placedSlotIds.has(id));
+
+                // DOM에서 제거
+                unusedSlotIds.forEach(slotId => {
+                    const el = document.getElementById(slotId);
+                    if (el && el.parentElement) {
+                        el.parentElement.removeChild(el);
+                    }
+                });
+
+                // GPT 슬롯 객체도 destroySlots로 정리
+                if (window.googletag && googletag.cmd) {
+                    googletag.cmd.push(function () {
+                        const allSlots = googletag.pubads().getSlots();
+                        const unusedSlots = allSlots.filter(slot =>
+                            unusedSlotIds.includes(slot.getSlotElementId())
+                        );
+                        if (unusedSlots.length > 0) {
+                            googletag.destroySlots(unusedSlots);
+                            logDebug(
+                                '[In-Article] Destroyed unused in-article slots',
+                                unusedSlots.map(s => s.getSlotElementId())
+                            );
+                        }
+                    });
+                }
+
+                logInfo('[In-Article] in-article 배치 완료', {
+                    usedSlots: Array.from(placedSlotIds),
+                    unusedSlots: MC_IN_ARTICLE_SLOT_IDS.filter(id => !placedSlotIds.has(id)),
+                    totalTextHeight,
+                    viewportHeight
+                });
+            }
+        }
+
+        // ==========================================================
+        // 함수 2. Lazy Load 대상 광고 슬롯 설정 및 Observer 생성
+        //
+        // - LAZY_AD_SLOT_IDS에 정의된 id를 기준으로, DOM 요소와 GAM 슬롯 객체를
+        //   각각 lazyAdSlotsHTML / lazyGamSlots에 매핑합니다.
+        //
+        // - 로그 포인트:
+        //   · 관찰 대상 HTML 요소 개수
+        //   · 매핑된 GAM 슬롯 개수
+        // ==========================================================
+        function setupLazyLoading() {
+            const allAdSlots = document.querySelectorAll('.ad-slot, .native-ad-list-item');
+            lazyAdSlotsHTML = [];
+
+            allAdSlots.forEach(slot => {
+                if (LAZY_AD_SLOT_IDS.includes(slot.id)) {
+                    lazyAdSlotsHTML.push(slot);
+                }
+            });
+
+            lazyGamSlots = [];
+
+            if (window.googletag && googletag.cmd) {
+                googletag.cmd.push(function () {
+                    const definedSlots = googletag.pubads().getSlots();
+                    lazyGamSlots = definedSlots.filter(slot =>
+                        LAZY_AD_SLOT_IDS.includes(slot.getSlotElementId())
+                    );
+
+                    logDebug('[LazyLoad] GAM 슬롯 매핑 결과', {
+                        lazyHtmlSlotCount: lazyAdSlotsHTML.length,
+                        lazyGamSlotCount: lazyGamSlots.length,
+                        lazyIds: LAZY_AD_SLOT_IDS
+                    });
+                });
+            }
+
+            const options = {
+                root: null,
+                rootMargin: '0px 0px 100px 0px',
+                threshold: 0.0
+            };
+
+            lazyObserver = new IntersectionObserver(function (entries, observerInstance) {
+                entries.forEach(entry => {
+                    const slotId = entry.target.id;
+                    if (!entry.isIntersecting) return;
+
+                    if (window.googletag && googletag.cmd) {
+                        googletag.cmd.push(function () {
+                            const slotToRefresh = lazyGamSlots.find(
+                                s => s.getSlotElementId() === slotId
+                            );
+
+                            if (slotToRefresh) {
+                                // disableInitialLoad() 상태이므로 display + refresh로 최초 요청
+                                googletag.display(slotId);
+                                googletag.pubads().refresh([slotToRefresh]);
+                                logInfo(
+                                    `✅ [Lazy Load SUCCESS] Ad ID: ${slotId} | GAM DISPLAYED & REFRESHED upon Scroll.`
+                                );
+                            } else {
+                                logWarn('[Lazy Load] Intersection 감지되었으나 GAM 슬롯을 찾지 못함', { slotId });
+                            }
+                        });
+                    }
+
+                    observerInstance.unobserve(entry.target);
+                });
+            }, options);
+        }
+
+        // ==========================================================
+        // 함수 3. "이 시각 주요 뉴스" 내 Native Ad 슬롯 랜덤 배치
+        //
+        // - 요구사항 정리
+        //   · 뉴스 목록(기사 LI)의 "순서"와 "번호"는 항상 고정
+        //     → HTML에 정의된 기사 순서를 그대로 유지
+        //   · 광고 LI(BC_native_list_1, BC_native_list_2)만
+        //     기사 사이의 여러 후보 위치 중 랜덤하게 삽입
+        //   · CSS 카운터 구조와 결합하여
+        //     기사 번호는 1~5로 연속 유지, 광고는 별도 라벨 없이 노출
+        //
+        // - 구현 방식
+        //   1) UL(.related-list) 하위 LI를 기사/광고로 분리
+        //   2) 기사 LI 배열(articleItems)의 순서는 절대 변경하지 않음
+        //   3) "기사 사이 틈(gap)" 목록을 구성
+        //      · gap index = 1 ~ (기사 개수 - 1)
+        //      · 예: 기사 5개 → gap 후보는 [1,2,3,4]
+        //      · gap = 2 라는 의미는 "2번 기사 뒤"를 의미
+        //   4) 광고 개수만큼 gap을 랜덤 선택 + 광고 배열 자체도 랜덤 셔플
+        //   5) 새 UL을 구성할 때:
+        //      · 기사 i를 append
+        //      · 만약 i 뒤에 광고를 넣기로 한 gap이면, 그 다음에 광고 LI를 append
+        //
+        // - 로그 포인트:
+        //   · article/ad 개수
+        //   · 선택된 gap 목록
+        // ==========================================================
+        function shufflePopularNewsNativeAds() {
+            const relatedList = document.querySelector('.related-list');
+            if (!relatedList) {
+                logWarn('[NativeList] .related-list 요소를 찾지 못해 셔플 스킵');
+                return;
+            }
+
+            const allItems = Array.from(relatedList.children);
+            const isAd = (item) => item.id && item.id.startsWith('BC_native');
+
+            const articleItems = allItems.filter(item => !isAd(item));
+            const adItems = allItems.filter(item => isAd(item));
+
+            // 기사 또는 광고가 아예 없으면 로직 수행 의미가 없음
+            if (articleItems.length === 0 || adItems.length === 0) {
+                logDebug('[NativeList] 기사 또는 광고 LI가 없어 셔플 스킵', {
+                    articleCount: articleItems.length,
+                    adCount: adItems.length
+                });
+                return;
+            }
+
+            logDebug('[NativeList] 셔플 시작', {
+                articleCount: articleItems.length,
+                adCount: adItems.length
+            });
+
+            // 기존 내용 초기화
+            relatedList.innerHTML = '';
+
+            const articleCount = articleItems.length;
+
+            // [1] "기사 사이 gap" 후보 생성 (1 ~ articleCount-1)
+            //     - gap = n 이라는 의미는 "n번 기사 뒤"라는 의미
+            const gapIndices = [];
+            for (let i = 1; i < articleCount; i++) {
+                gapIndices.push(i);
+            }
+
+            // [2] gap 후보들을 무작위 셔플(Fisher–Yates)
+            const gapsShuffled = [...gapIndices];
+            for (let i = gapsShuffled.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [gapsShuffled[i], gapsShuffled[j]] = [gapsShuffled[j], gapsShuffled[i]];
+            }
+
+            // [3] 광고 개수만큼 gap 사용 (gap 수보다 광고가 많으면, gap 수만큼만 사용)
+            const useGapCount = Math.min(adItems.length, gapsShuffled.length);
+            const selectedGaps = gapsShuffled
+                .slice(0, useGapCount)
+                .sort((a, b) => a - b); // 기사 순회 시 비교를 위해 오름차순 정렬
+
+            // [4] 광고 자체 순서도 무작위 셔플
+            const shuffledAds = [...adItems];
+            for (let i = shuffledAds.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [shuffledAds[i], shuffledAds[j]] = [shuffledAds[j], shuffledAds[i]];
+            }
+
+            let adIndex = 0;          // 다음에 사용할 광고 인덱스
+            let gapIndexCursor = 0;   // selectedGaps 순회용 커서
+
+            // [5] 기사 순서를 그대로 유지하면서, 선택된 gap 위치 뒤에만 광고 삽입
+            for (let i = 0; i < articleCount; i++) {
+                // (1) 기사 append
+                relatedList.appendChild(articleItems[i]);
+
+                // (2) 만약 "현재 기사(i+1) 뒤"가 선택된 gap이라면 광고 append
+                if (
+                    gapIndexCursor < selectedGaps.length &&
+                    selectedGaps[gapIndexCursor] === i + 1 &&
+                    adIndex < shuffledAds.length
+                ) {
+                    relatedList.appendChild(shuffledAds[adIndex]);
+                    adIndex++;
+                    gapIndexCursor++;
+                }
+            }
+
+            // [선택적 안전장치] gap보다 광고가 더 많은 극단적 케이스:
+            //  - 남은 광고가 있다면 마지막 기사 뒤에 순차적으로 붙임
+            //  - 기사 순서는 여전히 변경되지 않으므로 요구사항 위배 없음
+            while (adIndex < shuffledAds.length) {
+                relatedList.appendChild(shuffledAds[adIndex]);
+                adIndex++;
+            }
+
+            logInfo('[NativeList] Native 광고 셔플 완료', {
+                selectedGaps,
+                articleCount,
+                adCount: adItems.length
+            });
+        }
+
+        // ==========================================================
+        // 함수 4. Lazy Load 대상 슬롯 관찰 시작
+        // ==========================================================
+        function startObservingLazySlots() {
+            if (!lazyObserver || !lazyAdSlotsHTML || lazyAdSlotsHTML.length === 0) {
+                logDebug('[LazyLoad] 관찰할 슬롯이 없거나 Observer 미생성 상태', {
+                    hasObserver: !!lazyObserver,
+                    htmlSlotCount: lazyAdSlotsHTML ? lazyAdSlotsHTML.length : 0
+                });
+                return;
+            }
+            lazyAdSlotsHTML.forEach(slot => {
+                lazyObserver.observe(slot);
+            });
+            logInfo('[LazyLoad] IntersectionObserver 관찰 시작', {
+                observedSlotIds: lazyAdSlotsHTML.map(el => el.id)
+            });
+        }
+
+        // ==========================================================
+        // DOMContentLoaded 시점에 주요 로직 실행
+        //
+        // - View GPT에서 DOMContentLoaded를 사용하는 이유:
+        //   · 기사 본문(.article-body) DOM 구조가 완전히 구성된 이후에
+        //     in-article 광고 위치를 계산해야 하기 때문입니다.
+        //   · 이미지/임베드 등의 높이는 레이아웃에 영향을 주지만,
+        //     이 로직에서는 "텍스트 기준 거리"만 누적하므로
+        //     DOM이 준비된 시점에 getBoundingClientRect()를 사용하는 것이 안정적입니다.
+        //
+        // - 실행 순서:
+        //   1) setupInArticleAds()           → 본문 내 in-article 동적 배치 + 미사용 슬롯 제거
+        //   2) setupLazyLoading()            → Lazy 대상 슬롯 수집 + GAM 슬롯 매핑 + Observer 생성
+        //   3) shufflePopularNewsNativeAds() → 우측 '이 시각 주요 뉴스' 내 Native 광고 랜덤 배치 (기사 순서 고정, 광고만 셔플)
+        //   4) startObservingLazySlots()     → IntersectionObserver 관찰 시작
+        //
+        // - 로그:
+        //   · 초기화 단계 진입 여부를 INFO 레벨로 남겨, 페이지 단위 문제를 추적하기 쉽게 함.
+        // ==========================================================
+        document.addEventListener('DOMContentLoaded', function () {
+            logInfo('[View Init] DOMContentLoaded – View GPT 초기화 시작');
+
+            try {
+                setupInArticleAds();             // 본문 in-article 광고 동적 주입
+            } catch (e) {
+                logError('[View Init] setupInArticleAds() 실행 중 오류', e);
+            }
+
+            try {
+                setupLazyLoading();              // Lazy Load 대상 수집 및 Observer 초기화
+            } catch (e) {
+                logError('[View Init] setupLazyLoading() 실행 중 오류', e);
+            }
+
+            try {
+                shufflePopularNewsNativeAds();   // 우측 '이 시각 주요 뉴스' 내 Native 광고 랜덤 배치
+            } catch (e) {
+                logError('[View Init] shufflePopularNewsNativeAds() 실행 중 오류', e);
+            }
+
+            try {
+                startObservingLazySlots();       // Lazy 대상 슬롯 관찰 시작
+            } catch (e) {
+                logError('[View Init] startObservingLazySlots() 실행 중 오류', e);
+            }
+
+            logInfo('[View Init] DOMContentLoaded – View GPT 초기화 완료');
+        });
+    </script>
+</body>
+</html>
