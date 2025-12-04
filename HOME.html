@@ -186,6 +186,49 @@
             line-height: 1;
             white-space: nowrap;
         }
+
+        /*
+         * [HOME 전용 · 광고 닫기 버튼(.mk-ad-close-button) 설명]
+         *
+         * - TC_billboard_leaderboard와 같이 페이지 상단 핵심 인벤토리에서
+         *   사용자가 직접 광고를 접을 수 있도록 제공하는 "닫기 X" 버튼입니다.
+         *
+         * - 주요 동작:
+         *   1) 광고가 실제로 로드된 경우(slotRenderEnded + event.isEmpty === false)에만
+         *      자바스크립트에서 동적으로 생성됩니다.
+         *   2) 버튼 클릭 시 해당 광고 슬롯(.ad-slot) 컨테이너를 display:none 처리하여
+         *      레이아웃 상에서 완전히 0px 높이로 접습니다.
+         *   3) 페이지 새로고침/재접속 시에는 다시 광고가 로드되며,
+         *      slotRenderEnded 이벤트에 의해 새 버튼이 다시 생성됩니다.
+         *
+         * - 위치/디자인:
+         *   - .ad-slot를 기준으로 우측 상단(absolute top/right)에 위치하며,
+         *     상하좌우 20px의 padding을 주어 충분한 클릭 영역을 확보합니다.
+         *   - 높이(height) 20px, line-height 20px로 텍스트 라인을 고정합니다.
+         *
+         * - 주의사항:
+         *   - 실제 광고 iframe 위에 오버레이되는 형태이므로 z-index를 120으로 두어
+         *     mk-ad-label(100)보다 위에 위치시켰습니다.
+         *   - 현재 HOME GPT에서는 TC_billboard_leaderboard에만 사용되지만,
+         *     추후 Section/List GPT 상단 TC 슬롯에도 재사용 가능하도록
+         *     공통 클래스명(.mk-ad-close-button)으로 정의했습니다.
+         */
+        .mk-ad-close-button {
+            position: absolute;
+            top: 0;
+            right: 0;
+            padding: 20px;            /* 상하좌우 20px 패딩 */
+            height: 20px;             /* 텍스트 라인 높이 */
+            line-height: 20px;
+            font-size: 13px;
+            font-weight: normal;
+            background: transparent;
+            border: none;
+            cursor: pointer;
+            z-index: 120;             /* mk-ad-label(100)보다 위 */
+            color: #666;
+            white-space: nowrap;
+        }
         
         @media (prefers-color-scheme: dark) {
             body { background-color: #1a1a1a; color: #e0e0e0; }
@@ -207,6 +250,15 @@
                 background-color: transparent;
                 color: #A0A0A0;
                 border: none;
+            }
+
+            /*
+             * [Dark Mode · mk-ad-close-button]
+             * - 다크 모드에서도 닫기 버튼이 과도하게 튀지 않으면서도
+             *   충분한 대비를 확보하도록 색상만 조정합니다.
+             */
+            .mk-ad-close-button {
+                color: #bbbbbb;
             }
         }
 
@@ -296,46 +348,114 @@
         let MR_halfpage_rectangle_slot    = null;
 
         // ***************************************************
+        // ✅ 공통 헬퍼: 지정 슬롯에 '닫기 X' 버튼을 추가하는 함수
+        // ---------------------------------------------------
+        // - 현재는 HOME 상단 TC_billboard_leaderboard에서만 사용됩니다.
+        // - 동작 개요:
+        //   1) 광고가 실제로 로드된 슬롯에 대해서만 호출(addAdLabel 내부)됩니다.
+        //   2) 동일 슬롯에 이미 버튼이 존재하면 아무 동작도 하지 않습니다(중복 생성 방지).
+        //   3) 버튼 클릭 시 해당 .ad-slot 컨테이너를 display:none 처리하여
+        //      레이아웃 상에서 완전히 접습니다(높이/폭 0처럼 동작).
+        // - 추후 Section/List GPT 상단 TC 계열 슬롯에도 동일 패턴으로 재사용 가능하도록
+        //   별도 함수로 분리해 두었습니다.
+        // ***************************************************
+        function addCloseButtonForSlot(outerSlot, slotId) {
+            if (!outerSlot) return;
+
+            // 이미 버튼이 있으면 중복 생성 방지
+            if (outerSlot.querySelector('.mk-ad-close-button')) return;
+
+            const closeBtn = document.createElement('button');
+            closeBtn.className = 'mk-ad-close-button';
+            closeBtn.type = 'button';
+            closeBtn.textContent = '닫기 X';
+
+            closeBtn.addEventListener('click', function () {
+                // [중요] 클릭 시 광고 영역을 완전히 접기
+                // - display:none 처리로 높이/폭/마진/패딩이 모두 사라진 것처럼 동작합니다.
+                // - GPT/GAM 입장에서는 이미 로드된 iframe이 화면에서 보이지 않을 뿐이며,
+                //   추가 refresh를 하지 않는 한 추가 네트워크 요청은 발생하지 않습니다.
+                outerSlot.style.display = 'none';
+
+                // (선택사항) 필요 시 GAM 슬롯 리소스까지 해제하고 싶다면,
+                // destroySlots를 활용할 수 있습니다. 안정성/디버깅을 위해 기본은 주석 처리.
+                /*
+                if (window.googletag && googletag.destroySlots) {
+                    try {
+                        const definedSlots = googletag.pubads().getSlots();
+                        const targetSlot = definedSlots.find(s => s.getSlotElementId() === slotId);
+                        if (targetSlot) {
+                            googletag.destroySlots([targetSlot]);
+                        }
+                    } catch (e) {
+                        console.log('[Ad Close] destroySlots error:', e);
+                    }
+                }
+                */
+
+                console.log(`⛔ [Ad Close] User closed ad slot: ${slotId}`);
+            });
+
+            outerSlot.appendChild(closeBtn);
+        }
+
+        // ***************************************************
         // ✅ 광고 렌더링 완료 시 'Advertisement' 라벨을 삽입하는 함수 (전역 1회 정의)
         // ---------------------------------------------------
         // [공통 · GAM 이벤트 리스너 메커니즘]
         // - GAM은 각 광고 슬롯 렌더링이 완료될 때 slotRenderEnded 이벤트를 발생시킵니다.
-        // - 아래 addAdLabel 함수는 해당 이벤트를 수신하여 실제로 광고가 채워진 슬롯에만
+        // - 아래 addAdLabel 함수는 해당 이벤트를 수신하여, 실제로 광고가 채워진 슬롯에만
         //   'Advertisement' 라벨을 동적으로 삽입합니다.
-        // - 특징:
-        //   - event.isEmpty === false 일 때만 라벨 삽입 → 빈 슬롯에는 라벨이 붙지 않음
+        //
+        // - 공통 특징:
+        //   - event.isEmpty === false 일 때만 라벨/버튼 삽입 → 빈 슬롯에는 어떤 UI도 붙지 않음
         //   - .ad-slot 래퍼 안에 .mk-ad-label을 prepend 형태로 삽입
         //   - 동일 슬롯에 중복 라벨이 생성되지 않도록 방지 로직 포함
         //
-        // - 예외 처리 (HOME):
-        //   · TC_billboard_leaderboard
-        //     - 홈 상단 핵심 영역으로, 디자인/브랜딩 상 별도 'Advertisement' 라벨 없이
-        //       페이지 구조 및 크리에이티브 레벨에서 광고임을 인지하도록 설계합니다.
-        //     - View GPT의 BC_native_list_* 슬롯과 동일한 컨셉의 예외 슬롯으로 취급합니다.
+        // - 예외 처리:
+        //   · View GPT:
+        //     - BC_native_list_* 슬롯은 에디토리얼 리스트 UI에 자연스럽게 섞이는 Native 성격이므로
+        //       별도 "Advertisement" 라벨을 노출하지 않는 예외 슬롯으로 처리합니다.
+        //   · HOME GPT (본 파일):
+        //     - TC_billboard_leaderboard
+        //       - 홈 상단 핵심 영역으로, 디자인/브랜딩 상 별도 'Advertisement' 라벨 없이
+        //         페이지 구조 및 크리에이티브 레벨에서 광고임을 인지하도록 설계합니다.
+        //       - 대신, 광고가 실제로 로드된 경우에만 사용자가 직접 닫을 수 있는
+        //         '닫기 X' 버튼(.mk-ad-close-button)을 우측 상단에 노출합니다.
+        //
+        // - 정리:
+        //   - 대부분의 슬롯: "광고가 있을 때만 Advertisement 라벨" 패턴 유지
+        //   - 특정 예외 슬롯: 라벨 생략 + 별도 UI(예: 닫기 버튼) 제공
         // ***************************************************
         function addAdLabel(event) {
             const slotId = event.slot.getSlotElementId();
+            const slotElement = document.getElementById(slotId); 
 
-            // 💡 [예외] 홈 상단 'TC_billboard_leaderboard' 슬롯에는 라벨을 붙이지 않음
-            //   - 향후 Section/List GPT에서도 동일한 패턴(상단 TC 계열 슬롯 예외)을
-            //     적용할 수 있도록, 예외 처리 로직을 ID 기반으로 분리했습니다.
-            if (slotId === 'TC_billboard_leaderboard') {
+            // 광고가 비어 있거나 DOM 상에 요소가 없으면 어떤 작업도 하지 않음
+            if (event.isEmpty === true || !slotElement) {
                 return;
             }
 
-            const slotElement = document.getElementById(slotId); 
-            
-            if (event.isEmpty === false && slotElement) {
-                const outerSlot = slotElement.closest('.ad-slot'); 
-                if (!outerSlot) return;
+            // .ad-slot 래퍼(일반적인 경우) 기준으로 라벨/버튼을 붙입니다.
+            // 만약 마크업 구조가 바뀌어 .ad-slot이 없으면, slotElement 자체를 fallback으로 사용.
+            const outerSlot = slotElement.closest('.ad-slot') || slotElement;
+            if (!outerSlot) return;
 
-                // 이미 라벨이 있으면 중복 삽입 방지
-                if (outerSlot.querySelector('.mk-ad-label')) return; 
+            // 🟡 [예외 1] 홈 상단 'TC_billboard_leaderboard'
+            //   - 라벨은 붙이지 않고, 광고가 성공적으로 로드된 경우에만 '닫기 X' 버튼 추가
+            if (slotId === 'TC_billboard_leaderboard') {
+                addCloseButtonForSlot(outerSlot, slotId);
+                console.log('ℹ️ [Ad Label] TC_billboard_leaderboard: label skipped, close button added.');
+                return;
+            }
 
+            // 🔵 일반 슬롯: 라벨 처리 (기존 로직 유지)
+            if (!outerSlot.querySelector('.mk-ad-label')) {
                 const labelElement = document.createElement('div');
                 labelElement.className = 'mk-ad-label';
                 labelElement.textContent = 'Advertisement';
                 
+                // 광고 div의 가장 위에 라벨 요소를 삽입합니다.
                 outerSlot.insertBefore(labelElement, outerSlot.firstChild);
 
                 // 배경/보더는 투명 처리 유지
@@ -470,7 +590,7 @@
                 collapseDiv: 'BEFORE_FETCH'  // collapseEmptyDivs(true)와 동등한 동작
             });
             
-            // ✅ GAM 이벤트 리스너 추가 (라벨)
+            // ✅ GAM 이벤트 리스너 추가 (라벨 + TC 닫기 버튼)
             googletag.pubads().addEventListener('slotRenderEnded', addAdLabel);
 
             // --- [4] Size Mapping 정의 (2개로 분리 적용) ---
@@ -612,6 +732,12 @@
                      * 주의사항:
                      * - TC_billboard_leaderboard_slot 객체는 상단 스크립트에서 이미 정의/생성되어 있어야 합니다.
                      * - View / Section / List에서도 Eager 슬롯이 있다면 동일 패턴을 재사용하는 것을 권장드립니다.
+                     *
+                     * [추가 참고 · 닫기 버튼 연동]
+                     * - 광고가 성공적으로 로드되면(slotRenderEnded, event.isEmpty === false),
+                     *   상단 addAdLabel 함수 내부에서 TC 전용 '닫기 X' 버튼이 생성됩니다.
+                     * - 사용자가 닫기 버튼을 클릭하면, 해당 .ad-slot이 display:none 처리되어
+                     *   상단 광고 영역이 완전히 사라집니다.
                      */
                     // BODY에서 Eager Load: display + refresh
                     googletag.cmd.push(function() { 
