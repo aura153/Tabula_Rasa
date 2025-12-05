@@ -16,7 +16,16 @@
 
         body { font-family: 'Malgun Gothic', 'Dotum', Arial, sans-serif; margin: 0; padding: 0; background-color: #f6f6f6; color: #333; }
         a { text-decoration: none; color: inherit; }
-        .container { max-width: 1210px; margin: 0 auto; padding: 0 10px; }
+
+        /*
+         * [변경 · 컨테이너 폭 정책]
+         * - max-width: 1210px → 1246px로 확대
+         *   · 기존: 메인 + 사이드(300px) 기준으로 약 1210px 구성
+         *   · 변경: 우측 사이드레일을 336px까지 확장하면서 전체 폭도 1246px로 조정
+         * - 패딩(좌우 10px)은 그대로 유지하여 전체 레이아웃 톤은 유지
+         */
+        .container { max-width: 1246px; margin: 0 auto; padding: 0 10px; }
+
         header { width: 100%; background-color: #fff; border-bottom: 1px solid #ddd; padding: 10px 0; text-align: center; }
         .logo { font-size: 28px; font-weight: bold; color: #000; }
         nav { background-color: #f9f9f9; border-bottom: 2px solid #333; margin-bottom: 20px; }
@@ -30,7 +39,8 @@
          * [레이아웃 · 메인/우측 컬럼 비율 전략 – View GPT와의 정렬]
          *
          * - 목적:
-         *   1) 데스크탑에서 우측 사이드바 내 300px 폭 광고(300x250, 300x600 등)가
+         *   1) 데스크탑에서 우측 사이드바 내 336px 컨테이너 폭을 확보하여,
+         *      300x250, 300x600, 336x280 등 다양한 세로형/박스형 광고가
          *      잘리지 않고 온전히 노출되도록 "사이드바 영역 폭"을 보장
          *   2) 모바일/태블릿에서는 우측 컬럼이 메인 아래로 내려가면서 폭 100%를 사용하도록 설정
          *
@@ -39,13 +49,13 @@
          *   - 모바일/태블릿: width: 100%로 전환
          *
          * - HOME GPT의 .sidebar 전략:
-         *   - 외곽 padding을 0으로 두고, 전체 컨테이너 폭을 300px로 고정
-         *     → 300x600 / 300x250 소재를 정확히 수용(좌우 잘림 방지)
-         *   - 데스크탑(≥1025px): flex: 0 0 300px; min-width: 300px
+         *   - 외곽 padding을 0으로 두고, 전체 컨테이너 폭을 336px로 고정
+         *     → 336x280 크리에이티브는 풀폭, 300x250/300x600 소재는 좌우 여백을 두고 중앙 정렬
+         *   - 데스크탑(≥1025px): flex: 0 0 336px; min-width: 336px; max-width: 336px
          *   - 모바일/태블릿(≤1024px): width: 100%; flex: 1 1 auto; min-width: 0;
          *
          * - 결과:
-         *   - 데스크탑에서는 우측 영역 내 모든 ad-slot이 300px 폭 소재를 안정적으로 수용
+         *   - 데스크탑에서는 우측 영역 내 모든 ad-slot이 336px 폭 컨테이너를 기반으로 안정적으로 노출
          *   - 모바일/태블릿에서는 레이아웃이 세로 스택이 되며, 사이드바 폭 100%로 자연스럽게 확장
          */
         .main-content {
@@ -57,7 +67,7 @@
             /* 
              * [사이드바 공통 스타일]
              * - 광고 수익 테스트를 위해 외곽 padding을 0으로 설정
-             * - 우측 레일 전체 폭(300px) 안에서 광고/콘텐츠를 최대한 넓게 쓰기 위함
+             * - 우측 레일 전체 폭(336px 컨테이너) 안에서 광고/콘텐츠를 최대한 넓게 쓰기 위함
              * - 텍스트/콘텐츠 여백이 필요하면 .sidebar-item 등 내부 요소에서 padding을 부여
              */
             background-color: #fff;
@@ -201,7 +211,7 @@
          *   · "□ 오늘하루 | 닫기 X" 형태로 노출
          *   · "오늘하루" 클릭 시 체크박스 토글
          *   · "닫기 X" 클릭 시:
-         *       - 체크박스 O → 오늘 하루(자정까지) 상단 배너 숨김 + 광고 호출 차단
+         *       - 체크박스 O → 오늘 하루(자정까지) 상단 배너 숨김 + 광고 미호출
          *       - 체크박스 X → 이번 세션에서만 배너 닫기
          *
          * - 시각 디자인:
@@ -298,13 +308,14 @@
 
         /* ------------------------------
            데스크탑 레이아웃 (>= 1025px)
-           - 우측 사이드바 300px 컨테이너 폭 확보
-           - 300x600/300x250 등 세로형 광고를 수용하기에 충분한 폭 보장
+           - 우측 사이드바 336px 컨테이너 폭 확보
+           - 300x600 / 300x250 / 336x280 등 세로형 광고를 수용하기에 충분한 폭 보장
         ------------------------------ */
         @media (min-width: 1025px) {
             .sidebar {
-                flex: 0 0 300px;   /* 전체 폭 300px (외곽 padding 0 기준) */
-                min-width: 300px;  /* 최소 폭 보장 */
+                flex: 0 0 336px;   /* 전체 컨테이너 폭 336px (외곽 padding 0 기준) */
+                min-width: 336px;  /* 최소 폭 보장 */
+                max-width: 336px;  /* 최대 폭도 336px로 고정 → 사이드레일 정책 일관성 확보 */
             }
         }
 
@@ -729,8 +740,8 @@
              *   예) [1024, 0] 이상일 때는 데스크탑용 대형 배너, 그보다 작으면 모바일용 소형 배너
              *
              * - HOME GPT에서는:
-             *   - sizeMapping_horizontal     : 상단/중단의 가로형 배너(TC, MC)에 공통 적용
-             *   - sizeMapping_right_square   : 오른쪽 MR 박스형 배너에 적용
+             *   - sizeMapping_horizontal       : 상단/중단의 가로형 배너(TC, MC)에 공통 적용
+             *   - sizeMapping_siderail_square  : 우측 사이드레일(MR) 박스형/세로형 배너에 적용
              * - 실제 입찰 단계에서 GAM은 이 매핑 정보를 사용해, 뷰포트에 맞는 크리에이티브만 선별하여 노출합니다.
              */
 
@@ -741,11 +752,27 @@
                 .addSize([0, 0], [[336, 280], [300, 250], [320, 480], [320, 100], [320, 50], [250, 250], [200, 200], [2, 1], [1, 1], 'fluid'])
                 .build();
 
-            // 0-2. 우측 박스형 배너용 사이즈 매핑 (MR)
-            const sizeMapping_right_square = googletag.sizeMapping()
-                .addSize([1024, 0], [[300, 600], [300, 250], [250, 250], [200, 200], [2, 1], [1, 1], 'fluid'])
-                .addSize([768, 0], [[480, 320], [336, 280], [320, 100], [320, 50], [300, 250], [250, 250], [200, 200], [2, 1], [1, 1], 'fluid'])
-                .addSize([0, 0], [[336, 280], [320, 480], [320, 100], [320, 50], [300, 250], [250, 250], [200, 200], [2, 1], [1, 1], 'fluid'])
+            // 0-2. 우측 사이드레일 박스형 배너용 사이즈 매핑 (MR)
+            // - 기존 sizeMapping_right_square를 sizeMapping_siderail_square로 교체
+            //   · 데스크탑 구간([1024,0])에도 336x280을 최우선 사이즈로 추가
+            //   · 태블릿/모바일 구간은 기존 정책을 유지하면서 네이밍만 통일
+            const sizeMapping_siderail_square = googletag.sizeMapping()
+                .addSize([1024, 0], [
+                    [336, 280], [300, 600], [300, 250], [250, 250], [200, 200],
+                    [2, 1], [1, 1], 'fluid'
+                ])
+                .addSize([768, 0], [
+                    [480, 320], [336, 280],
+                    [320, 100], [320, 50],
+                    [300, 250], [250, 250], [200, 200],
+                    [2, 1], [1, 1], 'fluid'
+                ])
+                .addSize([0, 0], [
+                    [336, 280], [320, 480],
+                    [320, 100], [320, 50],
+                    [300, 250], [250, 250], [200, 200],
+                    [2, 1], [1, 1], 'fluid'
+                ])
                 .build();
             // ----------------------------------------------------]
             
@@ -793,13 +820,13 @@
                 .setTargeting('default_exposure', '') 
                 .addService(googletag.pubads());
 
-            // MR_halfpage_rectangle (Lazy Load) - sizeMapping_right_square 적용
+            // MR_halfpage_rectangle (Lazy Load) - sizeMapping_siderail_square 적용
             MR_halfpage_rectangle_slot = googletag.defineSlot(
                 AdUnitPath,
                 [[480, 320], [336, 280], [320, 480], [320, 100], [320, 50], [300, 600], [300, 250], [250, 250], [200, 200], [2, 1], [1, 1], 'fluid'],
                 'MR_halfpage_rectangle'
             )
-                .defineSizeMapping(sizeMapping_right_square) 
+                .defineSizeMapping(sizeMapping_siderail_square) 
                 .setTargeting('div_id', 'MR_halfpage_rectangle')
                 .setTargeting('load_type', 'lazy')           // 사이드바 내 Lazy 로딩 대상
                 .setTargeting('position', 'MR')              // Right(MR) 영역
