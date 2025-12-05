@@ -1,4 +1,4 @@
-<!DOCTYPE html> 
+<!DOCTYPE html>  
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
@@ -64,13 +64,24 @@
         //   2) 해당 요소가 속한 .ad-slot 래퍼를 찾고
         //   3) .mk-ad-label 이 이미 없을 때만 새 DIV를 prepend
         // - View/HOME/SECTION/LIST GPT 모두 동일한 스타일/로직으로 통일했습니다.
+        //
+        // [List/HOME 공통 정책]
+        // - 상단 TC_billboard_leaderboard는 브랜드/메인 크리에이티브 영역으로
+        //   활용될 수 있으므로 "Advertisement" 라벨을 붙이지 않는 예외 슬롯으로 처리합니다.
         // ***************************************************
         function addAdLabel(event) {
             const slotId = event.slot.getSlotElementId();
             const slotElement = document.getElementById(slotId); 
+
+            // 💡 [TC 전용 예외 처리] 리스트 상단 TC에는 라벨을 붙이지 않음 (HOME/SECTION과 동일 정책)
+            if (slotId === 'TC_billboard_leaderboard') {
+                if (event.isEmpty) return;   // 광고가 없으면 아무 동작 없음
+                console.log('ℹ️ [Ad Label] TC_billboard_leaderboard: label skipped by policy.');
+                return;
+            }
             
             if (event.isEmpty === false && slotElement) {
-                const outerSlot = slotElement.closest('.ad-slot'); 
+                const outerSlot = slotElement.closest('.ad-slot') || slotElement; 
                 if (!outerSlot) return;
 
                 // 동일 슬롯에 라벨 중복 삽입 방지
