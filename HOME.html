@@ -245,9 +245,12 @@
         /*
          * [HOME 전용 · 닫기 버튼 내부 텍스트 공통 타이포 스타일]
          * - 세 요소(.mk-ad-close-label / .mk-ad-close-text / .mk-ad-close-separator)는
-         *   UI 상 하나의 문장처럼 보이므로, 폰트 크기·라인 높이·자간을 공통으로 통일했습니다.
+         *   UI 상 하나의 문장처럼 보이므로, 폰트 크기·라인 높이·자간·두께·가시성용 그림자를
+         *   공통으로 통일했습니다.
          *   → "□ 오늘하루 | 닫기 X", "□ 오늘 그만 X"가 한 덩어리 텍스트처럼 자연스럽게 보이도록 정리
-         * - 색상/텍스트 그림자 등은 부모(.mk-ad-close-button)의 설정을 상속받습니다.
+         * - 색상은 상위 컨테이너(.mk-ad-close-button)의 color(#FFFFFF)를 상속받습니다.
+         * - text-shadow 역시 .mk-ad-close-button과 동일 값을 명시하여
+         *   유지보수 시 "닫기 UI 전체가 하나의 타이포셋"으로 인지되도록 했습니다.
          */
         .mk-ad-close-label,
         .mk-ad-close-text,
@@ -255,6 +258,10 @@
             font-size: 14px;
             line-height: 1;
             letter-spacing: -0.3px;
+            font-weight: 400;
+            text-shadow:
+                0 0 2px rgba(0, 0, 0, 0.70),
+                0 0 3px rgba(0, 0, 0, 0.55);
         }
 
         .mk-ad-close-label {
