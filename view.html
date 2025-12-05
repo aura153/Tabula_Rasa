@@ -601,7 +601,18 @@
             color: #333;
         }
         a { text-decoration: none; color: inherit; }
-        .container { max-width: 1200px; margin: 0 auto; padding: 0 15px; }
+
+        /* --------------------------------------------------------------
+           [페이지 공통 너비 정책 – 1246px 컨테이너]
+
+           - View/HOME/Section/List GPT 공통으로
+             Desktop 기준 최대 레이아웃 폭을 1246px로 맞추는 정책입니다.
+           - 이 안에서 상단 빌보드/BC 빌보드는 최대 1200px 크리에이티브를 사용하며,
+             좌우에는 20px 내외의 여백(광고/본문 안전 영역)을 확보합니다.
+           - 광고 로직(GPT sizeMapping, 1200x300/1200x100 등)은 그대로 유지됩니다.
+        -------------------------------------------------------------- */
+        .container { max-width: 1246px; margin: 0 auto; padding: 0 15px; }
+
         nav { background-color: #f9f9f9; border-bottom: 1px solid #333; margin-bottom: 20px; }
         .nav-list { list-style: none; padding: 0; margin: 0; display: flex; justify-content: flex-start; }
         .nav-list li { padding: 15px 15px; font-size: 14px; color: #555; }
