@@ -193,7 +193,10 @@
          * - TC_billboard_leaderboard와 같이 페이지 상단 핵심 인벤토리에서
          *   사용자가 직접 광고를 접을 수 있도록 제공하는 "닫기 ✕" 버튼입니다.
          *
-         * - 이번 버전은 좀 더 **심플하고 뉴스 사이트 톤에 맞는 플랫 스타일**에 초점을 맞추었습니다.
+         * - 이번 버전은:
+         *   · 심플한 직사각형 형태(border-radius: 0)
+         *   · 가독성을 해치지 않는 수준의 부드러운 그림자(Soft text/box shadow)
+         *   를 목표로 했습니다.
          *
          *   1) Layout & Position
          *      - 배너(= .ad-slot)를 기준으로 우측 상단 절대 위치
@@ -208,18 +211,19 @@
          *
          *   3) Shape & Spacing
          *      - border-radius: 0px → 완전히 각진 직사각형 버튼 (심플한 느낌)
-         *      - padding: 5px 5px → 텍스트 주변 최소 여백, 과도한 장식 없이 기능 위주 버튼
+         *      - padding: 5px 5px → 텍스트 주변 최소 여백
          *
          *   4) Color & Visibility
          *      - background: rgba(0,0,0,0.2)
          *        → 흰색/밝은 배너 위에서 버튼 배경이 적당히 잡히도록 조정
          *      - color: #FFFFFF
-         *      - text-shadow + box-shadow를 사용해
-         *        밝은 이미지 위에서도 텍스트와 버튼 윤곽이 묻히지 않도록 처리
+         *      - text-shadow + box-shadow:
+         *        → 기존 버전보다 투명도를 한 단계 낮춰, 강한 발광 느낌은 줄이고
+         *           “은은한 아웃라인 + 가독성”만 남기도록 조정한 Soft 스타일
          *
          *   5) Interaction
          *      - :hover 시 background를 rgba(0,0,0,0.3)로 살짝 어둡게,
-         *        box-shadow를 조금 강화하고 약간 위로 띄워 클릭감을 전달
+         *        box-shadow를 약간 강화하고 약간 위로 띄워 클릭감을 전달
          *
          * - 주의사항:
          *   - z-index를 120으로 설정하여 mk-ad-label(100)보다 항상 위에 위치시킵니다.
@@ -228,7 +232,7 @@
          */
         .mk-ad-close-button {
             position: absolute;
-            top: 15px;                /* ✅ Design: 좀 더 내려 심리적 여백 확보 */
+            top: 15px;                /* ✅ Design: 조금 내려 심리적 여백 확보 */
             right: 10px;
 
             display: inline-flex;      /* 텍스트 정렬용 */
@@ -249,15 +253,20 @@
             cursor: pointer;
             white-space: nowrap;
 
-            /* 가시성 확보용 그림자 (밝은/어두운 배경 모두 대비 확보) */
+            /* 
+             * [Soft 가시성 확보용 그림자]
+             * - 이전 버전보다 alpha 값을 전반적으로 0.1~0.2 낮춰
+             *   과도한 발광/후광 느낌은 줄이고, 
+             *   흰 배경 위에서도 적당한 대비만 남도록 조정.
+             */
             text-shadow:
-                0 0 2px rgba(0, 0, 0, 0.85),
-                0 0 4px rgba(0, 0, 0, 0.8),
-                0 0 6px rgba(0, 0, 0, 0.7);
+                0 0 2px rgba(0, 0, 0, 0.65),
+                0 0 4px rgba(0, 0, 0, 0.55),
+                0 0 6px rgba(0, 0, 0, 0.45);
 
             box-shadow:
-                0 0 4px rgba(0, 0, 0, 0.65),
-                0 0 8px rgba(0, 0, 0, 0.55);
+                0 0 4px rgba(0, 0, 0, 0.45),
+                0 0 8px rgba(0, 0, 0, 0.35);
 
             /* Hover 시 부드러운 변화 */
             transition:
@@ -271,8 +280,8 @@
         .mk-ad-close-button:hover {
             background: rgba(0, 0, 0, 0.3);  /* Hover: 배경 살짝 어둡게 */
             box-shadow:
-                0 0 6px rgba(0, 0, 0, 0.75),
-                0 0 10px rgba(0, 0, 0, 0.7);
+                0 0 6px rgba(0, 0, 0, 0.6),
+                0 0 10px rgba(0, 0, 0, 0.5);
             transform: translateY(-1px);     /* 살짝 위로 떠오르는 느낌 */
         }
         
@@ -1005,7 +1014,7 @@
              *
              * - Eager/Lazy 공통 로직 관점:
              *   - Eager: 페이지 로드시 곧바로 display + refresh
-             *   - Lazy : 페이지 로드 이후, 스크롤/관찰 조건 충족 시점에 display + refresh
+             *   - Lazy : 페이지 로드 이후, 스크롤/관찰 조건 충족 시점에서 display + refresh
              */
             lazyObserver = new IntersectionObserver(function(entries, observerInstance) {
                 entries.forEach(entry => {
