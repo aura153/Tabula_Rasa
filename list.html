@@ -220,12 +220,12 @@
                 .build();
 
             // 0-2. 우측 박스형 배너를 위한 사이즈 매핑 (MR 적용)
-            const sizeMapping_right_square = googletag.sizeMapping()
+            //     🔧 2025-12: sizeMapping_right_square → sizeMapping_siderail_square 로 명칭·구성을 통일
+            const sizeMapping_siderail_square = googletag.sizeMapping()
                 .addSize(
                     [1024, 0],
                     [
-                        [300, 600], [300, 250],
-                        [250, 250], [200, 200],
+                        [336, 280], [300, 600], [300, 250], [250, 250], [200, 200],
                         [2, 1], [1, 1],
                         'fluid'
                     ]
@@ -233,8 +233,7 @@
                 .addSize(
                     [768, 0],
                     [
-                        [480, 320],
-                        [336, 280],
+                        [480, 320], [336, 280],
                         [320, 100], [320, 50],
                         [300, 250], [250, 250], [200, 200],
                         [2, 1], [1, 1],
@@ -244,8 +243,7 @@
                 .addSize(
                     [0, 0],
                     [
-                        [336, 280],
-                        [320, 480],
+                        [336, 280], [320, 480],
                         [320, 100], [320, 50],
                         [300, 250], [250, 250], [200, 200],
                         [2, 1], [1, 1],
@@ -291,7 +289,7 @@
                 .addService(googletag.pubads());
 
 
-            // 5-2. MR_halfpage_rectangle (Lazy Load) - sizeMapping_right_square 적용
+            // 5-2. MR_halfpage_rectangle (Lazy Load) - sizeMapping_siderail_square 적용 (우측 레일 공통 사이즈 매핑)
             MR_halfpage_rectangle_slot = googletag.defineSlot(
                 AdUnitPath,
                 [
@@ -306,7 +304,7 @@
                 ],
                 'MR_halfpage_rectangle' // Slot ID는 MR_halfpage_rectangle 유지
             )
-                .defineSizeMapping(sizeMapping_right_square) 
+                .defineSizeMapping(sizeMapping_siderail_square)  // 🔧 2025-12: 우측 레일용 사이즈 매핑 통합 적용
                 .setTargeting('div_id', 'MR_halfpage_rectangle')
                 .setTargeting('position', 'MR')
                 .setTargeting('ad_area_type', 'ATF')      // 우측 MR (ATF 성격)
@@ -365,7 +363,8 @@
          */
         body { font-family: 'Malgun Gothic', 'Dotum', Arial, sans-serif; margin: 0; padding: 0; background-color: #f6f6f6; color: #333; }
         a { text-decoration: none; color: inherit; }
-        .container { max-width: 1210px; margin: 0 auto; padding: 0 10px; }
+        /* 🔧 2025-12: 전체 콘텐츠 폭을 1246px로 확장 (HOME/SECTION/List 공통 정책) */
+        .container { max-width: 1246px; margin: 0 auto; padding: 0 10px; }
         header { width: 100%; background-color: #fff; border-bottom: 1px solid #ddd; padding: 10px 0; text-align: center; }
         .logo { font-size: 28px; font-weight: bold; color: #000; }
         nav { background-color: #f9f9f9; border-bottom: 2px solid #333; margin-bottom: 20px; }
@@ -379,16 +378,16 @@
          * [레이아웃 · 메인/우측 컬럼 비율 전략 – HOME/SECTION/VIEW와 동일 방향]
          *
          * - 목표:
-         *   1) 데스크탑에서 우측 사이드바 내 300px 폭 광고(300x250, 300x600 등)가
+         *   1) 데스크탑에서 우측 사이드바 내 336px 폭 광고(336x280, 300x250, 300x600 등)가
          *      잘리지 않고 온전히 노출되도록 "사이드 레일 폭"을 보장
          *   2) 모바일/태블릿에서는 우측 컬럼이 메인 아래로 내려가며 폭 100% 사용
          *
          * - 전략:
          *   - .main-content : flex: 1 1 auto; → 남는 영역을 유연하게 차지
          *   - .sidebar      : 
-         *       · 데스크탑(≥1025px): flex: 0 0 300px; min-width: 300px
-         *          → padding 0 기준으로 레일 전체 폭을 300px 확보
-         *            (300x600 / 300x250 소재가 거의 딱 맞게 들어가는 폭)
+         *       · 데스크탑(≥1025px): flex: 0 0 336px; min-width: 336px; max-width: 336px
+         *          → padding 0 기준으로 레일 전체 폭을 336px 확보
+         *            (336x280 / 300x600 / 300x250 소재가 안정적으로 들어가는 폭)
          *       · 모바일/태블릿(≤1024px): width:100%; flex:1 1 auto; min-width:0
          *          → 폭 100%를 사용하며, min-width 제약 제거
          */
@@ -400,11 +399,11 @@
         .sidebar {
             /* 
              * [사이드바 공통 스타일]
-             * - 외곽 컨테이너에는 padding을 두지 않고, 폭만 300px 기준으로 확보합니다.
+             * - 외곽 컨테이너에는 padding을 두지 않고, 폭만 336px 기준으로 확보합니다. (데스크탑)
              * - 텍스트/콘텐츠 여백은 .sidebar-box 내부의 개별 요소(h4, p 등)에서
              *   margin/padding으로 제어하는 것을 권장합니다.
-             * - 광고 슬롯(.ad-slot)은 사이드바 폭(300px)을 그대로 활용하여,
-             *   300x600 / 300x250 등의 소재가 자연스럽게 노출되도록 합니다.
+             * - 광고 슬롯(.ad-slot)은 사이드바 폭(최대 336px)을 그대로 활용하여,
+             *   336x280 / 300x600 / 300x250 등의 소재가 자연스럽게 노출되도록 합니다.
              */
             background-color: #fff;
             padding: 0;                 /* 외곽 컨테이너는 padding 0 유지 */
@@ -579,13 +578,14 @@
 
         /* ------------------------------
            데스크탑 레이아웃 (>= 1025px)
-           - 우측 사이드바 컨테이너 폭 300px 확보 (padding 0 기준)
-           - 300x600/300x250 등 세로형 광고가 기준 폭 300px 안에서 노출
+           - 우측 사이드바 컨테이너 폭 336px 확보 (padding 0 기준)
+           - 336x280/300x600/300x250 등 세로형 광고가 기준 폭 336px 안에서 노출
         ------------------------------ */
         @media (min-width: 1025px) {
             .sidebar {
-                flex: 0 0 300px;
-                min-width: 300px;
+                flex: 0 0 336px;   /* 🔧 2025-12: 사이드 레일 폭 336px로 확장 */
+                min-width: 336px;
+                max-width: 336px;  /* 상단 코멘트 정책에 맞춰 최대 폭도 336px로 고정 */
             }
         }
         
