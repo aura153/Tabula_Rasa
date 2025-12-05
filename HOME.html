@@ -531,8 +531,7 @@
         //   · 납품된 광고(비어 있지 않은 슬롯)에 한해 "Advertisement" 라벨을 자동 삽입
         //   · HOME 상단 TC_billboard_leaderboard는 예외 처리:
         //       1) "Advertisement" 라벨을 붙이지 않음
-        //       2) event.size를 기반으로 TC 폭을 크리에이티브 폭에 맞게 보정
-        //       3) (데스크탑 전용) '오늘하루 | 닫기 X' 버튼을 삽입
+        //       2) (데스크탑 전용) '오늘하루 | 닫기 X' 버튼을 삽입
         //
         // - 라벨 자동 삽입:
         //   · 각 페이지(View/HOME/Section/List)의 HTML에 라벨을 하드코딩하지 않고,
@@ -551,35 +550,16 @@
                 // 광고가 없는 경우 아무 작업도 하지 않음
                 if (event.isEmpty) return;
 
-                // 1) 크리에이티브 폭 기준으로 TC 컨테이너 폭 보정
-                //    - 예: 1200x300 → 컨테이너 width/max-width를 1200px로 맞추고 가운데 정렬
-                //    - 모바일에서 320x50 등 다른 사이즈가 매칭될 경우도 동일하게 동작
-                const size = event.size;
-                if (Array.isArray(size) && typeof size[0] === 'number') {
-                    const creativeWidth = size[0];
+                // (폭 보정 로직 제거됨: 모든 디바이스에서 TC 영역은 컨테이너 폭 100% 사용)
 
-                    // 너무 작은(1x1 등) 비가시 크리에이티브는 폭 보정을 하지 않도록 가드
-                    if (creativeWidth >= 200 && creativeWidth <= 2000) {
-                        outerSlot.style.maxWidth = creativeWidth + 'px';
-                        outerSlot.style.width = creativeWidth + 'px';
-                        outerSlot.style.marginLeft = 'auto';
-                        outerSlot.style.marginRight = 'auto';
-                        console.log(`✅ [TC Width Fix] Applied width=${creativeWidth}px for TC_billboard_leaderboard.`);
-                    } else {
-                        console.log('[TC Width Fix] creativeWidth out of normal range, keep default 100% width.', creativeWidth);
-                    }
-                } else {
-                    console.log('[TC Width Fix] event.size invalid, keep default 100% width.');
-                }
-
-                // 2) 데스크탑 전용 '오늘하루 | 닫기 X' 버튼 삽입
+                // 데스크탑 전용 '오늘하루 | 닫기 X' 버튼 삽입
                 if (isTcBillboardCloseFeatureEnabled()) {
                     addCloseButtonForSlot(outerSlot);
                 } else {
                     console.log('[TC Close] Feature disabled (device != desktop or global flag false).');
                 }
 
-                // 3) TC 슬롯에는 'Advertisement' 라벨을 붙이지 않음
+                // TC 슬롯에는 'Advertisement' 라벨을 붙이지 않음
                 return;
             }
 
