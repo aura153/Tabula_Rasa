@@ -78,7 +78,7 @@
          *   2) height/min-height를 강제하지 않고, 실제 크리에이티브/iframe 높이에 맡김
          *      → PageSettingsConfig.collapseDiv = 'BEFORE_FETCH'와 결합해
          *        광고가 없을 때 불필요한 공백을 남기지 않음
-         *   3) 라벨(Advertisement)이 들어갈 상단 여백만 padding-top으로 최소한 확보
+         *   3) 라벨(Advertisement)과 닫기 버튼이 들어갈 상단 여백만 padding-top으로 최소한 확보
          *
          * - View GPT와의 차이/유사점:
          *   - View GPT: .ad-slot가 flex 컨테이너로 동작하며, 광고 내용을 수평/수직 중앙 정렬
@@ -225,7 +225,7 @@
             font-size: 13px;
             font-weight: 400;
             line-height: 1;
-            cursor: default;               /* 전체 컨테이너는 디폴트, 닫기 텍스트만 pointer */
+            cursor: default;               /* 전체 컨테이너는 디폴트, 텍스트 영역에서만 pointer 부여 */
             border-radius: 0px;            /* 요청: 날카로운 직사각형 형태 */
             /* 가시성 확보용 그림자 (톤을 완화해 세련되게 조정한 버전) */
             text-shadow:
@@ -243,13 +243,18 @@
         }
 
         /*
-         * [HOME 전용 · 닫기 버튼 내부 텍스트 폰트]
-         * - 요청에 따라 "□ 오늘하루 | 닫기 X", "□ 오늘 그만 X"의 가독성을 위해 14px로 통일
+         * [HOME 전용 · 닫기 버튼 내부 텍스트 공통 타이포 스타일]
+         * - 세 요소(.mk-ad-close-label / .mk-ad-close-text / .mk-ad-close-separator)는
+         *   UI 상 하나의 문장처럼 보이므로, 폰트 크기·라인 높이·자간을 공통으로 통일했습니다.
+         *   → "□ 오늘하루 | 닫기 X", "□ 오늘 그만 X"가 한 덩어리 텍스트처럼 자연스럽게 보이도록 정리
+         * - 색상/텍스트 그림자 등은 부모(.mk-ad-close-button)의 설정을 상속받습니다.
          */
         .mk-ad-close-label,
         .mk-ad-close-text,
         .mk-ad-close-separator {
             font-size: 14px;
+            line-height: 1;
+            letter-spacing: -0.3px;
         }
 
         .mk-ad-close-label {
@@ -258,7 +263,8 @@
         }
 
         .mk-ad-close-separator {
-            padding: 0 2px;
+            padding: 0 2px;   /* 문구 사이 간격을 위한 최소 패딩 */
+            /* separator는 단순 구분자이므로 cursor는 기본값 유지 (pointer 지정 X) */
         }
 
         .mk-ad-close-text {
@@ -1025,7 +1031,7 @@
                     <h3>📝 Policy Briefing</h3>
                     <p style="font-size: 16px;">**정부, 저출산 대책 발표... 파격적인 주거 지원 방안 포함**</p>
                 </div>
-            </div]
+            </div>
             
             <div class="sidebar">
                 <h3>📌 Right Contents: Investment Tips</h3>
