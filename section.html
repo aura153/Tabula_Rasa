@@ -74,15 +74,27 @@
         //   - .ad-slot 래퍼의 첫 번째 자식으로 mk-ad-label DIV를 prepend
         //   - 동일 슬롯에 중복 라벨이 붙지 않도록 사전 검사 수행
         //   - BC_native_xxx 등 라벨 예외 슬롯이 있다면, View GPT처럼 slotId로 조건 분기하여 제외 가능
+        //
+        // [Section/HOME 공통 정책]
+        // - HOME GPT와 동일하게, 섹션 상단 TC_billboard_leaderboard는
+        //   브랜드/메인 크리에이티브 영역으로 활용될 수 있으므로
+        //   "Advertisement" 라벨을 붙이지 않는 예외 슬롯으로 처리합니다.
         // ***************************************************
         function addAdLabel(event) {
             const slotId = event.slot.getSlotElementId();
             const slotElement = document.getElementById(slotId); 
-            
-            if (event.isEmpty === false && slotElement) {
-                const outerSlot = slotElement.closest('.ad-slot'); 
-                if (!outerSlot) return;
+            const outerSlot = slotElement ? (slotElement.closest('.ad-slot') || slotElement) : null;
 
+            // 💡 [TC 전용 예외 처리] Section 프론트 상단 TC에는 라벨을 붙이지 않음
+            // - HOME GPT의 TC_billboard_leaderboard와 동일 정책
+            if (slotId === 'TC_billboard_leaderboard') {
+                if (event.isEmpty) return;   // 광고가 없으면 아무 동작 없음
+                // (필요 시 콘솔 로깅만 남길 수 있음)
+                console.log('ℹ️ [Ad Label] TC_billboard_leaderboard: label skipped by policy.');
+                return;
+            }
+            
+            if (event.isEmpty === false && outerSlot) {
                 // 이미 라벨이 있는 경우 중복 삽입 방지
                 if (outerSlot.querySelector('.mk-ad-label')) return; 
 

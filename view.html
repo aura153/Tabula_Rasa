@@ -86,14 +86,18 @@
         //     Native 형태이므로, 리스트 UI에서 별도 "Advertisement" 라벨을 붙이지 않습니다.
         //     → 아래 CSS의 .related-list .native-ad-list-item 관련 정의 참고
         //       (번호 카운트에서는 제외하지만 화면상 별도 "AD" 라벨은 노출하지 않음)
+        //   · TC_billboard_X(상단 빌보드)는 HOME GPT의 'TC_billboard_leaderboard'와 동일하게
+        //     "Advertisement" 라벨을 붙이지 않는 예외 슬롯으로 처리합니다.
         // ***************************************************
         function addAdLabel(event) {
             const slotId = event.slot.getSlotElementId();
 
-            // 💡 [예외] 우측 '이 시각 주요 뉴스' 내 Native 슬롯에는 라벨을 붙이지 않음
-            //   - 이 슬롯은 기사 리스트 UI에 섞여 들어가며,
-            //     광고임을 표시하는 역할은 리스트 맥락(간격/위치)으로만 처리합니다.
-            if (slotId === 'BC_native_list_1' || slotId === 'BC_native_list_2') {
+            // 💡 [예외] 우측 '이 시각 주요 뉴스' Native 슬롯 + 상단 TC 빌보드에는 라벨을 붙이지 않음
+            if (
+                slotId === 'BC_native_list_1' ||
+                slotId === 'BC_native_list_2' ||
+                slotId === 'TC_billboard_X'
+            ) {
                 return;
             }
 
@@ -856,7 +860,7 @@
              · 숫자 번호가 붙은 단일 컬럼 리스트 (예시 스샷 스타일)
              · 각 항목 사이에 연한 회색 라인
              · 광고(Native) 항목은 리스트 안에 섞이되, 기사 카운트에는 포함 X
-               → 광고 LI는 번호/라벨 없이 콘텐츠만 노출 (BC_native_list_*)
+               → 광고 LI는 번호/라벨 없이 콘텐츠만 노출 (BC_native_list_*) 
 
            - 구현 요약
              1) UL(.related-list)에 counter-reset: hotNewsRank 선언
