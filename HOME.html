@@ -102,12 +102,12 @@
             font-weight: bold;
             box-sizing: border-box;
             border: none;
-            padding: 10px 0 0 0;        /* 상단 여백 10px (라벨 공간 확보) */
+            padding: 10px 0 0 0;        /* 상단 여백 10px (라벨/닫기 버튼 공간 확보) */
             background-color: transparent;
             width: 100%;                /* 부모 컨테이너 폭 100% 사용 */
             height: auto;               /* 높이는 실제 광고 크리에이티브에 의해 결정 */
             line-height: 1.5;
-            overflow: visible;
+            overflow: visible;          /* 상단/우측에 오버레이되는 닫기 버튼 표시를 위해 visible 유지 */
             color: transparent;         /* 텍스트 컬러는 투명 처리 (디버그 텍스트 노출 방지) */
             z-index: 10;
         }
@@ -188,101 +188,92 @@
         }
 
         /*
-         * [HOME 전용 · 광고 닫기 버튼(.mk-ad-close-button) 설명]
+         * [HOME 전용 · TC 상단 닫기 버튼(.mk-ad-close-button) 스타일]
          *
-         * - TC_billboard_leaderboard와 같이 페이지 상단 핵심 인벤토리에서
-         *   사용자가 직접 광고를 접을 수 있도록 제공하는 "닫기 ✕" 버튼입니다.
+         * - TC_billboard_leaderboard 슬롯에만 적용되는 "오늘 하루/오늘 그만 + 닫기 X" 오버레이 UI입니다.
+         * - 현재 정책:
+         *   · **초기면(HOME GPT)의 상단 TC 인벤토리에서만 닫기 버튼을 노출**하는 것을 기준으로 합니다.
+         *   · Section GPT, List GPT, View GPT 등 다른 템플릿에는 기본적으로 닫기 버튼을 넣지 않습니다.
+         *     (향후 정책 변경 시 재사용 가능하도록 JS 로직은 재활용 가능한 형태로 설계)
          *
-         * - 이번 버전은:
-         *   · 심플한 직사각형 형태(border-radius: 0)
-         *   · 가독성을 해치지 않는 수준의 부드러운 그림자(Soft text/box shadow)
-         *   를 목표로 했습니다.
+         * - 특징:
+         *   1) .ad-slot 상단 우측에 absolute로 위치 (top: 15px, right: 10px)
+         *   2) 체크박스 + 텍스트 + 닫기 버튼을 inline-flex로 가로 배치
+         *   3) text-shadow / box-shadow를 사용해 밝은/어두운 광고 이미지 위에서도
+         *      가독성을 확보하되, 과도하지 않도록 톤을 완화(부드러운 느낌 유지)
+         *   4) border-radius: 0px, padding: 4px 4px로 UI를 간결하게 구성
          *
-         *   1) Layout & Position
-         *      - 배너(= .ad-slot)를 기준으로 우측 상단 절대 위치
-         *        → top: 15px, right: 10px
-         *      - 텍스트 정렬을 위해 inline-flex + align-items/justify-content 사용
-         *
-         *   2) Typography
-         *      - 텍스트: "닫기 ✕"
-         *      - font-size: 14px (모바일 터치 및 가독성 고려)
-         *      - font-weight: 500 (Regular~Medium 느낌)
-         *      - letter-spacing: -0.3px (조밀하고 단단한 인상)
-         *
-         *   3) Shape & Spacing
-         *      - border-radius: 0px → 완전히 각진 직사각형 버튼 (심플한 느낌)
-         *      - padding: 5px 5px → 텍스트 주변 최소 여백
-         *
-         *   4) Color & Visibility
-         *      - background: rgba(0,0,0,0.2)
-         *        → 흰색/밝은 배너 위에서 버튼 배경이 적당히 잡히도록 조정
-         *      - color: #FFFFFF
-         *      - text-shadow + box-shadow:
-         *        → 기존 버전보다 투명도를 한 단계 낮춰, 강한 발광 느낌은 줄이고
-         *           “은은한 아웃라인 + 가독성”만 남기도록 조정한 Soft 스타일
-         *
-         *   5) Interaction
-         *      - :hover 시 background를 rgba(0,0,0,0.3)로 살짝 어둡게,
-         *        box-shadow를 약간 강화하고 약간 위로 띄워 클릭감을 전달
-         *
-         * - 주의사항:
-         *   - z-index를 120으로 설정하여 mk-ad-label(100)보다 항상 위에 위치시킵니다.
-         *   - HOME에서는 현재 TC_billboard_leaderboard에서만 사용하지만,
-         *     Section/List 상단 TC 계열 슬롯에도 동일하게 재사용 가능합니다.
+         * - 데스크탑/태블릿:
+         *   - 문구: "□ 오늘하루 | 닫기 X"  (폰트 14px)
+         * - 모바일:
+         *   - 문구: "□ 오늘 그만 X"       (폰트 14px, '오늘'과 '그만 X' 분리)
+         *   - UX:
+         *     · "오늘" 텍스트는 체크박스와 함께 클릭 시 체크 토글
+         *     · "그만 X" 텍스트 클릭 시 닫기 동작 수행
          */
         .mk-ad-close-button {
             position: absolute;
-            top: 15px;                /* ✅ Design: 조금 내려 심리적 여백 확보 */
+            top: 15px;
             right: 10px;
-
-            display: inline-flex;      /* 텍스트 정렬용 */
+            z-index: 120;
+            display: inline-flex;
             align-items: center;
-            justify-content: center;
-
-            padding: 5px 5px;          /* ✅ 요청: 상하/좌우 5px */
-            border-radius: 0px;        /* ✅ 각진 사각형 (라운드 제거) */
-            border: none;              /* 테두리 없이 심플하게 */
-
-            background: rgba(0, 0, 0, 0.2);
-            color: #ffffff;
-            font-size: 14px;
-            font-weight: 500;
-            letter-spacing: -0.3px;
-            line-height: 1.3;
-
-            cursor: pointer;
-            white-space: nowrap;
-
-            /* 
-             * [Soft 가시성 확보용 그림자]
-             * - 이전 버전보다 alpha 값을 전반적으로 0.1~0.2 낮춰
-             *   과도한 발광/후광 느낌은 줄이고, 
-             *   흰 배경 위에서도 적당한 대비만 남도록 조정.
-             */
+            gap: 4px;
+            padding: 4px 4px;              /* 요청: padding 4px 4px */
+            background-color: rgba(0, 0, 0, 0.28); /* 배경 살짝 강화 (너무 튀지 않게) */
+            color: #FFFFFF;
+            font-size: 13px;
+            font-weight: 400;
+            line-height: 1;
+            cursor: default;               /* 전체 컨테이너는 디폴트, 닫기 텍스트만 pointer */
+            border-radius: 0px;            /* 요청: 날카로운 직사각형 형태 */
+            /* 가시성 확보용 그림자 (톤을 완화해 세련되게 조정한 버전) */
             text-shadow:
-                0 0 2px rgba(0, 0, 0, 0.65),
-                0 0 4px rgba(0, 0, 0, 0.55),
-                0 0 6px rgba(0, 0, 0, 0.45);
-
+                0 0 2px rgba(0, 0, 0, 0.70),
+                0 0 3px rgba(0, 0, 0, 0.55);
             box-shadow:
-                0 0 4px rgba(0, 0, 0, 0.45),
-                0 0 8px rgba(0, 0, 0, 0.35);
+                0 2px 4px rgba(0, 0, 0, 0.45);
+        }
 
-            /* Hover 시 부드러운 변화 */
-            transition:
-                background-color 0.15s ease-out,
-                box-shadow 0.15s ease-out,
-                transform 0.1s ease-out;
+        .mk-ad-close-button input[type="checkbox"] {
+            width: 12px;
+            height: 12px;
+            margin: 0;
+            padding: 0;
+        }
 
-            z-index: 120;              /* mk-ad-label(100)보다 위에 노출 */
+        /*
+         * [HOME 전용 · 닫기 버튼 내부 텍스트 폰트]
+         * - 요청에 따라 "□ 오늘하루 | 닫기 X", "□ 오늘 그만 X"의 가독성을 위해 14px로 통일
+         */
+        .mk-ad-close-label,
+        .mk-ad-close-text,
+        .mk-ad-close-separator {
+            font-size: 14px;
+        }
+
+        .mk-ad-close-label {
+            white-space: nowrap;
+            cursor: pointer;  /* 라벨(오늘/오늘하루)은 클릭 시 체크박스 토글 가능함을 시각적으로 표현 */
+        }
+
+        .mk-ad-close-separator {
+            padding: 0 2px;
+        }
+
+        .mk-ad-close-text {
+            border: none;
+            background: none;
+            padding: 0;
+            margin: 0;
+            color: inherit;
+            font: inherit;
+            cursor: pointer;   /* 실제 닫기 동작이 걸린 영역 */
+            white-space: nowrap;
         }
 
         .mk-ad-close-button:hover {
-            background: rgba(0, 0, 0, 0.3);  /* Hover: 배경 살짝 어둡게 */
-            box-shadow:
-                0 0 6px rgba(0, 0, 0, 0.6),
-                0 0 10px rgba(0, 0, 0, 0.5);
-            transform: translateY(-1px);     /* 살짝 위로 떠오르는 느낌 */
+            background-color: rgba(0, 0, 0, 0.38);
         }
         
         @media (prefers-color-scheme: dark) {
@@ -309,15 +300,11 @@
 
             /*
              * [Dark Mode · mk-ad-close-button]
-             * - 다크 모드에서도 지나치게 떠 보이지 않도록
-             *   배경 농도만 살짝 조정합니다.
-             * - 기본 전략(흰색 텍스트 + 어두운 그림자)은 동일하게 유지합니다.
+             * - 다크 모드에서는 기본 배경이 어두우므로, 오버레이를 약간 더 짙게 설정하였습니다.
+             * - text-shadow / box-shadow는 기본값을 그대로 사용해도 충분한 대비가 확보됩니다.
              */
             .mk-ad-close-button {
-                background: rgba(0, 0, 0, 0.35);
-            }
-            .mk-ad-close-button:hover {
-                background: rgba(0, 0, 0, 0.5);
+                background-color: rgba(0, 0, 0, 0.55);
             }
         }
 
@@ -406,122 +393,256 @@
         let MC_billboard_rectangle_slot   = null;
         let MR_halfpage_rectangle_slot    = null;
 
-        // ***************************************************
-        // ✅ 공통 헬퍼: 지정 슬롯에 '닫기 ✕' 버튼을 추가하는 함수
-        // ---------------------------------------------------
-        // - 현재는 HOME 상단 TC_billboard_leaderboard에서만 사용됩니다.
-        // - 동작 개요:
-        //   1) 광고가 실제로 로드된 슬롯에 대해서만 호출(addAdLabel 내부)됩니다.
-        //   2) 동일 슬롯에 이미 버튼이 존재하면 아무 동작도 하지 않습니다(중복 생성 방지).
-        //   3) 버튼 클릭 시 해당 .ad-slot 컨테이너를 display:none 처리하여
-        //      레이아웃 상에서 완전히 접습니다(높이/폭 0처럼 동작).
-        // - 추후 Section/List GPT 상단 TC 계열 슬롯에도 동일 패턴으로 재사용 가능하도록
-        //   별도 함수로 분리해 두었습니다.
-        // ***************************************************
-        function addCloseButtonForSlot(outerSlot, slotId) {
-            if (!outerSlot) return;
+        // ==========================================================
+        // [HOME TC 전용 · 닫기 기능 컨트롤 플래그]
+        // ----------------------------------------------------------
+        // - window.__MK_TC_CLOSE_ENABLED__:
+        //   · true / undefined : 닫기 UI + "오늘 하루/오늘 그만" 기능 활성 (기본값)
+        //   · false            : 닫기 UI 전체 비활성
+        //
+        // - 정책:
+        //   · 현재는 초기면(HOME GPT) 상단 TC 인벤토리에서만 사용합니다.
+        //   · 로드블로킹(로드블럭) 캠페인 등 "유저가 닫기/숨김을 할 수 없어야 하는" 상황에서는
+        //     이 값을 false로 설정하면 TC 상단 닫기 UI 및 오늘 하루 숨김 로직이 모두 비활성화됩니다.
+        //
+        //   예)
+        //   - 일반 운영:  window.__MK_TC_CLOSE_ENABLED__ = true;   // 또는 미지정
+        //   - 로드블럭:  window.__MK_TC_CLOSE_ENABLED__ = false;  // 닫기 완전 비활성
+        // ==========================================================
+        window.__MK_TC_CLOSE_ENABLED__ = true;
 
-            // 이미 버튼이 있으면 중복 생성 방지
-            if (outerSlot.querySelector('.mk-ad-close-button')) return;
+        // ==========================================================
+        // [HOME TC 전용 · 오늘 하루 숨김 헬퍼 함수]
+        // ----------------------------------------------------------
+        // - getTodayKey():
+        //   · 브라우저 로컬 기준 YYYY-MM-DD 문자열을 반환합니다.
+        //   · "오늘 하루" 기준(금일 24시까지)으로 suppression을 관리하기 위함입니다.
+        //
+        // - isTcBillboardCloseFeatureEnabled():
+        //   · 상위 플래그(window.__MK_TC_CLOSE_ENABLED__) 상태를 확인하는 유틸 함수입니다.
+        //
+        // - isTcBillboardSuppressedForToday():
+        //   · localStorage('MK_HOME_TC_SUPPRESS_DATE')에 저장된 날짜와 오늘 날짜를 비교해,
+        //     금일에 대해 TC를 숨겨야 하는지 여부를 판단합니다.
+        //   · 닫기 기능이 비활성화되어 있으면 항상 false를 반환합니다.
+        // ==========================================================
+        function getTodayKey() {
+            const d = new Date();
+            const y = d.getFullYear();
+            const m = String(d.getMonth() + 1).padStart(2, '0');
+            const day = String(d.getDate()).padStart(2, '0');
+            return y + '-' + m + '-' + day;
+        }
 
-            const closeBtn = document.createElement('button');
-            closeBtn.className = 'mk-ad-close-button';
-            closeBtn.type = 'button';
-            closeBtn.textContent = '닫기 ✕';
+        function isTcBillboardCloseFeatureEnabled() {
+            return window.__MK_TC_CLOSE_ENABLED__ !== false;
+        }
 
-            closeBtn.addEventListener('click', function () {
-                // [중요] 클릭 시 광고 영역을 완전히 접기
-                // - display:none 처리로 높이/폭/마진/패딩이 모두 사라진 것처럼 동작합니다.
-                // - GPT/GAM 입장에서는 이미 로드된 iframe이 화면에서 보이지 않을 뿐이며,
-                //   추가 refresh를 하지 않는 한 추가 네트워크 요청은 발생하지 않습니다.
-                outerSlot.style.display = 'none';
+        function isTcBillboardSuppressedForToday() {
+            // 닫기 기능이 꺼져 있으면 suppression 자체를 무시 (로드블럭 보호)
+            if (!isTcBillboardCloseFeatureEnabled()) {
+                return false;
+            }
 
-                // (선택사항) 필요 시 GAM 슬롯 리소스까지 해제하고 싶다면,
-                // destroySlots를 활용할 수 있습니다. 안정성/디버깅을 위해 기본은 주석 처리.
-                /*
-                if (window.googletag && googletag.destroySlots) {
-                    try {
-                        const definedSlots = googletag.pubads().getSlots();
-                        const targetSlot = definedSlots.find(s => s.getSlotElementId() === slotId);
-                        if (targetSlot) {
-                            googletag.destroySlots([targetSlot]);
-                        }
-                    } catch (e) {
-                        console.log('[Ad Close] destroySlots error:', e);
-                    }
+            try {
+                const stored = localStorage.getItem('MK_HOME_TC_SUPPRESS_DATE');
+                if (!stored) return false;
+
+                const today = getTodayKey();
+                if (stored === today) {
+                    return true;
                 }
-                */
 
-                console.log(`⛔ [Ad Close] User closed ad slot: ${slotId}`);
-            });
-
-            outerSlot.appendChild(closeBtn);
+                // 날짜가 바뀐 경우(어제 값 등)는 정리 후, 오늘은 노출
+                localStorage.removeItem('MK_HOME_TC_SUPPRESS_DATE');
+                return false;
+            } catch (e) {
+                console.log('[TC Suppress] localStorage not available, fallback to normal exposure.', e);
+                return false;
+            }
         }
 
         // ***************************************************
-        // ✅ 광고 렌더링 완료 시 'Advertisement' 라벨을 삽입하는 함수 (전역 1회 정의)
+        // ✅ 광고 렌더링 완료 시 'Advertisement' 라벨 및
+        //    TC 전용 닫기 버튼을 삽입하는 함수 (전역 1회 정의)
         // ---------------------------------------------------
         // [공통 · GAM 이벤트 리스너 메커니즘]
         // - GAM은 각 광고 슬롯 렌더링이 완료될 때 slotRenderEnded 이벤트를 발생시킵니다.
-        // - 아래 addAdLabel 함수는 해당 이벤트를 수신하여, 실제로 광고가 채워진 슬롯에만
+        // - 아래 addAdLabel 함수는 해당 이벤트를 수신하여 실제로 광고가 채워진 슬롯에만
         //   'Advertisement' 라벨을 동적으로 삽입합니다.
         //
-        // - 공통 특징:
-        //   - event.isEmpty === false 일 때만 라벨/버튼 삽입 → 빈 슬롯에는 어떤 UI도 붙지 않음
-        //   - .ad-slot 래퍼 안에 .mk-ad-label을 prepend 형태로 삽입
-        //   - 동일 슬롯에 중복 라벨이 생성되지 않도록 방지 로직 포함
-        //
-        // - 예외 처리:
-        //   · View GPT:
-        //     - BC_native_list_* 슬롯은 에디토리얼 리스트 UI에 자연스럽게 섞이는 Native 성격이므로
-        //       별도 "Advertisement" 라벨을 노출하지 않는 예외 슬롯으로 처리합니다.
-        //   · HOME GPT (본 파일):
-        //     - TC_billboard_leaderboard
-        //       - 홈 상단 핵심 영역으로, 디자인/브랜딩 상 별도 'Advertisement' 라벨 없이
-        //         페이지 구조 및 크리에이티브 레벨에서 광고임을 인지하도록 설계합니다.
-        //       - 대신, 광고가 실제로 로드된 경우에만 사용자가 직접 닫을 수 있는
-        //         '닫기 ✕' 버튼(.mk-ad-close-button)을 우측 상단에 노출합니다.
-        //
-        // - 정리:
-        //   - 대부분의 슬롯: "광고가 있을 때만 Advertisement 라벨" 패턴 유지
-        //   - 특정 예외 슬롯: 라벨 생략 + 별도 UI(예: 닫기 버튼) 제공
+        // [View GPT와의 공통/차이]
+        // - View GPT:
+        //   · BC_native_list_* 슬롯은 에디토리얼 리스트와 자연스럽게 섞이는 네이티브 형태이므로
+        //     "Advertisement" 라벨을 HTML 상에 별도로 붙이지 않습니다.
+        // - HOME GPT:
+        //   · BC_native_list_* 슬롯 자체는 없으나, 공통 가이드 유지 관점에서
+        //     동일한 예외 주석/패턴을 유지합니다.
+        //   · 추가로, 상단 TC_billboard_leaderboard 슬롯에서는
+        //     "Advertisement 라벨 대신 '오늘 하루/오늘 그만 + 닫기 X' 버튼"을 노출합니다.
+        //   · 이 닫기 버튼은 현재 정책상 **초기면(HOME GPT)에서만 사용**합니다.
         // ***************************************************
         function addAdLabel(event) {
             const slotId = event.slot.getSlotElementId();
-            const slotElement = document.getElementById(slotId); 
 
-            // 광고가 비어 있거나 DOM 상에 요소가 없으면 어떤 작업도 하지 않음
-            if (event.isEmpty === true || !slotElement) {
+            // 💡 [예외] View GPT 공통 예외 패턴 유지 (HOME에는 실제 슬롯은 없음)
+            //   - BC_native_list_* 슬롯은 에디토리얼 뉴스 리스트와 자연스럽게 섞이는
+            //     Native 형태이므로, 리스트 UI에서 별도 "Advertisement" 라벨을 붙이지 않습니다.
+            if (slotId === 'BC_native_list_1' || slotId === 'BC_native_list_2') {
                 return;
             }
 
-            // .ad-slot 래퍼(일반적인 경우) 기준으로 라벨/버튼을 붙입니다.
-            // 만약 마크업 구조가 바뀌어 .ad-slot이 없으면, slotElement 자체를 fallback으로 사용.
+            const slotElement = document.getElementById(slotId);
+            if (!slotElement) return;
+
             const outerSlot = slotElement.closest('.ad-slot') || slotElement;
-            if (!outerSlot) return;
 
-            // 🟡 [예외 1] 홈 상단 'TC_billboard_leaderboard'
-            //   - 라벨은 붙이지 않고, 광고가 성공적으로 로드된 경우에만 '닫기 ✕' 버튼 추가
+            // 💡 [HOME 전용 예외] 상단 TC_billboard_leaderboard
+            //   - TC는 페이지 상단 핵심 인벤토리이자, 디자인 특성상
+            //     "Advertisement" 라벨 대신 우측 상단 닫기 UI를 노출합니다.
+            //   - 닫기 기능이 비활성화된 경우에도 라벨은 붙이지 않고 그대로 노출합니다.
+            //   - 이 정책은 현재 "초기면(HOME GPT)" 상단 TC에만 적용됩니다.
             if (slotId === 'TC_billboard_leaderboard') {
-                addCloseButtonForSlot(outerSlot, slotId);
-                console.log('ℹ️ [Ad Label] TC_billboard_leaderboard: label skipped, close button added.');
+                if (isTcBillboardCloseFeatureEnabled()) {
+                    // 이미 닫기 버튼이 존재하면 중복 삽입 방지
+                    if (!outerSlot.querySelector('.mk-ad-close-button')) {
+                        addCloseButtonForSlot(outerSlot, slotId);
+                    }
+                    console.log('ℹ️ [Ad Label] TC: label skipped, close button added.');
+                } else {
+                    console.log('ℹ️ [Ad Label] TC: close feature disabled by config, no label/close UI.');
+                }
+                // TC에는 어떤 경우에도 mk-ad-label은 붙이지 않음
                 return;
             }
 
-            // 🔵 일반 슬롯: 라벨 처리 (기존 로직 유지)
-            if (!outerSlot.querySelector('.mk-ad-label')) {
+            // - event.isEmpty === false: GAM이 이 슬롯에 실제 크리에이티브를 반환했다는 의미입니다.
+            // - outerSlot 존재 여부: DOM 상에 해당 id를 가진 요소가 실제 존재하는지 이중 확인합니다.
+            if (event.isEmpty === false && outerSlot) {
+                // 이미 라벨이 존재하면 중복 삽입 방지
+                if (outerSlot.querySelector('.mk-ad-label')) return;
+
                 const labelElement = document.createElement('div');
                 labelElement.className = 'mk-ad-label';
                 labelElement.textContent = 'Advertisement';
-                
+
                 // 광고 div의 가장 위에 라벨 요소를 삽입합니다.
                 outerSlot.insertBefore(labelElement, outerSlot.firstChild);
 
-                // 배경/보더는 투명 처리 유지
-                outerSlot.style.border = 'none'; 
+                // 슬롯 테두리/배경은 투명 처리(디자인 레벨에서 컨트롤)
+                outerSlot.style.border = 'none';
                 outerSlot.style.backgroundColor = 'transparent';
 
                 console.log(`✅ [Ad Label] Label added for ${slotId}`);
+            }
+        }
+        // ***************************************************
+
+        // ***************************************************
+        // ✅ TC 전용 닫기 버튼 DOM 생성 및 이벤트 핸들러
+        // ---------------------------------------------------
+        // - addCloseButtonForSlot(outerSlot, slotId)는
+        //   TC_billboard_leaderboard 슬롯에만 호출됩니다.
+        //
+        // [UI 스펙]
+        // - 데스크탑/태블릿:
+        //   · 표시 텍스트: "□ 오늘하루 | 닫기 X"
+        //   · label: "오늘하루"
+        //   · separator: "|"
+        //   · closeText: "닫기 X"
+        //
+        // - 모바일:
+        //   · 표시 텍스트: "□ 오늘 그만 X"
+        //   · label: "오늘"        (텍스트 클릭 시 체크박스 토글)
+        //   · closeText: "그만 X"  (클릭 시 닫기 수행)
+        //
+        // [동작]
+        // - 체크박스에 체크 + 닫기 클릭:
+        //   · 금일(YYYY-MM-DD) 기준으로 localStorage에 저장
+        //   · 오늘 하루 페이지 재방문 시 TC 슬롯을 호출하지 않고 슬롯 영역도 숨김
+        // - 체크박스 미체크 + 닫기 클릭:
+        //   · 현재 페이지에서만 슬롯 영역을 닫고(0px), 새로고침/재접속 시 다시 노출
+        //
+        // - 현재 구현/정책:
+        //   · 이 닫기 버튼은 "초기면(HOME GPT) 상단 TC 인벤토리"에서만 사용합니다.
+        // ***************************************************
+        function addCloseButtonForSlot(outerSlot, slotId) {
+            try {
+                const deviceCategory = window.__MK_DEVICE_CATEGORY__ || 'desktop';
+
+                const closeWrapper = document.createElement('div');
+                closeWrapper.className = 'mk-ad-close-button';
+
+                // 체크박스
+                const checkboxId = 'mk_tc_close_today_checkbox';
+                const checkbox = document.createElement('input');
+                checkbox.type = 'checkbox';
+                checkbox.id = checkboxId;
+                checkbox.className = 'mk-ad-close-checkbox';
+
+                const label = document.createElement('label');
+                label.setAttribute('for', checkboxId);
+                label.className = 'mk-ad-close-label';
+
+                // 디바이스별 문구 분리
+                if (deviceCategory === 'mobile') {
+                    // 모바일: "□ 오늘 그만 X"
+                    // - label: "오늘" (체크박스와 함께 클릭 시 체크 토글)
+                    // - 닫기 버튼 텍스트: "그만 X"
+                    label.textContent = '오늘';
+                } else {
+                    // 데스크탑/태블릿: "□ 오늘하루 | 닫기 X"
+                    label.textContent = '오늘하루';
+                }
+
+                // 구분자 (데스크탑/태블릿에서만 사용)
+                let separator = null;
+                if (deviceCategory !== 'mobile') {
+                    separator = document.createElement('span');
+                    separator.className = 'mk-ad-close-separator';
+                    separator.textContent = '|';
+                }
+
+                // 닫기 텍스트 버튼
+                const closeText = document.createElement('button');
+                closeText.type = 'button';
+                closeText.className = 'mk-ad-close-text';
+                // 모바일: "그만 X", 데스크탑/태블릿: "닫기 X"
+                closeText.textContent = (deviceCategory === 'mobile') ? '그만 X' : '닫기 X';
+
+                // 클릭 핸들러: 닫기 텍스트에만 부여
+                closeText.addEventListener('click', function (event) {
+                    event.preventDefault();
+                    event.stopPropagation();
+
+                    const shouldHideToday = checkbox && checkbox.checked === true;
+
+                    if (shouldHideToday) {
+                        try {
+                            const todayKey = getTodayKey();
+                            localStorage.setItem('MK_HOME_TC_SUPPRESS_DATE', todayKey);
+                            console.log(`[TC Suppress] Stored today(${todayKey}) as suppress date.`);
+                        } catch (e) {
+                            console.log('[TC Suppress] Failed to store localStorage.', e);
+                        }
+                    }
+
+                    // 현재 페이지에서 TC 영역 즉시 닫기 (공백 없이 접기)
+                    outerSlot.style.display = 'none';
+                    console.log(`⛔ [Ad Close] TC closed. TodayHide=${shouldHideToday}`);
+                });
+
+                // DOM 조합
+                closeWrapper.appendChild(checkbox);
+                closeWrapper.appendChild(label);
+                if (separator) {
+                    closeWrapper.appendChild(separator);
+                }
+                closeWrapper.appendChild(closeText);
+
+                outerSlot.appendChild(closeWrapper);
+            } catch (e) {
+                console.log('[TC Close Button] Failed to create close button UI.', e);
             }
         }
         // ***************************************************
@@ -547,6 +668,10 @@
                 deviceCategory = 'tablet';
             }
             googletag.pubads().setTargeting('device_category', deviceCategory);
+
+            // 💡 닫기 버튼/텍스트 문구에서 재사용할 수 있도록 전역 변수에 저장
+            //   - HOME GPT 상단 TC 닫기 UI에서만 사용 (초기면 전용 정책)
+            window.__MK_DEVICE_CATEGORY__ = deviceCategory;
             
             /*
              * [공통 · 페이지 레벨 동적 키/값 설정]
@@ -777,29 +902,45 @@
             <div class="gam-container">
                 <script>
                     /*
-                     * [HOME 전용 · Eager Load 구현 로직]
+                     * [HOME 전용 · Eager Load 구현 로직 + 오늘 하루 숨김 연동]
                      * - disableInitialLoad()를 사용했기 때문에, 광고 호출은 개발자가 직접 제어해야 합니다.
                      * - TC_billboard_leaderboard는 홈 상단 핵심 인벤토리이므로
                      *   페이지 로드 시점에 바로 display + refresh를 호출하여 즉시 노출하도록 설계했습니다.
                      *
+                     * ➕ [오늘 하루 숨김 로직 연동]
+                     * - isTcBillboardSuppressedForToday()가 true를 반환하는 경우:
+                     *   · 금일 24시까지 TC 슬롯을 호출하지 않고, 슬롯 영역도 숨깁니다(display:none).
+                     *   · GAM 요청이 발생하지 않으므로 광고 플랫폼 비용도 발생하지 않습니다.
+                     *
                      * 동작 순서:
-                     * 1) googletag.display('TC_billboard_leaderboard')
+                     * 1) suppression 여부 확인
+                     *    - true  → TC 영역 display:none 처리 후, display/refresh 호출 없이 종료
+                     *    - false → 아래 단계로 진행
+                     * 2) googletag.display('TC_billboard_leaderboard')
                      *    - 해당 div ID에 GPT iframe을 렌더링합니다.
-                     * 2) googletag.pubads().refresh([TC_billboard_leaderboard_slot])
+                     * 3) googletag.pubads().refresh([TC_billboard_leaderboard_slot])
                      *    - 방금 정의된 슬롯을 대상으로 광고 요청을 전송합니다.
                      *
                      * 주의사항:
                      * - TC_billboard_leaderboard_slot 객체는 상단 스크립트에서 이미 정의/생성되어 있어야 합니다.
                      * - View / Section / List에서도 Eager 슬롯이 있다면 동일 패턴을 재사용하는 것을 권장드립니다.
-                     *
-                     * [추가 참고 · 닫기 버튼 연동]
-                     * - 광고가 성공적으로 로드되면(slotRenderEnded, event.isEmpty === false),
-                     *   상단 addAdLabel 함수 내부에서 TC 전용 '닫기 ✕' 버튼이 생성됩니다.
-                     * - 사용자가 닫기 버튼을 클릭하면, 해당 .ad-slot이 display:none 처리되어
-                     *   상단 광고 영역이 완전히 사라집니다.
+                     * - 닫기 버튼 정책은 현재 "초기면(HOME GPT) 상단 TC"에서만 사용됩니다.
                      */
-                    // BODY에서 Eager Load: display + refresh
-                    googletag.cmd.push(function() { 
+                    // BODY에서 Eager Load: display + refresh (오늘 하루 숨김과 연동)
+                    googletag.cmd.push(function() {
+                        try {
+                            if (window.isTcBillboardSuppressedForToday && window.isTcBillboardSuppressedForToday()) {
+                                var outerSlot = document.getElementById('TC_billboard_leaderboard');
+                                if (outerSlot) {
+                                    outerSlot.style.display = 'none';  // 공백 없이 접기
+                                }
+                                console.log('⏹ [TC Suppress] Today-suppressed. No display/refresh for TC_billboard_leaderboard.');
+                                return;
+                            }
+                        } catch (e) {
+                            console.log('[TC Suppress] Error while checking suppression, fallback to normal display.', e);
+                        }
+
                         googletag.display('TC_billboard_leaderboard');
                         googletag.pubads().refresh([TC_billboard_leaderboard_slot]);
                         console.log("▶️ [Immediate Load] Ad ID: TC_billboard_leaderboard | DISPLAY + REFRESH called on page load.");
@@ -884,7 +1025,7 @@
                     <h3>📝 Policy Briefing</h3>
                     <p style="font-size: 16px;">**정부, 저출산 대책 발표... 파격적인 주거 지원 방안 포함**</p>
                 </div>
-            </div>
+            </div]
             
             <div class="sidebar">
                 <h3>📌 Right Contents: Investment Tips</h3>
@@ -1014,7 +1155,7 @@
              *
              * - Eager/Lazy 공통 로직 관점:
              *   - Eager: 페이지 로드시 곧바로 display + refresh
-             *   - Lazy : 페이지 로드 이후, 스크롤/관찰 조건 충족 시점에서 display + refresh
+             *   - Lazy : 페이지 로드 이후, 스크롤/관찰 조건 충족 시점에 display + refresh
              */
             lazyObserver = new IntersectionObserver(function(entries, observerInstance) {
                 entries.forEach(entry => {
