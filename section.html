@@ -198,83 +198,72 @@
             // GAM 이벤트 리스너 추가 (라벨 삽입)
             googletag.pubads().addEventListener('slotRenderEnded', addAdLabel);
 
-            // 0. Size Mapping 정의 (2개로 분리 적용)
+            // --- [4] Size Mapping 정의 (2개로 분리 적용) ---
             /*
              * [공통 · 반응형 광고 구현 로직 개요]
-             * - googletag.sizeMapping()은 뷰포트 크기에 따라 허용할 광고 사이즈 조합을 정의하는 API입니다.
-             * - addSize([viewportWidth, viewportHeight], [허용 광고 사이즈 목록]) 형식으로 사용하며,
-             *   나중에 defineSizeMapping(sizeMapping)으로 슬롯에 적용합니다.
+             * - sizeMapping은 "뷰포트 크기에 따라 어떤 사이즈 조합을 허용할지"를 정의하는 객체입니다.
+             * - addSize([viewportWidth, viewportHeight], [허용 광고 사이즈 목록])
+             *   예) [1024, 0] 이상일 때는 데스크탑용 대형 배너, 그보다 작으면 모바일용 소형 배너
              *
-             * - Section GPT에서는:
-             *   - sizeMapping_horizontal     : 상단 TC 빌보드(가로형)용
-             *   - sizeMapping_siderail_square: 우측 MR 박스형(하프페이지 등)용
-             * - HOME / LIST GPT와 동일한 사이즈 세트를 사용해 인벤토리/캠페인 운영을 통일합니다.
+             * - Section/List GPT에서는:
+             *   - sizeMapping_horizontal       : 상단 가로형 배너(TC)에 공통 적용
+             *   - sizeMapping_siderail_square  : 우측 사이드레일(MR) 박스형/세로형 배너에 적용
+             * - 실제 입찰 단계에서 GAM은 이 매핑 정보를 사용해, 뷰포트에 맞는 크리에이티브만 선별하여 노출합니다.
              */
 
-            // 0-1. 가로형 배너를 위한 사이즈 매핑 (TC 적용)
+            // 0-1. 가로형 배너용 사이즈 매핑 (TC)
             const sizeMapping_horizontal = googletag.sizeMapping()
-                .addSize(
-                    [1024, 0],
-                    [
-                        [1246, 100], [1200, 300], [1200, 100],
-                        [970, 250], [980, 120], [970, 90], [930, 180],
-                        [750, 300], [750, 200],
-                        [728, 90],
-                        [2, 1], [1, 1],
-                        'fluid'
-                    ]
-                )
-                .addSize(
-                    [768, 0],
-                    [
-                        [750, 300], [750, 200],
-                        [728, 90],
-                        [480, 320],
-                        [336, 280], [300, 250],
-                        [2, 1], [1, 1],
-                        'fluid'
-                    ]
-                )
-                .addSize(
-                    [0, 0],
-                    [
-                        [336, 280],
-                        [320, 480],
-                        [320, 100], [320, 50],
-                        [300, 250], [250, 250], [200, 200],
-                        [2, 1], [1, 1],
-                        'fluid'
-                    ]
-                )
-                .build();
-
-            // 0-2. 우측 사이드레일 박스형 배너용 사이즈 매핑 (MR 적용)
-            /*
-             * [변경 · sizeMapping_siderail_square 도입]
-             * - 기존 sizeMapping_right_square를 HOME GPT와 동일한 정책의
-             *   sizeMapping_siderail_square로 교체했습니다.
-             * - 데스크탑 구간([1024,0])에 336x280을 최우선 사이즈로 추가하여,
-             *   사이드바 폭 336px 컨테이너와 자연스럽게 매칭됩니다.
-             */
-            const sizeMapping_siderail_square = googletag.sizeMapping()
                 .addSize([1024, 0], [
-                    [336, 280], [300, 600], [300, 250], [250, 250], [200, 200],
-                    [2, 1], [1, 1], 'fluid'
+                    [1246, 100], [1200, 300], [1200, 100], 
+                    [980, 120], [970, 250], [930, 180], [970, 90], 
+                    [728, 90], 
+                    [2, 1], [1, 1], 
+                    'fluid'
                 ])
                 .addSize([768, 0], [
-                    [480, 320], [336, 280],
+                    [750, 300], [750, 200], [728, 90], 
+                    [480, 320], 
+                    [336, 280], [300, 250], 
+                    [2, 1], [1, 1], 
+                    'fluid'
+                ])
+                .addSize([0, 0], [
+                    [336, 280], [320, 480],
+                    [320, 100], [320, 50], 
+                    [300, 250], [250, 250], [200, 200], 
+                    [2, 1], [1, 1], 
+                    'fluid'
+                ])
+                .build();
+
+            // 0-2. 우측 사이드레일 박스형 배너용 사이즈 매핑 (MR)
+            //   · 데스크탑 구간([1024,0])에도 336x280을 최우선 사이즈로 추가
+            //   · 태블릿/모바일 구간은 기존 정책을 유지하면서 네이밍만 통일
+            const sizeMapping_siderail_square = googletag.sizeMapping()
+                .addSize([1024, 0], [
+                    [336, 280], [300, 600], [300, 250], 
+                    [250, 250], [200, 200],
+                    [2, 1], [1, 1], 
+                    'fluid'
+                ])
+                .addSize([768, 0], [
+                    [750, 300], [750, 200], [728, 90], 
+                    [480, 320], 
+                    [336, 280],[320, 480],
                     [320, 100], [320, 50],
                     [300, 250], [250, 250], [200, 200],
-                    [2, 1], [1, 1], 'fluid'
+                    [2, 1], [1, 1], 
+                    'fluid'
                 ])
                 .addSize([0, 0], [
                     [336, 280], [320, 480],
                     [320, 100], [320, 50],
                     [300, 250], [250, 250], [200, 200],
-                    [2, 1], [1, 1], 'fluid'
+                    [2, 1], [1, 1], 
+                    'fluid'
                 ])
                 .build();
-
+            // ----------------------------------------------------]
 
             // 5. 광고 슬롯 정의 
             /*
@@ -291,16 +280,7 @@
             // 5-1. TC_billboard_leaderboard (Eager Load) - sizeMapping_horizontal 적용
             TC_billboard_leaderboard_slot = googletag.defineSlot(
                 AdUnitPath,
-                [
-                    [1246, 100], [1200, 300], [1200, 100],
-                    [980, 120],
-                    [970, 250], [970, 90],
-                    [930, 180],
-                    [728, 90],
-                    [320, 100], [320, 50],
-                    [1, 1],
-                    'fluid'
-                ],
+                [[1246, 100], [1200, 300], [1200, 100], [980, 120], [970, 250], [970, 90], [930, 180], [728, 90], [320, 100], [320, 50], [2, 1], [1, 1], 'fluid'],
                 'TC_billboard_leaderboard'
             )
                 .defineSizeMapping(sizeMapping_horizontal) 
@@ -315,16 +295,7 @@
             // 5-2. MR_halfpage_rectangle (Lazy Load) - sizeMapping_siderail_square 적용
             MR_halfpage_rectangle_slot = googletag.defineSlot(
                 AdUnitPath,
-                [
-                    [480, 320],
-                    [336, 280],
-                    [320, 480],
-                    [320, 100], [320, 50],
-                    [300, 600], [300, 250],
-                    [250, 250], [200, 200],
-                    [2, 1], [1, 1],
-                    'fluid'
-                ],
+                [[480, 320],[336, 280], [320, 480], [320, 100], [320, 50], [300, 600], [300, 250], [250, 250], [200, 200], [2, 1], [1, 1], 'fluid'],
                 'MR_halfpage_rectangle' // Slot ID는 MR_halfpage_rectangle 유지
             )
                 .defineSizeMapping(sizeMapping_siderail_square) 
