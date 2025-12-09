@@ -1,9 +1,49 @@
 # 매일경제 디지털 광고 구현 가이드 - ver 2.1
 - 작성일 : 2025.11.25  
-- 업데이트 : 2025.12.02 18:01 PM
-- 최종 업데이트 : 2025.12.09 12:00 PM
+- 2차 업데이트 : 2025.12.02 18:01 PM
+- 3차 업데이트 : 2025.12.09 12:00 PM
 - 광고코드의 생성 및 광고 메커니즘, 광고로딩만 구현  
 - UI 및 디자인에 대한 고려는 제외, 광고 사이즈, 형태, 위치 등은 추후 최적화 진행  
+
+## ----------------# 3차 업데이트 주요 내용--------------------------------
+# 1. 모든 페이지 전체 넓이 1246px로 조정 (View / HOME / Section / List 공통)
+.container { max-width: 1246px; margin: 0 auto; padding: 0 10px; }
+
+# 2. HOME/Section/List의 .sidebar 폭 300 → 336px (우측 MR 영역)으로 조정, 
+@media (min-width: 1025px) {
+    .sidebar {
+        flex: 0 0 336px;
+        min-width: 336px;
+        /* max-width: 336px;  ← 꼭 필요하진 않지만 추가해도 무방 */
+    }
+}
+
+# 3. 사이즈 매핑 업데이트, 통일 (HOME/Section/List/View 전역)
+  ## 3.1 용도별 사이즈 매핑 업데이트, 네이밍 통일 (상세 내용은 본 가이드 374줄 또는 각 데모 소스 확인)
+  - 가로형 : `sizeMapping_horizontal` : 'TC_billboard_leaderboard', 'TC_billboard_X', 'BC_byline_rectangle' 등 수평 가로형 광고 슬롯 정의
+  - 세로 박스형 / 사이드 레일 :  `sizeMapping_siderail_square` : 'MR_halfpage_rectangle' 우측 사이드레일 세로 박스형/세로형 슬롯 정의
+  - 본문 박스형 : `sizeMapping_article_horizontal` : 'MC_article_rectangle_1~8' 본문 박스형 슬롯
+  ## 3.2 사이즈 매핑으로 인한 각 슬롯별 광고 사이즈 모두 업데이트
+  ## 3.2. sizeMapping_right_square → sizeMapping_siderail_square 로 교체, 그리고 더 이상 쓰이지 않는 sizeMapping_right_square 선언은 삭제.
+
+# 4 HOME/Section/List/View 페이지에서 상단 영역에서  "Advertisement" 라벨 제외
+- HOME/Section/List 상단 'TC_billboard_leaderboard' 슬롯에 "Advertisement" 라벨 제외
+-  View  TC_billboard_X  슬롯에서  "Advertisement" 라벨 제외
+
+# 5. HOME만 해당(나머지는 해당사항 없음)  '체크박스 + 오늘하루 | 닫기 X 버튼' 은 데스크탑 전용으로만 변경
+
+  ## 5.1 '오늘 하루 닫기' / 디바이스 정책 관련 전역 헬퍼들
+        // ---------------------------------------------------
+        // - HOME GPT 상단 `TC_billboard_leaderboard` 전용 로직
+        // - 정책:
+        //   · 초기면(HOME)의 상단 TC에만 `오늘 하루 닫기` 기능을 제공
+        //   · 현재는 데스크탑 전용으로 운용
+        //     (모바일/태블릿에서는 레이아웃 안정성 및 수익성 관점에서 닫기 기능 비활성화)
+        //   · 상위 플래그(window.__MK_TC_CLOSE_ENABLED__ !== false)를 통해
+        //    **** 로드블로킹 캠페인 등에서 "닫기 기능 전체 OFF"가 가능하도록 설계
+  ## 5.2 상단 닫기 버튼 UI (.mk-ad-close-*) CSS 최적화
+## --------------------------------------------------------------------------
+
 
 ## 0. 개요
 
@@ -1003,8 +1043,11 @@ googletag.pubads().setTargeting('section_list_nm', 'economic-policy');
 4. **슬롯 구조 설계**
    - TC / MC / MR / BC 구분, in-article 여부
    - Eager vs Lazy 구분
-5. **사이즈 매핑 재사용 여부 확인**
-   - 기존 `sizeMapping_horizontal`, `sizeMapping_square`, `sizeMapping_article_horizontal` 재사용 여부 검토
+5. **사이즈 매핑 최종 확인**
+  - 가로형 : `sizeMapping_horizontal` : 'TC_billboard_leaderboard', 'TC_billboard_X', 'BC_byline_rectangle' 등 수평 가로형 광고 슬롯 정의
+  - 세로 박스형 / 사이드 레일 :  `sizeMapping_siderail_square` : 'MR_halfpage_rectangle' 우측 사이드레일 세로 박스형/세로형 슬롯 정의
+  - 본문 박스형 : `sizeMapping_article_horizontal` : 'MC_article_rectangle_1~8' 본문 박스형 슬롯
+
 6. **Lazy 인프라 적용**
    - `LAZY_AD_SLOT_IDS`에 Lazy 대상 ID 추가
    - 별도 로직이 없다면 `setupLazyLoading()` / `startObservingLazySlots()` 그대로 재사용
@@ -1072,7 +1115,7 @@ googletag.pubads().setTargeting('section_list_nm', 'economic-policy');
 
 ---
 
-## 11. 향후 개선 제안 (Developer Notes)
+## 11. 향후 개선 아이디어 (Developer Notes)
 
 이 섹션은 현재 코드에는 없거나 제한적으로만 구현된, **향후 개선 아이디어**입니다.
 
