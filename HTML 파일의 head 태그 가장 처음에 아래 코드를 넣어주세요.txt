@@ -1,0 +1,9 @@
+<script>
+  (function() {
+    const saved = localStorage.getItem('theme');
+    const systemDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    if (saved === 'dark' || (!saved && systemDark)) {
+      document.documentElement.setAttribute('data-dark', 'true');
+    }
+  })();
+</script>
