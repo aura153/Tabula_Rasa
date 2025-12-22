@@ -4,27 +4,26 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <style>
-        /* 다크모드 배경색 #1d1d1d 고정 */
+        /* 다크모드 배경색 #1d1d1d 적용 */
         html, body { 
             background: #1d1d1d !important; 
-            margin: 0px !important; 
-            padding: 0px !important; 
+            margin: 0px !important; padding: 0px !important; 
             -webkit-text-size-adjust: none !important; 
         }
         h4, ul, li { margin: 0px !important; padding: 0px !important; }
         * { box-sizing: border-box !important; }
         
         #mk_native_ad_wrap { 
-            width: 100%; 
-            text-align: left; 
+            width: 100%; text-align: left; 
             font-family: 'Pretendard Variable', 'Pretendard', 'Malgun Gothic', sans-serif; 
             -webkit-font-smoothing: antialiased; 
         }
         .ad_box { list-style: none !important; }
 
+        /* [수정] 행 높이를 40px로 축소 및 다크 구분선 유지 */
         .ad_item { 
             border-bottom: 1px solid #464646 !important; 
-            height: 80px !important; 
+            height: 40px !important; /* 80px -> 40px로 수정 */
             display: flex !important; 
             align-items: center !important; 
             overflow: hidden !important;
@@ -32,24 +31,22 @@
         .ad_item:last-child { border-bottom: none !important; }
 
         .ad_link { 
-            display: flex !important; 
-            align-items: center !important; 
-            width: 100% !important; 
-            height: 100% !important; 
+            display: flex !important; align-items: center !important; 
+            width: 100% !important; height: 100% !important; 
             padding: 0px 10px !important; 
             text-decoration: none !important; 
         }
 
-        /* [수정] 폰트 크기 15px, 행간 13px 적용 */
+        /* 폰트 15px / 행간 25px 유지 / 글자색 #f0f0f0 */
         .ad_title { 
             margin: 0px !important; 
             color: #f0f0f0 !important; 
-            font-size: 15px !important; /* 17px -> 15px로 수정 */
+            font-size: 15px !important; 
             font-weight: 600 !important; 
-            line-height: 13px !important; /* 25px -> 13px(약 1/2)로 수정 */
+            line-height: 25px !important; 
             letter-spacing: -0.75px !important;
             display: -webkit-box !important; 
-            -webkit-line-clamp: 2 !important; 
+            -webkit-line-clamp: 1 !important; 
             -webkit-box-orient: vertical !important;
             overflow: hidden !important; 
             text-overflow: ellipsis !important;
@@ -57,12 +54,11 @@
             top: 1px !important;
         }
 
-        /* [수정] 블릿 크기 15px로 통일 */
         .ad_title::before { 
             content: '·' !important; 
             color: #FF891C !important; 
             font-weight: 900 !important; 
-            font-size: 15px !important; /* 28px -> 15px로 수정 */
+            font-size: 15px !important; 
             margin-right: 6px !important; 
             line-height: 1 !important;
         }
@@ -73,9 +69,9 @@
 <body>
     <div id="mk_native_ad_wrap">
         <ul class="ad_box">
-            <li class="ad_item"><a href="#" class="ad_link"><h4 class="ad_title">다크모드 폰트/블릿 15px 및 좁은 행간 버전입니다.</h4></a></li>
-            <li class="ad_item"><a href="#" class="ad_link"><h4 class="ad_title">배경은 지정하신 대로 #1d1d1d로 설정되었습니다.</h4></a></li>
-            <li class="ad_item"><a href="#" class="ad_link"><h4 class="ad_title">폰트 크기와 블릿 크기가 동일하게 맞춰졌습니다.</h4></a></li>
+            <li class="ad_item"><a href="#" class="ad_link"><h4 class="ad_title">다크모드 - 배경 #1d1d1d 및 높이 40px 적용</h4></a></li>
+            <li class="ad_item"><a href="#" class="ad_link"><h4 class="ad_title">폰트 크기와 블릿 크기는 15px로 고정되어 있습니다.</h4></a></li>
+            <li class="ad_item"><a href="#" class="ad_link"><h4 class="ad_title">3줄 리스트의 전체 높이는 120px가 됩니다.</h4></a></li>
         </ul>
     </div>
 </body>

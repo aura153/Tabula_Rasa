@@ -6,24 +6,23 @@
     <style>
         html, body { 
             background: transparent !important; 
-            margin: 0px !important; 
-            padding: 0px !important; 
+            margin: 0px !important; padding: 0px !important; 
             -webkit-text-size-adjust: none !important; 
         }
         h4, ul, li { margin: 0px !important; padding: 0px !important; }
         * { box-sizing: border-box !important; }
         
         #mk_native_ad_wrap { 
-            width: 100%; 
-            text-align: left; 
+            width: 100%; text-align: left; 
             font-family: 'Pretendard Variable', 'Pretendard', 'Malgun Gothic', sans-serif; 
             -webkit-font-smoothing: antialiased; 
         }
         .ad_box { list-style: none !important; }
 
+        /* [수정] 행 높이를 40px로 축소 */
         .ad_item { 
             border-bottom: 1px solid #dadada !important; 
-            height: 80px !important; 
+            height: 40px !important; /* 80px -> 40px로 수정 */
             display: flex !important; 
             align-items: center !important; 
             overflow: hidden !important;
@@ -31,24 +30,22 @@
         .ad_item:last-child { border-bottom: none !important; }
 
         .ad_link { 
-            display: flex !important; 
-            align-items: center !important; 
-            width: 100% !important; 
-            height: 100% !important; 
+            display: flex !important; align-items: center !important; 
+            width: 100% !important; height: 100% !important; 
             padding: 0px 10px !important; 
             text-decoration: none !important; 
         }
 
-        /* [수정] 폰트 크기 15px, 행간 13px 적용 */
+        /* 폰트 15px / 행간 25px 유지 */
         .ad_title { 
             margin: 0px !important; 
             color: #212121 !important; 
-            font-size: 15px !important; /* 17px -> 15px로 수정 */
+            font-size: 15px !important; 
             font-weight: 600 !important; 
-            line-height: 13px !important; /* 25px -> 13px(약 1/2)로 수정 */
+            line-height: 25px !important; 
             letter-spacing: -0.75px !important;
             display: -webkit-box !important; 
-            -webkit-line-clamp: 2 !important; 
+            -webkit-line-clamp: 1 !important; /* 좁은 높이를 고려해 1줄 권장 */
             -webkit-box-orient: vertical !important;
             overflow: hidden !important; 
             text-overflow: ellipsis !important;
@@ -56,12 +53,11 @@
             top: 1px !important;
         }
 
-        /* [수정] 블릿 크기 15px로 통일 */
         .ad_title::before { 
             content: '·' !important; 
             color: #FF7A00 !important; 
             font-weight: 900 !important; 
-            font-size: 15px !important; /* 28px -> 15px로 수정 */
+            font-size: 15px !important; 
             margin-right: 6px !important; 
             line-height: 1 !important;
         }
@@ -72,8 +68,8 @@
 <body>
     <div id="mk_native_ad_wrap">
         <ul class="ad_box">
-            <li class="ad_item"><a href="#" class="ad_link"><h4 class="ad_title">라이트모드 폰트/블릿 15px 통일 버전입니다.</h4></a></li>
-            <li class="ad_item"><a href="#" class="ad_link"><h4 class="ad_title">행간 높이가 기존 대비 1/2로 축소되었습니다.</h4></a></li>
+            <li class="ad_item"><a href="#" class="ad_link"><h4 class="ad_title">라이트모드 - 높이 40px가 적용된 광고입니다.</h4></a></li>
+            <li class="ad_item"><a href="#" class="ad_link"><h4 class="ad_title">좁은 간격으로 뉴스 목록에 더욱 밀착되어 노출됩니다.</h4></a></li>
             <li class="ad_item"><a href="#" class="ad_link"><h4 class="ad_title">세 번째 광고 줄 샘플 텍스트입니다.</h4></a></li>
         </ul>
     </div>
