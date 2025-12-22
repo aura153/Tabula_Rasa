@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <style>
-        /* [전역 설정] 요청에 따라 다크모드 배경색을 #1d1d1d로 고정 */
+        /* 다크모드 배경색 #1d1d1d 고정 */
         html, body { 
             background: #1d1d1d !important; 
             margin: 0px !important; 
@@ -14,7 +14,6 @@
         h4, ul, li { margin: 0px !important; padding: 0px !important; }
         * { box-sizing: border-box !important; }
         
-        /* [폰트 및 레이아웃] */
         #mk_native_ad_wrap { 
             width: 100%; 
             text-align: left; 
@@ -23,7 +22,6 @@
         }
         .ad_box { list-style: none !important; }
 
-        /* [개별 행 스타일] 다크모드 표준 구분선 컬러 #464646 */
         .ad_item { 
             border-bottom: 1px solid #464646 !important; 
             height: 80px !important; 
@@ -33,7 +31,6 @@
         }
         .ad_item:last-child { border-bottom: none !important; }
 
-        /* [클릭 영역] */
         .ad_link { 
             display: flex !important; 
             align-items: center !important; 
@@ -43,14 +40,14 @@
             text-decoration: none !important; 
         }
 
-        /* [텍스트] 다크모드 표준 글자색 #f0f0f0, 크기 17px 고정 */
+        /* [수정] 폰트 크기 15px, 행간 13px 적용 */
         .ad_title { 
             margin: 0px !important; 
             color: #f0f0f0 !important; 
-            font-size: 17px !important; 
+            font-size: 15px !important; /* 17px -> 15px로 수정 */
             font-weight: 600 !important; 
-            line-height: 25px !important; 
-            letter-spacing: -0.85px !important;
+            line-height: 13px !important; /* 25px -> 13px(약 1/2)로 수정 */
+            letter-spacing: -0.75px !important;
             display: -webkit-box !important; 
             -webkit-line-clamp: 2 !important; 
             -webkit-box-orient: vertical !important;
@@ -60,32 +57,25 @@
             top: 1px !important;
         }
 
-        /* [블릿] 다크모드 표준 포인트 오렌지 #FF891C */
+        /* [수정] 블릿 크기 15px로 통일 */
         .ad_title::before { 
             content: '·' !important; 
             color: #FF891C !important; 
             font-weight: 900 !important; 
-            font-size: 28px !important; 
-            margin-right: 8px !important; 
+            font-size: 15px !important; /* 28px -> 15px로 수정 */
+            margin-right: 6px !important; 
             line-height: 1 !important;
         }
 
-        /* [인터랙션] */
         .ad_link:hover .ad_title { opacity: 0.6 !important; transition: 0.2s !important; }
     </style>
 </head>
 <body>
     <div id="mk_native_ad_wrap">
         <ul class="ad_box">
-            <li class="ad_item">
-                <a href="광고링크1" target="_blank" class="ad_link"><h4 class="ad_title">다크모드 전용 텍스트 첫 번째 줄입니다 (#1d1d1d 배경)</h4></a>
-            </li>
-            <li class="ad_item">
-                <a href="광고링크2" target="_blank" class="ad_link"><h4 class="ad_title">모든 수치가 px로 고정되어 환경 변화에도 크기가 일정합니다</h4></a>
-            </li>
-            <li class="ad_item">
-                <a href="광고링크3" target="_blank" class="ad_link"><h4 class="ad_title">어두운 테마 기사 목록과 시각적으로 완전히 동기화됩니다</h4></a>
-            </li>
+            <li class="ad_item"><a href="#" class="ad_link"><h4 class="ad_title">다크모드 폰트/블릿 15px 및 좁은 행간 버전입니다.</h4></a></li>
+            <li class="ad_item"><a href="#" class="ad_link"><h4 class="ad_title">배경은 지정하신 대로 #1d1d1d로 설정되었습니다.</h4></a></li>
+            <li class="ad_item"><a href="#" class="ad_link"><h4 class="ad_title">폰트 크기와 블릿 크기가 동일하게 맞춰졌습니다.</h4></a></li>
         </ul>
     </div>
 </body>

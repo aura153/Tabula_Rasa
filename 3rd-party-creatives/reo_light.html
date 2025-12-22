@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <style>
-        /* [전역 초기화] 모든 브라우저 기본 여백 제거 및 자동 확대 방지 */
         html, body { 
             background: transparent !important; 
             margin: 0px !important; 
@@ -14,7 +13,6 @@
         h4, ul, li { margin: 0px !important; padding: 0px !important; }
         * { box-sizing: border-box !important; }
         
-        /* [폰트 및 레이아웃] */
         #mk_native_ad_wrap { 
             width: 100%; 
             text-align: left; 
@@ -23,7 +21,6 @@
         }
         .ad_box { list-style: none !important; }
 
-        /* [개별 행 스타일] t_topnews_v 높이 80px 및 하단선 적용 */
         .ad_item { 
             border-bottom: 1px solid #dadada !important; 
             height: 80px !important; 
@@ -33,7 +30,6 @@
         }
         .ad_item:last-child { border-bottom: none !important; }
 
-        /* [클릭 영역] 전체 행을 클릭 가능하게 설정 */
         .ad_link { 
             display: flex !important; 
             align-items: center !important; 
@@ -43,14 +39,14 @@
             text-decoration: none !important; 
         }
 
-        /* [텍스트 상세] 17px 고정, 행간 25px, 2줄 제한 */
+        /* [수정] 폰트 크기 15px, 행간 13px 적용 */
         .ad_title { 
             margin: 0px !important; 
             color: #212121 !important; 
-            font-size: 17px !important; 
+            font-size: 15px !important; /* 17px -> 15px로 수정 */
             font-weight: 600 !important; 
-            line-height: 25px !important; 
-            letter-spacing: -0.85px !important;
+            line-height: 13px !important; /* 25px -> 13px(약 1/2)로 수정 */
+            letter-spacing: -0.75px !important;
             display: -webkit-box !important; 
             -webkit-line-clamp: 2 !important; 
             -webkit-box-orient: vertical !important;
@@ -60,32 +56,25 @@
             top: 1px !important;
         }
 
-        /* [블릿] MK 시그니처 주황색 포인트 블릿 */
+        /* [수정] 블릿 크기 15px로 통일 */
         .ad_title::before { 
             content: '·' !important; 
             color: #FF7A00 !important; 
             font-weight: 900 !important; 
-            font-size: 28px !important; 
-            margin-right: 8px !important; 
+            font-size: 15px !important; /* 28px -> 15px로 수정 */
+            margin-right: 6px !important; 
             line-height: 1 !important;
         }
 
-        /* [인터랙션] 호버 시 투명도 변화 */
         .ad_link:hover .ad_title { opacity: 0.6 !important; transition: 0.2s !important; }
     </style>
 </head>
 <body>
     <div id="mk_native_ad_wrap">
         <ul class="ad_box">
-            <li class="ad_item">
-                <a href="광고링크1" target="_blank" class="ad_link"><h4 class="ad_title">라이트모드 텍스트 첫 번째 줄입니다</h4></a>
-            </li>
-            <li class="ad_item">
-                <a href="광고링크2" target="_blank" class="ad_link"><h4 class="ad_title">모든 수치를 px로 고정하여 주변 리스트와 완벽히 일치합니다</h4></a>
-            </li>
-            <li class="ad_item">
-                <a href="광고링크3" target="_blank" class="ad_link"><h4 class="ad_title">세 번째 광고 줄이며 기사와 동일한 가독성을 제공합니다</h4></a>
-            </li>
+            <li class="ad_item"><a href="#" class="ad_link"><h4 class="ad_title">라이트모드 폰트/블릿 15px 통일 버전입니다.</h4></a></li>
+            <li class="ad_item"><a href="#" class="ad_link"><h4 class="ad_title">행간 높이가 기존 대비 1/2로 축소되었습니다.</h4></a></li>
+            <li class="ad_item"><a href="#" class="ad_link"><h4 class="ad_title">세 번째 광고 줄 샘플 텍스트입니다.</h4></a></li>
         </ul>
     </div>
 </body>
