@@ -1,27 +1,33 @@
 document.write("<style>" +
   "html, body { background: transparent !important; margin: 0; padding: 0; }" +
-  "#mk_native_ad_wrap { width: 100%; text-align: left; }" +
-  "#mk_native_ad_wrap .ad_box { list-style: none; padding: 0; margin: 0; width: 100%; }" +
-  "#mk_native_ad_wrap .ad_item { border-bottom: 1px solid #ccc !important; width: 100%; }" +
-  "#mk_native_ad_wrap .ad_item:last-child { border-bottom: none !important; }" +
-  "#mk_native_ad_wrap .ad_link { display: flex; align-items: center; padding: 18px 0; text-decoration: none; transition: opacity 0.2s; }" +
-  "#mk_native_ad_wrap .ad_link:hover { opacity: 0.6; }" +
-  "#mk_native_ad_wrap .ad_title { " +
-    "display: flex; align-items: center; margin: 0; " +
-    "font-family: 'Pretendard Variable', 'Malgun Gothic', sans-serif; " +
-    "font-size: 2.4rem !important; font-weight: 700 !important; color: #212121 !important; " +
+  "#reo_0HBy { width: 100%; text-align: left; font-family: 'Pretendard Variable', 'Malgun Gothic', sans-serif; }" +
+  "#reo_0HBy .ad_box { padding: 0; margin: 0; }" +
+  
+  /* 텍스트 간 구분선 및 패딩: 주변 뉴스 리스트와 동일하게 최적화 */
+  "#reo_0HBy .ad_list { border-bottom: 1px solid #ccc !important; padding: 18px 0; }" +
+  "#reo_0HBy .ad_list:last-child { border-bottom: none !important; }" +
+  
+  /* 폰트 스타일 및 위치 보정 (2.4rem, Bold, 위치 -4px) */
+  "#reo_0HBy .ad_list a { " +
+    "display: flex; align-items: center; text-decoration: none; " +
+    "color: #212121 !important; font-size: 2.4rem !important; font-weight: 700 !important; " +
     "letter-spacing: -0.05em !important; line-height: 1.4 !important; " +
-    "position: relative; bottom: 4px; " + 
+    "position: relative; bottom: 4px; transition: 0.3s; " +
   "}" +
-  "#mk_native_ad_wrap .ad_title::before { " +
+  
+  /* 주황색 블릿 스타일 (t_badge 스타일 적용) */
+  "#reo_0HBy .ad_list a::before { " +
     "content: '·'; color: #FF7A00 !important; font-weight: 900 !important; " +
     "font-size: 3rem !important; margin-right: 10px; line-height: 1; " +
   "}" +
+  
+  /* 호버 효과 */
+  "#reo_0HBy .ad_list a:hover { opacity: 0.6; }" +
 "</style>" +
-"<div id=\"mk_native_ad_wrap\">" +
-  "<ul class=\"ad_box\">" +
-    "<li class=\"ad_item\"><a href=\"%%CLICK_URL_UNESC%%https://ad.reople.co.kr/cgi-bin/PelicanC.dll?CLK?pageid=0HBy%26bannerid=55wE%26campaignid=0RgY\" target=\"_blank\" class=\"ad_link\"><h3 class=\"ad_title\">회장님과 결혼한 아나운서, 얼마나 예쁘길래..</h3></a></li>" +
-    "<li class=\"ad_item\"><a href=\"%%CLICK_URL_UNESC%%https://ad.reople.co.kr/cgi-bin/PelicanC.dll?CLK?pageid=0HBy%26bannerid=53Eg%26campaignid=0RLZ\" target=\"_blank\" class=\"ad_link\"><h3 class=\"ad_title\">월 만원대 '실비보험' 인기! 막판가입 \"우르르\"..</h3></a></li>" +
-    "<li class=\"ad_item\"><a href=\"%%CLICK_URL_UNESC%%https://ad.reople.co.kr/cgi-bin/PelicanC.dll?CLK?pageid=0HBy%26bannerid=4zHT%26campaignid=0Qid\" target=\"_blank\" class=\"ad_link\"><h3 class=\"ad_title\">소변보기 불편한 \"전립선비대증\" 빨리 병원가야...</h3></a></li>" +
-  "</ul>" +
+"<div id=\"reo_0HBy\">" +
+  "<div class=\"ad_box\">" +
+    "<div class=\"ad_list\"><a href=\"%%CLICK_URL_UNESC%%https://ad.reople.co.kr/cgi-bin/PelicanC.dll?CLK?pageid=0HBy%26bannerid=55To%26campaignid=0Qrc\" target=\"_blank\">요즘 죽이는 \"브로콜리\" TV방송 후 구매 열풍!</a></div>" +
+    "<div class=\"ad_list\"><a href=\"%%CLICK_URL_UNESC%%https://ad.reople.co.kr/cgi-bin/PelicanC.dll?CLK?pageid=0HBy%26bannerid=50LL%26campaignid=0R3W\" target=\"_blank\">\"선비치리조트\" 오픈 기념! 100%반환 신규회원 모집!</a></div>" +
+    "<div class=\"ad_list\"><a href=\"%%CLICK_URL_UNESC%%https://ad.reople.co.kr/cgi-bin/PelicanC.dll?CLK?pageid=0HBy%26bannerid=4zHP%26campaignid=0Qpn\" target=\"_blank\">죽을만큼 아픈 허리통증! \"수술없이\" 해결하는 비법!</a></div>" +
+  "</div>" +
 "</div>");
