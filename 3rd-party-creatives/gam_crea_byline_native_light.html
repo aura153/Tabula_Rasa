@@ -1,0 +1,46 @@
+15px<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        /* [Expert Universal Reset] ID에 관계없이 모든 요소에 스타일 강제 주입 */
+        html, body { background: transparent !important; margin: 0px !important; padding: 0px !important; -webkit-text-size-adjust: none !important; }
+        h4, ul, li, div { margin: 0px !important; padding: 0px !important; }
+        * { box-sizing: border-box !important; }
+
+        /* [Abstraction Layer] 가변적인 ID 대신 공통 클래스 및 태그 구조 타겟팅 */
+        body div, .ad_box { width: 100% !important; text-align: left !important; font-family: 'Malgun Gothic', sans-serif !important; }
+        
+        /* 개별 리스트 행: 높이 45px 및 구분선 고정 */
+        .ad_list, li { border-bottom: 1px solid #dadada !important; height: 45px !important; display: flex !important; align-items: center !important; overflow: hidden !important; list-style: none !important; }
+        
+        /* 텍스트 16px / 행간 25px / 베이스라인 보정 */
+        .ad_list a, li a { 
+            display: flex !important; align-items: center !important; width: 100% !important; height: 100% !important; 
+            padding: 0 10px !important; text-decoration: none !important; color: #212121 !important; 
+            font-size: 16px !important; font-weight: 600 !important; line-height: 25px !important; 
+            letter-spacing: -0.75px !important; white-space: nowrap !important; text-overflow: ellipsis !important; overflow: hidden !important; 
+        }
+
+        /* 시그니처 블릿 16px 동기화 */
+        .ad_list a::before, li a::before { content: '·' !important; color: #FF7A00 !important; font-size: 16px !important; font-weight: 900 !important; margin-right: 6px !important; line-height: 1 !important; }
+        .ad_list a:hover, li a:hover { opacity: 0.6 !important; transition: 0.2s !important; }
+
+        /* [The Bridge] 스크립트간 단절된 라인을 이어주는 외부 구분선 */
+        .ad_divider { border-top: 1px solid #dadada !important; width: 100% !important; height: 0px !important; margin: 0px !important; }
+    </style>
+</head>
+<body>
+    <script src='//ad.reople.co.kr/cgi-bin/PelicanC.dll?impr?pageid=0Hsv&lang=utf-8&out=script'></script>
+    
+    <div class="ad_divider"></div>
+    
+    <script src="//ad.adinc.kr/cgi-bin/PelicanC.dll?impr?pageid=09gd&lang=utf-8&out=script"></script>
+
+    <style>
+        /* 전체 스택 중 최하단 리스트의 마지막 선만 제거 */
+        div:last-of-type .ad_list:last-child, div:last-of-type li:last-child { border-bottom: none !important; }
+    </style>
+</body>
+</html>
