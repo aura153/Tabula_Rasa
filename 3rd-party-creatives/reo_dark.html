@@ -1,32 +1,78 @@
-document.write("<style>" +
-  "html, body { background: transparent !important; margin: 0; padding: 0; }" +
-  "#reo_0HBy { width: 100%; text-align: left; font-family: 'Pretendard Variable', 'Malgun Gothic', sans-serif; }" +
-  "#reo_0HBy .ad_box { padding: 0; margin: 0; }" +
+<style>
+  /* 기본 환경 초기화 및 투명 배경 */
+  html, body { background: transparent !important; margin: 0; padding: 0; }
   
-  /* 다크모드 전용 구분선 및 패딩 */
-  "#reo_0HBy .ad_list { border-bottom: 1px solid #464646 !important; padding: 18px 0; }" +
-  "#reo_0HBy .ad_list:last-child { border-bottom: none !important; }" +
+  #reo_0HBy { 
+    width: 100%; 
+    text-align: left; 
+    font-family: 'Pretendard Variable', 'Malgun Gothic', sans-serif; 
+  }
   
-  /* 다크모드 폰트 스타일 (컬러 #f0f0f0) */
-  "#reo_0HBy .ad_list a { " +
-    "display: flex; align-items: center; text-decoration: none; " +
-    "color: #f0f0f0 !important; font-size: 2.4rem !important; font-weight: 700 !important; " +
-    "letter-spacing: -0.05em !important; line-height: 1.4 !important; " +
-    "position: relative; bottom: 4px; transition: 0.3s; " +
-  "}" +
+  #reo_0HBy .ad_box { padding: 0; margin: 0; list-style: none; }
   
-  /* 다크모드용 블릿 스타일 */
-  "#reo_0HBy .ad_list a::before { " +
-    "content: '·'; color: #FF891C !important; font-weight: 900 !important; " +
-    "font-size: 3rem !important; margin-right: 10px; line-height: 1; " +
-  "}" +
+  /* 다크모드 전용 경계선 컬러 (--c-line) */
+  #reo_0HBy .ad_list { 
+    border-bottom: 1px solid #464646 !important; 
+    height: 80px; 
+    overflow: hidden; 
+    display: flex;
+    align-items: center;
+  }
   
-  "#reo_0HBy .ad_list a:hover { opacity: 0.6; }" +
-"</style>" +
-"<div id=\"reo_0HBy\">" +
-  "<div class=\"ad_box\">" +
-    "<div class=\"ad_list\"><a href=\"%%CLICK_URL_UNESC%%https://ad.reople.co.kr/cgi-bin/PelicanC.dll?CLK?pageid=0HBy%26bannerid=55To%26campaignid=0Qrc\" target=\"_blank\">요즘 죽이는 \"브로콜리\" TV방송 후 구매 열풍!</a></div>" +
-    "<div class=\"ad_list\"><a href=\"%%CLICK_URL_UNESC%%https://ad.reople.co.kr/cgi-bin/PelicanC.dll?CLK?pageid=0HBy%26bannerid=50LL%26campaignid=0R3W\" target=\"_blank\">\"선비치리조트\" 오픈 기념! 100%반환 신규회원 모집!</a></div>" +
-    "<div class=\"ad_list\"><a href=\"%%CLICK_URL_UNESC%%https://ad.reople.co.kr/cgi-bin/PelicanC.dll?CLK?pageid=0HBy%26bannerid=4zHP%26campaignid=0Qpn\" target=\"_blank\">죽을만큼 아픈 허리통증! \"수술없이\" 해결하는 비법!</a></div>" +
-  "</div>" +
-"</div>");
+  #reo_0HBy .ad_list:last-child { border-bottom: none !important; }
+  
+  /* 다크모드 텍스트 스타일 (--c-txt) */
+  #reo_0HBy .ad_list a { 
+    display: flex; 
+    align-items: center; 
+    width: 100%;
+    height: 100%;
+    padding: 20px 0 !important; 
+    text-decoration: none; 
+    transition: opacity 0.3s; 
+  }
+  
+  #reo_0HBy .ad_list a h4 { 
+    margin: 0;
+    color: #f0f0f0 !important; 
+    font-size: 2.4rem !important; 
+    font-weight: 600 !important; 
+    line-height: 2.5rem !important;
+    letter-spacing: -0.05em !important;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    position: relative;
+    bottom: 4px;
+  }
+  
+  /* 다크모드 주황색 블릿 포인트 */
+  #reo_0HBy .ad_list a h4::before { 
+    content: '·'; 
+    color: #FF891C !important; 
+    font-weight: 900 !important; 
+    font-size: 3rem !important; 
+    margin-right: 10px; 
+    line-height: 1;
+    display: inline-block;
+    vertical-align: middle;
+  }
+  
+  #reo_0HBy .ad_list a:hover { opacity: 0.6; }
+</style>
+
+<div id="reo_0HBy">
+  <div class="ad_box">
+    <div class="ad_list">
+      <a href="https://ad.reople.co.kr/..." target="_blank"><h4>요즘 죽이는 "브로콜리" TV방송 후 구매 열풍!</h4></a>
+    </div>
+    <div class="ad_list">
+      <a href="https://ad.reople.co.kr/..." target="_blank"><h4>"선비치리조트" 오픈 기념! 100%반환 신규회원 모집!</h4></a>
+    </div>
+    <div class="ad_list">
+      <a href="https://ad.reople.co.kr/..." target="_blank"><h4>죽을만큼 아픈 허리통증! "수술없이" 해결하는 비법!</h4></a>
+    </div>
+  </div>
+</div>
