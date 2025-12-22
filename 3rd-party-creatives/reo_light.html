@@ -1,59 +1,91 @@
-<style>
-  /* Iframe 환경 초기화 및 자동 확대 방지 */
-  html, body { 
-    background: transparent !important; 
-    margin: 0; padding: 0; 
-    -webkit-text-size-adjust: none; 
-  }
-  body, h4, ul, li { margin: 0; padding: 0; }
-  * { box-sizing: border-box; }
-  
-  #reo_0HBy { 
-    width: 100%; text-align: left; 
-    font-family: 'Pretendard Variable', 'Malgun Gothic', sans-serif; 
-    -webkit-font-smoothing: antialiased; 
-  }
-  #reo_0HBy .ad_box { padding: 0; margin: 0; list-style: none; }
-  
-  /* 개별 행 스타일: 높이 80px 고정 */
-  #reo_0HBy .ad_list { 
-    border-bottom: 1px solid #dadada !important; 
-    height: 80px; 
-    display: flex; align-items: center; 
-    overflow: hidden;
-  }
-  #reo_0HBy .ad_list:last-child { border-bottom: none !important; }
-  
-  /* 텍스트 영역: rem 대신 px 사용하여 크기 고정 */
-  #reo_0HBy .ad_list a { 
-    display: flex; align-items: center; 
-    width: 100%; height: 100%; 
-    padding: 0 10px !important; 
-    text-decoration: none; 
-  }
-  #reo_0HBy .ad_list a h4 { 
-    margin: 0; color: #212121 !important; 
-    font-size: 17px !important; /* rem 대신 17px 고정 */
-    font-weight: 600 !important; 
-    line-height: 1.4 !important; 
-    letter-spacing: -0.05em !important;
-    display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
-    overflow: hidden; text-overflow: ellipsis;
-    position: relative; bottom: 1px; /* 17px에 맞춘 미세 위치 조정 */
-  }
-  
-  /* 주황색 블릿 */
-  #reo_0HBy .ad_list a h4::before { 
-    content: '·'; color: #FF7A00 !important; font-weight: 900 !important; 
-    font-size: 22px !important; margin-right: 8px; line-height: 1;
-  }
-  #reo_0HBy .ad_list a:hover { opacity: 0.6; transition: 0.3s; }
-</style>
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        /* 1. Iframe 환경 초기화 */
+        html, body { 
+            background: transparent !important; 
+            margin: 0; padding: 0; 
+            -webkit-text-size-adjust: none; 
+        }
+        body, h4, ul, li { margin: 0; padding: 0; }
+        * { box-sizing: border-box; }
+        
+        /* 2. 전체 컨테이너 및 폰트 설정 */
+        #mk_native_ad_wrap { 
+            width: 100%; 
+            text-align: left; 
+            font-family: 'Pretendard Variable', 'Pretendard', 'Malgun Gothic', sans-serif; 
+            -webkit-font-smoothing: antialiased; 
+        }
+        .ad_box { list-style: none; }
 
-<div id="reo_0HBy">
-  <div class="ad_box">
-    <div class="ad_list"><a href="링크1" target="_blank"><h4>첫 번째 라이트모드 광고 텍스트입니다.</h4></a></div>
-    <div class="ad_list"><a href="링크2" target="_blank"><h4>두 번째 줄이며 px 단위로 크기를 고정했습니다.</h4></a></div>
-    <div class="ad_list"><a href="링크3" target="_blank"><h4>세 번째 줄까지 주변 뉴스 리스트와 완벽히 정렬됩니다.</h4></a></div>
-  </div>
-</div>
+        /* 3. 개별 행 레이아웃 (t_topnews_v 스타일 이식) */
+        .ad_item { 
+            border-bottom: 1px solid #dadada !important; 
+            height: 80px; 
+            display: flex; 
+            align-items: center; 
+            overflow: hidden;
+        }
+        .ad_item:last-child { border-bottom: none !important; }
+
+        /* 4. 클릭 영역 및 텍스트 박스 */
+        .ad_link { 
+            display: flex; 
+            align-items: center; 
+            width: 100%; 
+            height: 100%; 
+            padding: 0 10px !important; 
+            text-decoration: none; 
+        }
+
+        /* 5. 텍스트 상세 스타일 (px 단위 고정) */
+        .ad_title { 
+            margin: 0; 
+            color: #212121 !important; 
+            font-size: 17px !important; /* t_topnews_v 표준 크기 */
+            font-weight: 600 !important; 
+            line-height: 25px !important; /* t_topnews_v 행간 재현 */
+            letter-spacing: -0.05em !important;
+            display: -webkit-box; 
+            -webkit-line-clamp: 2; 
+            -webkit-box-orient: vertical;
+            overflow: hidden; 
+            text-overflow: ellipsis;
+            position: relative;
+            top: 1px; /* 텍스트 베이스라인 미세 조정 */
+        }
+
+        /* 6. 주황색 블릿 (t_badge 스타일) */
+        .ad_title::before { 
+            content: '·'; 
+            color: #FF7A00 !important; 
+            font-weight: 900 !important; 
+            font-size: 24px !important; 
+            margin-right: 8px; 
+            line-height: 1;
+        }
+
+        /* 7. 인터랙션 */
+        .ad_link:hover .ad_title { opacity: 0.6; transition: 0.2s; }
+    </style>
+</head>
+<body>
+    <div id="mk_native_ad_wrap">
+        <ul class="ad_box">
+            <li class="ad_item">
+                <a href="광고링크1" target="_blank" class="ad_link"><h4 class="ad_title">첫 번째 라이트모드 광고 텍스트입니다.</h4></a>
+            </li>
+            <li class="ad_item">
+                <a href="광고링크2" target="_blank" class="ad_link"><h4 class="ad_title">두 번째 광고 줄이며 px 단위로 크기를 17px로 고정했습니다.</h4></a>
+            </li>
+            <li class="ad_item">
+                <a href="광고링크3" target="_blank" class="ad_link"><h4 class="ad_title">세 번째 광고 줄까지 주변 뉴스 리스트와 완벽히 정렬됩니다.</h4></a>
+            </li>
+        </ul>
+    </div>
+</body>
+</html>
