@@ -1,79 +1,86 @@
 <style>
-  /* 기본 환경 초기화 및 투명 배경 */
-  html, body { background: transparent !important; margin: 0; padding: 0; }
+  /* [환경설정] Iframe 내부 rem 기준 및 초기화 */
+  html { font-size: 10px !important; -webkit-text-size-adjust: none; }
+  body, h4, ul, li { margin: 0; padding: 0; }
+  * { box-sizing: border-box; }
   
-  #reo_0HBy { 
-    width: 100%; 
-    text-align: left; 
-    font-family: 'Pretendard Variable', 'Malgun Gothic', sans-serif; 
+  /* [기본스타일] 배경 투명 및 폰트 설정 */
+  html, body { 
+    background: transparent !important; 
+    font-family: 'Pretendard Variable', 'Pretendard', 'Malgun Gothic', sans-serif; 
+    -webkit-font-smoothing: antialiased; 
   }
-  
-  #reo_0HBy .ad_box { padding: 0; margin: 0; list-style: none; }
-  
-  /* t_topnews_v li 스타일: 높이 80px 및 경계선 일치 */
-  #reo_0HBy .ad_list { 
+
+  #mk_native_ad_wrap { width: 100%; text-align: left; }
+  .ad_box { list-style: none; }
+
+  /* [레이아웃] 행 높이 80px 및 구분선 설정 */
+  .ad_item { 
     border-bottom: 1px solid #dadada !important; 
     height: 80px; 
-    overflow: hidden; 
-    display: flex;
-    align-items: center;
-  }
-  
-  #reo_0HBy .ad_list:last-child { border-bottom: none !important; }
-  
-  /* t_topnews_v .link_style1 & .txt_area 스타일 */
-  #reo_0HBy .ad_list a { 
     display: flex; 
     align-items: center; 
-    width: 100%;
-    height: 100%;
-    padding: 20px 0 !important; 
-    text-decoration: none; 
-    transition: opacity 0.3s; 
+    overflow: hidden;
   }
-  
-  /* 텍스트 스타일: 2.4rem 및 수평 보정 */
-  #reo_0HBy .ad_list a h4 { 
-    margin: 0;
+  .ad_item:last-child { border-bottom: none !important; }
+
+  /* [클릭영역] */
+  .ad_link { 
+    display: flex; 
+    align-items: center; 
+    width: 100%; 
+    height: 100%; 
+    padding: 0 5px; /* 좌우 미세 여백 */
+    text-decoration: none; 
+  }
+
+  /* [텍스트] 2.4rem, 600굵기, 위치 보정(-4px), 2줄 제한 */
+  .ad_title { 
+    margin: 0; 
     color: #212121 !important; 
     font-size: 2.4rem !important; 
     font-weight: 600 !important; 
-    line-height: 2.5rem !important;
+    line-height: 1.4 !important; 
     letter-spacing: -0.05em !important;
-    display: -webkit-box;
-    -webkit-line-clamp: 2; /* 2줄 제한 */
+    display: -webkit-box; 
+    -webkit-line-clamp: 2; 
     -webkit-box-orient: vertical;
-    overflow: hidden;
+    overflow: hidden; 
     text-overflow: ellipsis;
-    position: relative;
-    bottom: 4px; /* 베이스라인 조정 */
+    position: relative; 
+    bottom: 4px; 
   }
-  
-  /* t_badge 스타일을 적용한 주황색 블릿 */
-  #reo_0HBy .ad_list a h4::before { 
+
+  /* [블릿] MK 시그니처 주황색 중점 */
+  .ad_title::before { 
     content: '·'; 
     color: #FF7A00 !important; 
     font-weight: 900 !important; 
     font-size: 3rem !important; 
     margin-right: 10px; 
     line-height: 1;
-    display: inline-block;
-    vertical-align: middle;
   }
   
-  #reo_0HBy .ad_list a:hover { opacity: 0.6; }
+  /* [인터랙션] 호버 시 투명도 변화 */
+  .ad_link:hover .ad_title { opacity: 0.6; transition: 0.3s; }
 </style>
 
-<div id="reo_0HBy">
-  <div class="ad_box">
-    <div class="ad_list">
-      <a href="https://ad.reople.co.kr/..." target="_blank"><h4>요즘 죽이는 "브로콜리" TV방송 후 구매 열풍!</h4></a>
-    </div>
-    <div class="ad_list">
-      <a href="https://ad.reople.co.kr/..." target="_blank"><h4>"선비치리조트" 오픈 기념! 100%반환 신규회원 모집!</h4></a>
-    </div>
-    <div class="ad_list">
-      <a href="https://ad.reople.co.kr/..." target="_blank"><h4>죽을만큼 아픈 허리통증! "수술없이" 해결하는 비법!</h4></a>
-    </div>
-  </div>
+<div id="mk_native_ad_wrap">
+  <ul class="ad_box">
+    <li class="ad_item">
+      <a href="광고링크1" target="_blank" class="ad_link">
+        <h4 class="ad_title">첫 번째 광고 헤드라인이 들어가는 자리입니다</h4>
+      </a>
+    </li>
+    <li class="ad_item">
+      <a href="광고링크2" target="_blank" class="ad_link">
+        <h4 class="ad_title">두 번째 광고 텍스트도 동일한 스타일로 노출됩니다</h4>
+      </a>
+    </li>
+    <li class="ad_item">
+      <a href="광고링크3" target="_blank" class="ad_link">
+        <h4 class="ad_title">마지막 세 번째 광고 줄은 하단 선이 없습니다</h4>
+      </a>
+    </li>
+  </ul>
 </div>
