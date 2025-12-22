@@ -1,87 +1,89 @@
-<style>
-  /* [환경설정] Iframe 내부 rem 기준 및 초기화 */
-  html { font-size: 10px !important; -webkit-text-size-adjust: none; }
-  body, h4, ul, li { margin: 0; padding: 0; }
-  * { box-sizing: border-box; }
-  
-  /* [기본스타일] 배경 투명 및 폰트 설정 */
-  html, body { 
-    background: #1d1d1d !important; 
-    font-family: 'Pretendard Variable', 'Pretendard', 'Malgun Gothic', sans-serif; 
-    -webkit-font-smoothing: antialiased; 
-  }
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    /* [핵심] 부모 페이지와 동일하게 1rem = 10px로 강제 고정 */
+    html { 
+      font-size: 10px !important; 
+      -webkit-text-size-adjust: none !important; 
+    }
+    
+    body, h4, ul, li { margin: 0; padding: 0; }
+    * { box-sizing: border-box; }
+    
+    html, body { 
+      background: transparent !important; 
+      font-family: 'Pretendard Variable', 'Pretendard', 'Malgun Gothic', sans-serif; 
+      -webkit-font-smoothing: antialiased; 
+    }
 
-  #mk_native_ad_wrap { width: 100%; text-align: left; }
-  .ad_box { list-style: none; }
+    #mk_native_ad_wrap { width: 100%; text-align: left; }
+    .ad_box { list-style: none; }
 
-  /* [레이아웃] 다크모드 전용 구분선 (#464646) */
-  .ad_item { 
-    border-bottom: 1px solid #464646 !important; 
-    height: 80px; 
-    display: flex; 
-    align-items: center; 
-    overflow: hidden;
-  }
-  .ad_item:last-child { border-bottom: none !important; }
+    /* 다크모드 전용 구분선 (#464646) */
+    .ad_item { 
+      border-bottom: 1px solid #464646 !important; 
+      height: 80px; 
+      display: flex; 
+      align-items: center; 
+      overflow: hidden;
+    }
+    .ad_item:last-child { border-bottom: none !important; }
 
-  /* [클릭영역] */
-  .ad_link { 
-    display: flex; 
-    align-items: center; 
-    width: 100%; 
-    height: 100%; 
-    padding: 0 5px; 
-    text-decoration: none; 
-  }
+    .ad_link { 
+      display: flex; 
+      align-items: center; 
+      width: 100%; 
+      height: 100%; 
+      padding: 0 10px; 
+      text-decoration: none; 
+    }
 
-  /* [텍스트] 다크모드 전용 글자색 (#f0f0f0) */
-  .ad_title { 
-    margin: 0; 
-    color: #f0f0f0 !important; 
-    font-size: 2.4rem !important; 
-    font-weight: 600 !important; 
-    line-height: 1.4 !important; 
-    letter-spacing: -0.05em !important;
-    display: -webkit-box; 
-    -webkit-line-clamp: 2; 
-    -webkit-box-orient: vertical;
-    overflow: hidden; 
-    text-overflow: ellipsis;
-    position: relative; 
-    bottom: 4px;
-  }
+    /* 다크모드 전용 텍스트 컬러 (#f0f0f0) */
+    .ad_title { 
+      margin: 0; 
+      color: #f0f0f0 !important; 
+      font-size: 2.4rem !important; 
+      font-weight: 600 !important; 
+      line-height: 1.4 !important; 
+      letter-spacing: -0.05em !important;
+      display: -webkit-box; 
+      -webkit-line-clamp: 2; 
+      -webkit-box-orient: vertical;
+      overflow: hidden; 
+      text-overflow: ellipsis;
+      position: relative; 
+      bottom: 4px;
+    }
 
-  /* [블릿] 다크모드 포인트 오렌지 컬러 (#FF891C) */
-  .ad_title::before { 
-    content: '·'; 
-    color: #FF891C !important; 
-    font-weight: 900 !important; 
-    font-size: 3rem !important; 
-    margin-right: 10px; 
-    line-height: 1;
-  }
-  
-  /* [인터랙션] 호버 시 투명도 변화 */
-  .ad_link:hover .ad_title { opacity: 0.6; transition: 0.3s; }
-</style>
-
-<div id="mk_native_ad_wrap">
-  <ul class="ad_box">
-    <li class="ad_item">
-      <a href="광고링크1" target="_blank" class="ad_link">
-        <h4 class="ad_title">다크모드 첫 번째 광고 줄입니다</h4>
-      </a>
-    </li>
-    <li class="ad_item">
-      <a href="광고링크2" target="_blank" class="ad_link">
-        <h4 class="ad_title">가독성을 위해 반전된 컬러가 적용되었습니다</h4>
-      </a>
-    </li>
-    <li class="ad_item">
-      <a href="광고링크3" target="_blank" class="ad_link">
-        <h4 class="ad_title">3줄 구성으로 주변 뉴스 목록과 완벽히 동기화됩니다</h4>
-      </a>
-    </li>
-  </ul>
-</div>
-
+    /* 다크모드 주황색 블릿 포인트 */
+    .ad_title::before { 
+      content: '·'; 
+      color: #FF891C !important; 
+      font-weight: 900 !important; 
+      font-size: 3rem !important; 
+      margin-right: 10px; 
+      line-height: 1;
+    }
+    
+    .ad_link:hover .ad_title { opacity: 0.6; transition: 0.2s; }
+  </style>
+</head>
+<body>
+  <div id="mk_native_ad_wrap">
+    <ul class="ad_box">
+      <li class="ad_item">
+        <a href="광고링크1" target="_blank" class="ad_link"><h4 class="ad_title">다크모드 첫 번째 광고 텍스트입니다.</h4></a>
+      </li>
+      <li class="ad_item">
+        <a href="광고링크2" target="_blank" class="ad_link"><h4 class="ad_title">어두운 테마에서도 선명한 가독성을 제공합니다.</h4></a>
+      </li>
+      <li class="ad_item">
+        <a href="광고링크3" target="_blank" class="ad_link"><h4 class="ad_title">3줄 구성으로 뉴스 목록과 조화를 이룹니다.</h4></a>
+      </li>
+    </ul>
+  </div>
+</body>
+</html>
