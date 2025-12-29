@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>당신이 좋아할 만한 콘텐츠 - 매일경제</title>
+    
+    <style>
+        /* [1. 폰트 임포트] */
+        @import url("https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/variable/pretendardvariable.css");
+
+        /* [2. 라이트/다크모드 전역 변수 설정] */
+        :root {
+            --c-bg: #ffffff;
+            --c-txt: #212121;
+            --c-line: #dadada;
+            --c-source: #888888;
+            --c-ad-bg: rgba(0, 0, 0, 0.3); /* 배지 투명도 0.3 적용 */
+            --c-ad-txt: #d1d1d1;
+        }
+
+        /* 다크모드 강제 적용 및 시스템 설정 대응 */
+        [data-dark="true"], 
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --c-bg: #1d1d1d; /* 매경 다크모드 배경색 */
+                --c-txt: #f0f0f0; /* 매경 다크모드 텍스트색 */
+                --c-line: #464646; /* 매경 다크모드 구분선 */
+                --c-source: #aaaaaa;
+                --c-ad-bg: rgba(255, 255, 255, 0.15);
+                --c-ad-txt: #d1d1d1;
+            }
+        }
+
+        /* [3. Global Reset] */
+        html { font-size: 10px !important; } 
+        body, div, h3, h4, article, a, img, section, span, button { margin: 0; padding: 0; box-sizing: border-box; }
+        body { 
+            font-family: 'Pretendard Variable', 'Malgun Gothic', sans-serif; 
+            background-color: var(--c-bg); 
+            color: var(--c-txt);
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        /* [4. Container & Layout] */
+        .mk-recommend-widget {
+            max-width: 900px; /* Desktop 기본 영역 */
+            margin: 40px auto;
+            padding: 0;
+        }
+
+        .widget-header h3 { border-top: 2px solid var(--c-txt); padding: 12px 0; margin: 0; }
+        .widget-header h3 span { font-size: 1.8rem; font-weight: 800; }
+
+        .widget-grid { display: grid; width: 100%; }
+
+        /* [5. Desktop & Tablet (>= 768px) Grid] */
+        @media only screen and (min-width: 768px) {
+            .widget-grid { grid-template-columns: repeat(3, 1fr); } /* 3열 구성 */
+            .grid-item {
+                /* 격자 사이 세로 여백 25px 구현 (상하 각 12.5px) */
+                padding: 12.5px 15px;
+                border-left: 1px solid var(--c-line); /* 세로선 유지 */
+                display: flex; flex-direction: column;
+            }
+            .grid-item:nth-child(3n+1) { border-left: none; padding-left: 0; }
+            .grid-item:nth-child(3n) { padding-right: 0; }
+            
+            /* Tablet Width 조정 (600px 영역) */
+            @media (max-width: 1023px) {
+                .mk-recommend-widget { max-width: 600px; }
+            }
+        }
+
+        /* [6. Smartphone (< 768px) Grid] */
+        @media only screen and (max-width: 767px) {
+            .mk-recommend-widget { max-width: 100%; padding: 0 15px; }
+            .widget-grid { grid-template-columns: repeat(2, 1fr); } /* 2열 구성 */
+            .grid-item {
+                padding: 12.5px 0; /* 세로 여백 25px 유지 (상하 12.5px) */
+                border-left: none !important; /* 세로선 삭제 */
+                border-bottom: 1px solid var(--c-line); /* 가로선 유지 */
+            }
+            .grid-item:nth-child(2n+1) { padding-right: 10px; }
+            .grid-item:nth-child(2n) { padding-left: 10px; }
+            .grid-item:nth-child(7), .grid-item:nth-child(8) { border-bottom: none !important; }
+            .grid-item:nth-child(n+9) { display: none; } /* 모바일 8개 제한 */
+        }
+
+        /* [7. Content Elements] */
+        .item-link { text-decoration: none; display: block; height: 100%; color: inherit; }
+        .img-wrapper {
+            position: relative; width: 100%; padding-bottom: 60.25%; /* 16:9 비율 */
+            overflow: hidden; background-color: #f2f2f2;
+        }
+        .img-wrapper img {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            object-fit: cover; transition: transform 0.3s ease;
+        }
+        .grid-item a:hover img { transform: scale(1.05); }
+
+        /* AD 뱃지 스타일 */
+        .grid-item.is-ad .img-wrapper::after {
+            content: 'AD'; position: absolute; top: 0; left: 0;
+            background-color: var(--c-ad-bg); color: var(--c-ad-txt);
+            font-size: 1.1rem; font-weight: 400; padding: 3px 7px; z-index: 10;
+        }
+
+        /* Typography & Spacing (10px 여백 고정) */
+        .txt-area { padding-top: 15px; }
+        .ad-title {
+            font-size: 1.6rem; font-weight: 600; line-height: 1.4; color: var(--c-txt);
+            margin: 0 0 10px 0 !important; /* 기사제목-출처 사이 여백 10px */
+            display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+            overflow: hidden; min-height: 4.4rem;
+        }
+
+        .bottom-info { display: flex; justify-content: space-between; align-items: center; }
+        .source { font-size: 1.25rem; color: var(--c-source); font-weight: 400; }
+
+        .cta-button {
+            padding: 3px 8px; border: 1px solid var(--c-line); border-radius: 2px;
+            font-size: 1.1rem; font-weight: 600; color: var(--c-txt); background: var(--c-bg);
+            white-space: nowrap;
+        }
+    </style>
+</head>
+<body data-dark="false"> <section class="mk-recommend-widget">
+        <div class="widget-header">
+            <h3 class="widget-title"><span>당신이 좋아할 만한 콘텐츠</span></h3>
+        </div>
+
+        <div class="widget-grid">
+            <article class="grid-item is-ad">
+                <a href="#" class="item-link">
+                    <div class="img-wrapper"><img src="https://picsum.photos/400/225?random=101" alt="광고"></div>
+                    <div class="txt-area">
+                        <h4 class="ad-title">"노후 자금 고민 끝" 은퇴 후 월 300만원 보장받는 수익형 부동산</h4>
+                        <div class="bottom-info">
+                            <span class="source">리얼티랩</span>
+                            <span class="cta-button">문의하기</span>
+                        </div>
+                    </div>
+                </a>
+            </article>
+
+            <article class="grid-item is-content">
+                <a href="#" class="item-link">
+                    <div class="img-wrapper"><img src="https://picsum.photos/400/225?random=102" alt="기사"></div>
+                    <div class="txt-area">
+                        <h4 class="ad-title">삼성전자, 용인 반도체 클러스터에 300조 투자... 세계 최대 규모</h4>
+                        <div class="bottom-info"><span class="source">매일경제</span></div>
+                    </div>
+                </a>
+            </article>
+
+            <article class="grid-item is-ad">
+                <a href="#" class="item-link">
+                    <div class="img-wrapper"><img src="https://picsum.photos/400/225?random=103" alt="광고"></div>
+                    <div class="txt-area">
+                        <h4 class="ad-title">내 보험료 1분 만에 조회하고 다이렉트로 최대 15% 할인 받기</h4>
+                        <div class="bottom-info">
+                            <span class="source">현대해상</span>
+                            <span class="cta-button">견적확인</span>
+                        </div>
+                    </div>
+                </a>
+            </article>
+
+            <article class="grid-item is-content">
+                <a href="#" class="item-link">
+                    <div class="img-wrapper"><img src="https://picsum.photos/400/225?random=104" alt="기사"></div>
+                    <div class="txt-area">
+                        <h4 class="ad-title">비트코인 1억 시대 열리나... 전문가들이 꼽은 하반기 3대 변수</h4>
+                        <div class="bottom-info"><span class="source">매일경제</span></div>
+                    </div>
+                </a>
+            </article>
+
+            <article class="grid-item is-ad">
+                <a href="#" class="item-link">
+                    <div class="img-wrapper"><img src="https://picsum.photos/400/225?random=105" alt="광고"></div>
+                    <div class="txt-area">
+                        <h4 class="ad-title">영어 회화, 10일 만에 입이 트인다? 야나두 기초 패턴 패키지</h4>
+                        <div class="bottom-info">
+                            <span class="source">야나두</span>
+                            <span class="cta-button">가입하기</span>
+                        </div>
+                    </div>
+                </a>
+            </article>
+
+            <article class="grid-item is-content">
+                <a href="#" class="item-link">
+                    <div class="img-wrapper"><img src="https://picsum.photos/400/225?random=106" alt="기사"></div>
+                    <div class="txt-area">
+                        <h4 class="ad-title">현대차 DNA 바꾼 정의선 회장, 미래 모빌리티 시장 선점 가속</h4>
+                        <div class="bottom-info"><span class="source">매일경제</span></div>
+                    </div>
+                </a>
+            </article>
+
+            <article class="grid-item is-ad">
+                <a href="#" class="item-link">
+                    <div class="img-wrapper"><img src="https://picsum.photos/400/225?random=107" alt="광고"></div>
+                    <div class="txt-area">
+                        <h4 class="ad-title">임플란트 뼈이식까지 하루 만에 완성! 디지털 치과 솔루션 안내</h4>
+                        <div class="bottom-info">
+                            <span class="source">미소치과</span>
+                            <span class="cta-button">예약하기</span>
+                        </div>
+                    </div>
+                </a>
+            </article>
+
+            <article class="grid-item is-ad">
+                <a href="#" class="item-link">
+                    <div class="img-wrapper"><img src="https://picsum.photos/400/225?random=108" alt="광고"></div>
+                    <div class="txt-area">
+                        <h4 class="ad-title">제주 서귀포 독채 풀빌라 윈터 스테이 패키지 단독 특가 오픈</h4>
+                        <div class="bottom-info">
+                            <span class="source">트립비토즈</span>
+                            <span class="cta-button">지금예약</span>
+                        </div>
+                    </div>
+                </a>
+            </article>
+
+            <article class="grid-item is-content">
+                <a href="#" class="item-link">
+                    <div class="img-wrapper"><img src="https://picsum.photos/400/225?random=109" alt="기사"></div>
+                    <div class="txt-area">
+                        <h4 class="ad-title">AI가 바꿀 금융의 미래, 핀테크 업계 생성형 AI 도입 열풍</h4>
+                        <div class="bottom-info"><span class="source">매일경제</span></div>
+                    </div>
+                </a>
+            </article>
+        </div>
+    </section>
+
+</body>
+</html>

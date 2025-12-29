@@ -2,53 +2,33 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <style>
-        /* [Dark Mode Global] 다크모드 배경색 #1d1d1d 고정 */
         html, body { background: #1d1d1d !important; margin: 0px !important; padding: 0px !important; -webkit-text-size-adjust: none !important; }
-        h4, ul, li, div { margin: 0px !important; padding: 0px !important; }
+        h4, ul, li, div, span { margin: 0px !important; padding: 0px !important; }
         * { box-sizing: border-box !important; }
 
-        body div, .ad_box { width: 100% !important; text-align: left !important; font-family: 'Malgun Gothic', sans-serif !important; }
-        
-        /* 다크 전용 구분선 #464646 / 높이 45px */
-        .ad_list, li { border-bottom: 1px solid #464646 !important; height: 45px !important; display: flex !important; align-items: center !important; overflow: hidden !important; list-style: none !important; }
-        
-        /* 다크 전용 텍스트 #f0f0f0 / 16px / 행간 25px */
-        .ad_list a, li a { 
-            display: flex !important; align-items: center !important; width: 100% !important; height: 100% !important; 
-            padding: 0 10px !important; text-decoration: none !important; color: #f0f0f0 !important; 
-            font-size: 16px !important; font-weight: 600 !important; line-height: 25px !important; 
-            letter-spacing: -0.75px !important; white-space: nowrap !important; text-overflow: ellipsis !important; overflow: hidden !important; 
-        }
+        .ad_container_wrapper { width: 100% !important; display: block !important; position: relative !important; clear: both !important; overflow: hidden !important; min-height: 135px !important; }
 
-        /* 다크 전용 블릿 #FF891C / 16px */
-        .ad_list a::before, li a::before { content: '·' !important; color: #FF891C !important; font-size: 16px !important; font-weight: 900 !important; margin-right: 6px !important; line-height: 1 !important; }
-        .ad_list a:hover, li a:hover { opacity: 0.6 !important; transition: 0.2s !important; }
+        .ad_list, li, .ad_item { border-bottom: 1px solid #464646 !important; height: 45px !important; display: flex !important; align-items: center !important; overflow: hidden !important; list-style: none !important; }
+        .ad_container_wrapper:first-of-type .ad_list:last-child, .ad_container_wrapper:first-of-type li:last-child { border-bottom: 1px solid #464646 !important; }
+        .ad_container_wrapper:last-of-type .ad_list:last-child, .ad_container_wrapper:last-of-type li:last-child, .ad_container_wrapper:last-of-type .ad_item:last-child { border-bottom: none !important; }
 
-        /* 다크 전용 외부 연결선 */
-        .ad_divider { border-top: 1px solid #464646 !important; width: 100% !important; height: 0px !important; margin: 0px !important; }
+        body div, .ad_box, [id^="reo"], [id^="adinc"] { width: 100% !important; text-align: left !important; font-family: 'Malgun Gothic', sans-serif !important; }
+        .ad_list a, li a, .ad_item a, .ad_link { display: flex !important; align-items: center !important; width: 100% !important; height: 100% !important; padding: 0px 10px !important; text-decoration: none !important; color: #f0f0f0 !important; font-size: 16px !important; font-weight: 600 !important; line-height: 25px !important; letter-spacing: -0.75px !important; white-space: nowrap !important; text-overflow: ellipsis !important; overflow: hidden !important; position: relative !important; top: 1px !important; }
+
+        .ad_list a::before, li a::before, .ad_item a::before { content: '·' !important; color: #FF891C !important; font-weight: 900 !important; font-size: 16px !important; margin-right: 6px !important; line-height: 1 !important; }
+        .ad_link:hover { opacity: 0.6 !important; }
     </style>
 </head>
 <body>
     <script>
         (function() {
-            var adScripts = [
-                "//ad.reople.co.kr/cgi-bin/PelicanC.dll?impr?pageid=0Hsv&lang=utf-8&out=script",
-                "//ad.adinc.kr/cgi-bin/PelicanC.dll?impr?pageid=09gd&lang=utf-8&out=script"
-            ];
-            // 50:50 확률로 셔플
+            var adScripts = [{ id: "wrap_leople", src: "//ad.reople.co.kr/cgi-bin/PelicanC.dll?impr?pageid=0Hsv&lang=utf-8&out=script" }, { id: "wrap_adinc", src: "//ad.adinc.kr/cgi-bin/PelicanC.dll?impr?pageid=09gd&lang=utf-8&out=script" }];
             if (Math.random() > 0.5) adScripts.reverse();
-
-            // 순차적 광고 주입
-            document.write("<script src='" + adScripts[0] + "'></scr" + "ipt>");
-            document.write("<div class='ad_divider'></div>");
-            document.write("<script src='" + adScripts[1] + "'></scr" + "ipt>");
+            document.write("<div id='" + adScripts[0].id + "' class='ad_container_wrapper'><script src='" + adScripts[0].src + "'></scr" + "ipt></div>");
+            document.write("<div id='" + adScripts[1].id + "' class='ad_container_wrapper'><script src='" + adScripts[1].src + "'></scr" + "ipt></div>");
         })();
     </script>
-
-    <style>
-        div:last-of-type .ad_list:last-child, div:last-of-type li:last-child { border-bottom: none !important; }
-    </style>
 </body>
 </html>
+

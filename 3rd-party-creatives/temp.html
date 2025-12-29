@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <style>
+        @import url("https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/variable/pretendardvariable.css");
+
+        /* [1. Global Reset] */
+        html, body { background: transparent !important; margin: 0px !important; padding: 0px !important; -webkit-text-size-adjust: none !important; }
+        h4, ul, li, div, span { margin: 0px !important; padding: 0px !important; }
+        * { box-sizing: border-box !important; }
+
+        /* [2. Isolation] 단일 6줄 컨테이너 높이 확보 (45px * 6 = 270px) */
+        .ad_container_wrapper { 
+            width: 100% !important; 
+            display: flow-root !important; 
+            position: relative !important; 
+            clear: both !important; 
+            min-height: 270px !important; 
+            overflow: visible !important;
+        }
+
+        /* [3. Border Control] 모든 행에 선 부여 후 마지막 행만 제거 */
+        .ad_list, li, .ad_item { border-bottom: 1px solid #dadada !important; height: 45px !important; display: flex !important; align-items: center !important; list-style: none !important; }
+        .ad_container_wrapper .ad_list:last-child, 
+        .ad_container_wrapper li:last-child, 
+        .ad_container_wrapper .ad_item:last-child { border-bottom: none !important; }
+
+        /* [4. Typography] 16px / 25px / Pretendard Priority */
+        body div, .ad_box, [id^="adinc"] { 
+            width: 100% !important; 
+            text-align: left !important; 
+            font-family: 'Pretendard Variable', 'Malgun Gothic', -apple-system, sans-serif !important; 
+        }
+        .ad_list a, li a, .ad_item a, .ad_link { display: flex !important; align-items: center !important; width: 100% !important; height: 100% !important; padding: 0px 10px 0px 0px !important; text-decoration: none !important; color: #212121 !important; font-size: 16px !important; font-weight: 600 !important; line-height: 25px !important; letter-spacing: -0.75px !important; white-space: nowrap !important; text-overflow: ellipsis !important; overflow: hidden !important; position: relative !important; top: 1px !important; cursor: pointer !important; }
+
+        /* Bullet 16px */
+        .ad_list a::before, li a::before, .ad_item a::before { content: '·' !important; color: #FF7A00 !important; font-weight: 900 !important; font-size: 16px !important; margin-right: 6px !important; line-height: 1 !important; }
+    </style>
+</head>
+<body>
+    <div id="wrap_adinc" class="ad_container_wrapper">
+        <script src="//ad.adinc.kr/cgi-bin/PelicanC.dll?impr?pageid=09hL&lang=utf-8&out=script"></script>
+    </div>
+
+    <script>
+        /* [변동 대응형 하이브리드 클릭 인터셉터] */
+        (function() {
+            const gamClickMacro = "%%CLICK_URL_UNESC%%";
+            
+            function applyTracking() {
+                // a 태그뿐만 아니라 onclick 속성이 부여된 모든 요소를 감시
+                const targets = document.querySelectorAll('#wrap_adinc a, #wrap_adinc [onclick]');
+                
+                targets.forEach(el => {
+                    // 이미 처리되었거나 매크로가 치환되지 않은 경우(로컬 테스트 등) 스킵
+                    if (el.dataset.tracked === "true" || gamClickMacro.indexOf("%%") === 0) return;
+
+                    // 1. 표준 a 태그 링크 방식 대응
+                    if (el.tagName === 'A') {
+                        const originalHref = el.getAttribute('href');
+                        if (originalHref && originalHref.indexOf(gamClickMacro) === -1) {
+                            el.href = gamClickMacro + originalHref;
+                            el.dataset.tracked = "true";
+                        }
+                    } 
+                    // 2. onclick 자바스크립트 클릭 방식 대응 (변동 대응 핵심)
+                    else if (el.getAttribute('onclick')) {
+                        const originalClick = el.getAttribute('onclick');
+                        if (originalClick.indexOf(gamClickMacro) === -1) {
+                            // fetch를 통해 백그라운드에서 구글 클릭을 기록한 후 원본 스크립트 실행
+                            el.setAttribute('onclick', `fetch('${gamClickMacro}', {mode:'no-cors'}); ${originalClick}`);
+                            el.dataset.tracked = "true";
+                        }
+                    }
+                });
+            }
+
+            // 애드인 스크립트가 링크를 생성할 때까지 5초간 반복 체크
+            let count = 0;
+            const timer = setInterval(() => { 
+                applyTracking(); 
+                if (++count > 10) clearInterval(timer); 
+            }, 500);
+        })();
+    </script>
+</body>
+</html>
