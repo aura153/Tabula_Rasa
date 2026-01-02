@@ -108,15 +108,15 @@
             /*
              * [device_category 판별 로직]
              * - UA + viewport 너비 기준으로 대략적인 디바이스 카테고리 도출
-             *   - mobile : UA에서 모바일 키워드 탐지 OR width <= 768
-             *   - tablet : width <= 1024 (mobile보다는 크고 desktop보다는 작은 경우)
+             *   - smartphone : UA에서 모바일 키워드 탐지 OR width <= 768
+             *   - tablet : width <= 1024 (smartphone보다는 크고 desktop보다는 작은 경우)
              *   - desktop: 그 외
              * - 결과는 device_category 키로 세팅되어, 입찰/타게팅/리포트에서 공통 축으로 활용됩니다.
              */
             const userAgent = navigator.userAgent.toLowerCase();
             let deviceCategory = 'desktop';
             if (/mobile|android|iphone|ipad|ipod/.test(userAgent) || window.innerWidth <= 768) {
-                deviceCategory = 'mobile';
+                deviceCategory = 'smartphone'; // 'mobile' 대신 'smartphone' 사용
             } else if (window.innerWidth <= 1024) {
                 deviceCategory = 'tablet';
             }

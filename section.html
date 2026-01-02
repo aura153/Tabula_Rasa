@@ -119,8 +119,8 @@
             /*
              * [공통 · device_category 결정 로직]
              * - UA 문자열과 viewport 너비를 조합하여 간단한 디바이스 카테고리를 산출합니다.
-             *   - mobile : UA에 mobile/android/iphone/ipad/ipod 포함 OR width <= 768
-             *   - tablet : width <= 1024 (mobile보다는 크고 desktop보다는 작은 영역)
+             *   - smartphone : UA에 mobile/android/iphone/ipad/ipod 포함 OR width <= 768
+             *   - tablet : width <= 1024 (smartphone보다는 크고 desktop보다는 작은 영역)
              *   - desktop: 그 외
              * - 영향:
              *   - 페이지 레벨 타게팅 키(device_category)에 사용되어, 입찰/타게팅/리포트에서
@@ -131,7 +131,7 @@
             const userAgent = navigator.userAgent.toLowerCase();
             let deviceCategory = 'desktop';
             if (/mobile|android|iphone|ipad|ipod/.test(userAgent) || window.innerWidth <= 768) {
-                deviceCategory = 'mobile';
+                deviceCategory = 'smartphone'; // 'mobile' 대신 'smartphone' 사용
             } else if (window.innerWidth <= 1024) {
                 deviceCategory = 'tablet';
             }

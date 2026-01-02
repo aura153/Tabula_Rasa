@@ -146,7 +146,7 @@
             //
             // - UA + viewport 폭을 함께 사용해 3단계로 구분합니다.
             //   · desktop : 기본값
-            //   · mobile  : 모바일 UA 또는 width <= 768
+            //   · smartphone  : 스마트폰 UA 또는 width <= 768
             //   · tablet  : 태블릿으로 추정되는 중간 구간(width <= 1024)
             //
             // - 이 값은:
@@ -157,7 +157,7 @@
             const userAgent = navigator.userAgent.toLowerCase();
             let deviceCategory = 'desktop';
             if (/mobile|android|iphone|ipad|ipod/.test(userAgent) || window.innerWidth <= 768) {
-                deviceCategory = 'mobile';
+                deviceCategory = 'smartphone'; // 'mobile' 대신 'smartphone' 사용
             } else if (window.innerWidth <= 1024) {
                 deviceCategory = 'tablet';
             }
@@ -331,7 +331,7 @@
             let MC_article_rectangle_8_slot = null;
 
             // ------------------------------------------------------------------
-            // 5-1. [Desktop 전용] TC_billboard_X (Eager Load, ATF)
+            // 5-1. [Desktop, 태블릿 전용] TC_billboard_X (Eager Load, ATF)
             //
             // - 상단 빌보드 영역.
             // - 데스크탑 전용이므로 모바일 사이즈는 제외 합니다.

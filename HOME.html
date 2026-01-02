@@ -589,8 +589,8 @@
             // --- [1] 페이지 레벨 타게팅: GPT 버전, 디바이스, 환경 정보 ---
             // [공통 · device_category 결정 로직]
             // - userAgent + viewport 너비를 조합하여, 간단한 수준으로 디바이스 범주를 결정합니다.
-            //   - mobile : UA에 mobile/android/iphone/ipad/ipod가 포함되거나, width <= 768
-            //   - tablet : width <= 1024 (모바일보다 넓고 데스크탑보다는 작은 영역)
+            //   - smartphone : UA에 mobile/android/iphone/ipad/ipod가 포함되거나, width <= 768
+            //   - tablet : width <= 1024 (smartphone보다 넓고 데스크탑보다는 작은 영역)
             //   - desktop: 그 외
             // - 영향 범위:
             //   1) 페이지 레벨 타게팅 키 device_category 값으로 전달되어 입찰/타게팅에 활용
@@ -600,7 +600,7 @@
             const userAgent = navigator.userAgent.toLowerCase();
             let deviceCategory = 'desktop';
             if (/mobile|android|iphone|ipad|ipod/.test(userAgent) || window.innerWidth <= 768) {
-                deviceCategory = 'mobile';
+                deviceCategory = 'smartphone'; // 'mobile' 대신 'smartphone' 사용
             } else if (window.innerWidth <= 1024) {
                 deviceCategory = 'tablet';
             }

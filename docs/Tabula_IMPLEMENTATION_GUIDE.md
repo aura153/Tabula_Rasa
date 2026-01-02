@@ -366,16 +366,16 @@ const userAgent = navigator.userAgent.toLowerCase();
 let deviceCategory = 'desktop';
 
 if (/mobile|android|iphone|ipad|ipod/.test(userAgent) || window.innerWidth <= 768) {
-  deviceCategory = 'mobile';
+  deviceCategory = 'smartphone';
 } else if (window.innerWidth <= 1024) {
   deviceCategory = 'tablet';
 }
 
 googletag.pubads().setTargeting('device_category', deviceCategory);
 ```
-- **모바일**: UA 상 모바일 문자열 포함 OR `innerWidth <= 768`
-- **태블릿**: 모바일은 아니지만 `innerWidth <= 1024`
-- **데스크탑**: 그 외
+- **smartphone**: UA 상 스마트폰 문자열 포함 OR `innerWidth <= 768`
+- **tablet**: 스마트폰은 아니지만 `innerWidth <= 1024`
+- **desktop**: 그 외
 - SPA/리사이즈 환경에서는 필요 시 별도 재평가 로직 협의
 
 ---
