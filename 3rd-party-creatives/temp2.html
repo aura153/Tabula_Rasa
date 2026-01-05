@@ -1,3 +1,5 @@
+아래와 같이 셋팅 되어 있는 상황에서 광고 확인결과 첨부한 사신과 같이 attribution이 우측 상단이 아니라 전체 영역에 걸쳐 있고, 광고와 광고 라벨간 간격도 유지가 안되고 있다. 원인과 해결책에 대해서 심층 분석해줘.
+*라이트모드 GAM  Creative 코드
 <!DOCTYPE html>
 <html lang="ko">
 <head>
@@ -91,3 +93,55 @@
     </script>
 </body>
 </html>
+
+*GAM Native ads style의 HTML
+<div id="adunit">
+  <img src="[%Thirdpartyimpressiontracker%]" style="display:none">
+  
+  <div class="native-ad-container">
+    <div class="attribution">[%Attribution%]</div>
+    
+    <div class="ad-content">
+      [%3rd_party_tag%]
+    </div>
+  </div>
+</div>
+
+*GAM Native ads style의 CSS
+/* [1. 환경 설정] 매경 지면 테마 투영 및 스크롤 방지 */
+html, body {
+  background-color: transparent !important;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+}
+
+/* [2. 컨테이너] 배지 위치의 기준점 및 여백 확보 */
+.native-ad-container {
+  position: relative; /* 배지의 절대 위치 기준점 */
+  width: 100%;
+  /* 배지 높이(약 20px) + 요청하신 간격(10px) = 총 30px 상단 여백 */
+  padding-top: 30px; 
+  text-align: left;
+}
+
+/* [3. 배지 스타일] 요청하신 상세 규격 적용 */
+.attribution {
+  display: table;
+  background-color: rgba(165, 165, 165, 0.7); /* 요청하신 투명도 0.7 적용 */
+  color: #ffffff;
+  border-radius: 4px;
+  box-shadow: 0px 1px 2px rgba(0, 0, 0, 0.5);
+  font-size: 13px;
+  font-weight: 400;
+  line-height: 14px;
+  padding: 3px 5px;
+  position: absolute;
+  right: 0px;
+  top: 0px;
+  z-index: 10;
+}
+
+.ad-content {
+  width: 100%;
+}
