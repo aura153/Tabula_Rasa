@@ -1,23 +1,17 @@
-<!DOCTYPE html>  
+<!DOCTYPE html> 
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>List GPT</title> 
 
-    <!-- 
-        [공통 · GPT 로더 스크립트]
-        - securepubads.g.doubleclick.net/tag/js/gpt.js : 최신 Google Publisher Tag 로더
-        - window.googletag.cmd.push(...) 패턴과 함께 사용하여,
-          비동기 로드 환경에서도 안전하게 광고 슬롯 정의/설정을 순차 실행합니다.
-    -->
     <script async src="https://securepubads.g.doubleclick.net/tag/js/gpt.js"></script>
     <script>
         /*
          * [공통 · googletag 네임스페이스 초기화]
          * - GPT 공식 권장 패턴
          * - gpt.js 로더가 로드되기 전에도 googletag.cmd.push(function(){ ... })에
-         *   콜백을 쌓아두었다가, 로더 로딩 후 순차적으로 실행할 수 있게 합니다.
+         * 콜백을 쌓아두었다가, 로더 로딩 후 순차적으로 실행할 수 있게 합니다.
          */
         window.googletag = window.googletag || {cmd: []};
 
@@ -29,9 +23,9 @@
          * - '/section_list'      : 경제 섹션 내 리스트 페이지(예: 정책 리스트) 구분
          *
          * - List 템플릿에서는 “섹션 프론트”가 아닌 “섹션 리스트” 단위로
-         *   인벤토리를 쪼개기 위해 별도의 suffix(section_list)를 사용합니다.
+         * 인벤토리를 쪼개기 위해 별도의 suffix(section_list)를 사용합니다.
          * - 추후에는 section_list_nm에 따라,
-         *   /news/economy/policy_list, /news/economy/stock_list 등으로 세분화도 가능합니다.
+         * /news/economy/policy_list, /news/economy/stock_list 등으로 세분화도 가능합니다.
          */
         const AdUnitPath = '/7450/www.mk.co.kr/news/economy/section_list'; 
 
@@ -48,10 +42,10 @@
          * - TC_billboard_leaderboard_slot : 상단 TC 빌보드(리스트 상단), Eager Load
          * - MR_halfpage_rectangle_slot    : 우측 MR(사이드 레일), Lazy Load
          * - 외부(하단 스크립트 등)에서 해당 슬롯 객체를 참조해야 할 경우를 대비하여
-         *   전역 스코프에 변수로 보관합니다.
+         * 전역 스코프에 변수로 보관합니다.
          */
         var TC_billboard_leaderboard_slot = null;
-        var MR_halfpage_rectangle_slot   = null;
+        var MR_halfpage_rectangle_slot    = null;
 
         // ***************************************************
         // ✅ 광고 렌더링 완료 시 'Advertisement' 라벨을 삽입하는 함수
@@ -108,9 +102,9 @@
             /*
              * [device_category 판별 로직]
              * - UA + viewport 너비 기준으로 대략적인 디바이스 카테고리 도출
-             *   - smartphone : UA에서 모바일 키워드 탐지 OR width <= 768
-             *   - tablet : width <= 1024 (smartphone보다는 크고 desktop보다는 작은 경우)
-             *   - desktop: 그 외
+             * - smartphone : UA에서 모바일 키워드 탐지 OR width <= 768
+             * - tablet : width <= 1024 (smartphone보다는 크고 desktop보다는 작은 경우)
+             * - desktop: 그 외
              * - 결과는 device_category 키로 세팅되어, 입찰/타게팅/리포트에서 공통 축으로 활용됩니다.
              */
             const userAgent = navigator.userAgent.toLowerCase();
@@ -125,14 +119,14 @@
             /*
              * [List GPT 전용 · 페이지 레벨 고정 값]
              * - page_type        : 'section_front'로 되어 있으나, 실제 의미는 "섹션 관련 페이지"를 통합 식별
-             *                      (※ 실제 운영 시 'section_list' 등으로 세분화할 여지 있음)
+             * (※ 실제 운영 시 'section_list' 등으로 세분화할 여지 있음)
              * - section_home_nm  : '' (홈 구분 필요 시 향후 'MK' 등으로 확장 가능)
              * - section_front_nm : '' (리스트 페이지는 섹션 프론트가 아니므로 공백)
              * - is_dark_mode     : 위에서 계산한 다크 모드 여부
              * - gpt_version      : 스크립트/템플릿 버전 관리용 내부 플래그(2025)
              * - setPublisherProvidedId(PPID) :
-             *   - 서버에서 해시 처리된 1st-party 사용자 ID를 넣을 자리,
-             *     현재는 설명용 더미 문자열로 세팅되어 있습니다.
+             * - 서버에서 해시 처리된 1st-party 사용자 ID를 넣을 자리,
+             * 현재는 설명용 더미 문자열로 세팅되어 있습니다.
              */
             // 페이지 레벨 키/값 설정 (고정 값) - List GPT용
             googletag.pubads().setTargeting('page_type', 'section_front');
@@ -146,10 +140,10 @@
              * [동적 입력 키-값 영역 · List GPT]
              * - section_list_nm  : 'economic-policy' (경제 > 정책 리스트 등, 리스트 유형 식별)
              * - 나머지 SOURCE_ID, CODE_ID, article_num 등은 실제 환경에서 CMS/백엔드에서
-             *   기사/콘텐츠 정보에 맞게 덮어써야 하는 영역입니다.
+             * 기사/콘텐츠 정보에 맞게 덮어써야 하는 영역입니다.
              * - 용도:
-             *   - 리포트 분석(예: economic-policy 리스트 페이지 수익/효율)
-             *   - 컨텍스트 타게팅(키워드/코드 기반 타게팅, 유료·성인·민감 콘텐츠 구분 등)
+             * - 리포트 분석(예: economic-policy 리스트 페이지 수익/효율)
+             * - 컨텍스트 타게팅(키워드/코드 기반 타게팅, 유료·성인·민감 콘텐츠 구분 등)
              */
             // ▼▼▼ 동적 입력 키-값 복구 ▼▼▼
             googletag.pubads().setTargeting('domain', window.location.hostname);
@@ -187,11 +181,11 @@
              * [공통 · 반응형 광고 구현 로직 개요]
              * - sizeMapping은 "뷰포트 크기에 따라 어떤 사이즈 조합을 허용할지"를 정의하는 객체입니다.
              * - addSize([viewportWidth, viewportHeight], [허용 광고 사이즈 목록])
-             *   예) [1024, 0] 이상일 때는 데스크탑용 대형 배너, 그보다 작으면 모바일용 소형 배너
+             * 예) [1024, 0] 이상일 때는 데스크탑용 대형 배너, 그보다 작으면 모바일용 소형 배너
              *
              * - Section/List GPT에서는:
-             *   - sizeMapping_horizontal       : 상단 가로형 배너(TC)에 공통 적용
-             *   - sizeMapping_siderail_square  : 우측 사이드레일(MR) 박스형/세로형 배너에 적용
+             * - sizeMapping_horizontal        : 상단 가로형 배너(TC)에 공통 적용
+             * - sizeMapping_siderail_square   : 우측 사이드레일(MR) 박스형/세로형 배너에 적용
              * - 실제 입찰 단계에서 GAM은 이 매핑 정보를 사용해, 뷰포트에 맞는 크리에이티브만 선별하여 노출합니다.
              */
 
@@ -221,8 +215,6 @@
                 .build();
 
             // 0-2. 우측 사이드레일 박스형 배너용 사이즈 매핑 (MR)
-            //   · 데스크탑 구간([1024,0])에도 336x280을 최우선 사이즈로 추가
-            //   · 태블릿/모바일 구간은 기존 정책을 유지하면서 네이밍만 통일
             const sizeMapping_siderail_square = googletag.sizeMapping()
                 .addSize([1024, 0], [
                     [336, 280], [320, 480], [300, 600], [300, 250], 
@@ -251,14 +243,14 @@
 
             // 5. 광고 슬롯 정의 
             /*
-             * [슬롯 레벨 타게팅 공통 패턴]
-             * - setTargeting('div_id', ...)       : DOM ID와 동일하게 설정(리포트/디버깅용)
-             * - setTargeting('position', ...)     : TC/MR/MC 등 위치 정보
+             * [슬롯 레벨 타게팅 · 공통 패턴]
+             * - setTargeting('div_id', ...)        : DOM ID와 동일하게 설정(리포트/디버깅용)
+             * - setTargeting('position', ...)      : TC/MR/MC 등 위치 정보
              * - setTargeting('ad_area_type', ...) : ATF, in_article 등 영역 성격
              * - setTargeting('default_exposure', ...):
-             *   - 기본 노출 여부(A/B 테스트, fallback 전략 등) 구분용
+             * - 기본 노출 여부(A/B 테스트, fallback 전략 등) 구분용
              * - setTargeting('load_type', 'eager'|'lazy'):
-             *   - 로드 전략(즉시 or Lazy)을 리포트에서 구분하기 위해 사용
+             * - 로드 전략(즉시 or Lazy)을 리포트에서 구분하기 위해 사용
              */
 
             // 5-1. TC_billboard_leaderboard (Eager Load) - sizeMapping_horizontal 적용
@@ -282,7 +274,7 @@
                 [[750, 300], [750, 200], [728, 90], [480, 320], [336, 280], [320, 480], [320, 100], [320, 50], [300, 600], [300, 250], [250, 250], [200, 200], [2, 1], [1, 1], 'fluid'],
                 'MR_halfpage_rectangle' // Slot ID는 MR_halfpage_rectangle 유지
             )
-                .defineSizeMapping(sizeMapping_siderail_square)  // 🔧 2025-12: 우측 레일용 사이즈 매핑 통합 적용
+                .defineSizeMapping(sizeMapping_siderail_square)   // 🔧 2025-12: 우측 레일용 사이즈 매핑 통합 적용
                 .setTargeting('div_id', 'MR_halfpage_rectangle')
                 .setTargeting('position', 'MR')
                 .setTargeting('ad_area_type', 'ATF')      // 우측 MR (ATF 성격)
@@ -295,18 +287,18 @@
              * [GAM 핵심 설정]
              *
              * 1) disableInitialLoad()
-             *    - 페이지 로드시 자동 광고 요청을 막고,
-             *      개발자가 명시적으로 display() + refresh()를 호출할 때만 요청.
-             *    - Lazy Load 구현 시 필수 설정입니다.
+             * - 페이지 로드시 자동 광고 요청을 막고,
+             * 개발자가 명시적으로 display() + refresh()를 호출할 때만 요청.
+             * - Lazy Load 구현 시 필수 설정입니다.
              *
              * 2) enableSingleRequest()
-             *    - SRA(Single Request Architecture) 활성화
-             *    - 여러 슬롯 요청을 한 번의 네트워크 콜로 묶어 레이턴시 감소 및
-             *      라인 아이템 경쟁 로직을 일관되게 처리.
+             * - SRA(Single Request Architecture) 활성화
+             * - 여러 슬롯 요청을 한 번의 네트워크 콜로 묶어 레이턴시 감소 및
+             * 라인 아이템 간 경쟁 로직을 일관되게 처리.
              *
              * 3) PageSettingsConfig (setConfig)
-             *    - centering   : 슬롯 폭 대비 작은 크리에이티브를 수평 중앙 정렬.
-             *    - collapseDiv : 'BEFORE_FETCH' → 기존 collapseEmptyDivs(true)와 동등 동작.
+             * - centering   : 슬롯 폭 대비 작은 크리에이티브를 수평 중앙 정렬.
+             * - collapseDiv : 'BEFORE_FETCH' → 기존 collapseEmptyDivs(true)와 동등 동작.
              */
             googletag.pubads().disableInitialLoad();        // ★ 전역 초기 로드 비활성화
             googletag.pubads().enableSingleRequest();
@@ -322,9 +314,9 @@
             /*
              * [Eager vs Lazy · List GPT 전략]
              * - TC_billboard_leaderboard : Eager
-             *   → 리스트 페이지 최상단 핵심 인벤토리이므로 페이지 진입 시 바로 노출
+             * → 리스트 페이지 최상단 핵심 인벤토리이므로 페이지 진입 시 바로 노출
              * - MR_halfpage_rectangle    : Lazy
-             *   → IntersectionObserver 기반 Lazy 로딩(하단 스크립트)에서 display + refresh 처리
+             * → IntersectionObserver 기반 Lazy 로딩(하단 스크립트)에서 display + refresh 처리
              */
 
             // TC(Eager)만 즉시 display + refresh
@@ -334,10 +326,9 @@
         });
     </script>
     <style>
-        /* 
-         * [기본 레이아웃 · List GPT]
+        /* * [기본 레이아웃 · List GPT]
          * - HOME/SECTION 템플릿과 동일한 스타일을 재사용하여
-         *   전체 사이트에서 광고 슬롯/레이아웃의 일관성을 유지합니다.
+         * 전체 사이트에서 광고 슬롯/레이아웃의 일관성을 유지합니다.
          */
         body { font-family: 'Malgun Gothic', 'Dotum', Arial, sans-serif; margin: 0; padding: 0; background-color: #f6f6f6; color: #333; }
         a { text-decoration: none; color: inherit; }
@@ -356,18 +347,18 @@
          * [레이아웃 · 메인/우측 컬럼 비율 전략 – HOME/SECTION/VIEW와 동일 방향]
          *
          * - 목표:
-         *   1) 데스크탑에서 우측 사이드바 내 336px 폭 광고(336x280, 300x250, 300x600 등)가
-         *      잘리지 않고 온전히 노출되도록 "사이드 레일 폭"을 보장
-         *   2) 모바일/태블릿에서는 우측 컬럼이 메인 아래로 내려가며 폭 100% 사용
+         * 1) 데스크탑에서 우측 사이드바 내 336px 폭 광고(336x280, 300x250, 300x600 등)가
+         * 잘리지 않고 온전히 노출되도록 "사이드 레일 폭"을 보장
+         * 2) 모바일/태블릿에서는 우측 컬럼이 메인 아래로 내려가며 폭 100% 사용
          *
          * - 전략:
-         *   - .main-content : flex: 1 1 auto; → 남는 영역을 유연하게 차지
-         *   - .sidebar      : 
-         *       · 데스크탑(≥1025px): flex: 0 0 336px; min-width: 336px; max-width: 336px
-         *          → padding 0 기준으로 레일 전체 폭을 336px 확보
-         *            (336x280 / 300x600 / 300x250 소재가 안정적으로 들어가는 폭)
-         *       · 모바일/태블릿(≤1024px): width:100%; flex:1 1 auto; min-width:0
-         *          → 폭 100%를 사용하며, min-width 제약 제거
+         * - .main-content : flex: 1 1 auto; → 남는 영역을 유연하게 차지
+         * - .sidebar      : 
+         * · 데스크탑(≥1025px): flex: 0 0 336px; min-width: 336px; max-width: 336px
+         * → padding 0 기준으로 레일 전체 폭을 336px 확보
+         * (336x280 / 300x600 / 300x250 소재가 안정적으로 들어가는 폭)
+         * · 모바일/태블릿(≤1024px): width:100%; flex:1 1 auto; min-width:0
+         * → 폭 100%를 사용하며, min-width 제약 제거
          */
         .main-content {
             flex: 1 1 auto;
@@ -375,13 +366,12 @@
         }
 
         .sidebar {
-            /* 
-             * [사이드바 공통 스타일]
+            /* * [사이드바 공통 스타일]
              * - 외곽 컨테이너에는 padding을 두지 않고, 폭만 336px 기준으로 확보합니다. (데스크탑)
              * - 텍스트/콘텐츠 여백은 .sidebar-box 내부의 개별 요소(h4, p 등)에서
-             *   margin/padding으로 제어하는 것을 권장합니다.
+             * margin/padding으로 제어하는 것을 권장합니다.
              * - 광고 슬롯(.ad-slot)은 사이드바 폭(최대 336px)을 그대로 활용하여,
-             *   336x280 / 300x600 / 300x250 등의 소재가 자연스럽게 노출되도록 합니다.
+             * 336x280 / 300x600 / 300x250 등의 소재가 자연스럽게 노출되도록 합니다.
              */
             background-color: #fff;
             padding: 0;                 /* 외곽 컨테이너는 padding 0 유지 */
@@ -396,12 +386,12 @@
          * - 모든 광고 슬롯이 공통으로 사용하는 래퍼 DIV 클래스입니다.
          *
          * - 핵심 전략:
-         *   1) 폭(width): 부모 컨테이너(메인, 사이드바 등)의 100%를 사용
-         *   2) 높이(height/min-height): 강제하지 않고, 실제 크리에이티브/iframe 높이에 맡김
-         *      → PageSettingsConfig.collapseDiv = 'BEFORE_FETCH'와 조합하여
-         *        광고 미집행 시 공백 최소화
-         *   3) flex 컨테이너로 동작시켜 다양한 사이즈 배너를 중앙 정렬
-         *   4) 상단 padding 10px으로 mk-ad-label(Advertisement) 라벨 공간 확보
+         * 1) 폭(width): 부모 컨테이너(메인, 사이드바 등)의 100%를 사용
+         * 2) 높이(height/min-height): 강제하지 않고, 실제 크리에이티브/iframe 높이에 맡김
+         * → PageSettingsConfig.collapseDiv = 'BEFORE_FETCH'와 조합하여
+         * 광고 미집행 시 공백 최소화
+         * 3) flex 컨테이너로 동작시켜 다양한 사이즈 배너를 중앙 정렬
+         * 4) 상단 padding 10px으로 mk-ad-label(Advertisement) 라벨 공간 확보
          */
         .ad-slot {
             position: relative; 
@@ -441,7 +431,7 @@
         
         /* TC / MR 광고의 배경/테두리 스타일 초기화
          * - 상단 TC, 우측 MR 슬롯은 실제 서비스에서는 border/배경을 투명 처리하여
-         *   광고 크리에이티브만 자연스럽게 보이도록 합니다.
+         * 광고 크리에이티브만 자연스럽게 보이도록 합니다.
          */
         #TC_billboard_leaderboard, #MR_halfpage_rectangle { 
             background-color: transparent !important; 
@@ -451,7 +441,7 @@
         /*
          * [디버깅용 상태 클래스 · .ad-loaded]
          * - JS에서 event.isEmpty === false 인 경우에만 해당 클래스를 추가하면,
-         *   실제 광고가 로드된 슬롯을 시각적으로 구분해 볼 수 있습니다.
+         * 실제 광고가 로드된 슬롯을 시각적으로 구분해 볼 수 있습니다.
          * - 현재 템플릿에서는 사용하지 않지만, 향후 디버깅용으로 활용 가능.
          */
         .ad-loaded { background-color: #c00 !important; color: #fff; }
@@ -461,11 +451,11 @@
          * [공통 · mk-ad-label]
          * - "Advertisement" 문구를 노출하는 라벨 DIV 스타일
          * - 특징:
-         *   - 상단 바깥 영역에 뜨도록 top: -15px, position: absolute
-         *   - 수평 중앙 정렬: left: 50% + transform: translateX(-50%)
-         *   - 폰트: 13px, normal weight, 대문자 표기(uppercase)
+         * - 상단 바깥 영역에 뜨도록 top: -15px, position: absolute
+         * - 수평 중앙 정렬: left: 50% + transform: translateX(-50%)
+         * - 폰트: 13px, normal weight, 대문자 표기(uppercase)
          * - View/HOME/SECTION/LIST GPT 전 페이지에서 완전히 동일한 스타일로 유지하여,
-         *   사용자가 어느 페이지에서든 광고 표시 정책을 일관되게 인식할 수 있도록 합니다.
+         * 사용자가 어느 페이지에서든 광고 표시 정책을 일관되게 인식할 수 있도록 합니다.
          */
         .mk-ad-label {
             position: absolute;
@@ -557,11 +547,11 @@
         /* ------------------------------
            데스크탑 레이아웃 (>= 1025px)
            - 우측 사이드바 컨테이너 폭 336px 확보 (padding 0 기준)
-           - 336x280/300x600/300x250 등 세로형 광고가 기준 폭 336px 안에서 노출
+           - 336x280 / 300x600 / 300x250 등 세로형 광고가 기준 폭 336px 안에서 노출
         ------------------------------ */
         @media (min-width: 1025px) {
             .sidebar {
-                flex: 0 0 336px;   /* 🔧 2025-12: 사이드 레일 폭 336px로 확장 */
+                flex: 0 0 336px;   /* 🔧 HOME GPT와 동일: 고정 폭 336px */
                 min-width: 336px;
                 max-width: 336px;  /* 상단 코멘트 정책에 맞춰 최대 폭도 336px로 고정 */
             }
@@ -573,7 +563,7 @@
              * - 1024px 이하에서는 메인/사이드 영역을 상하 스택
              * - .sidebar는 폭 100%를 사용하며, min-width 제약을 제거합니다.
              * - ad-2-mr(MR_halfpage_rectangle)는 상단 여백만 부여하고,
-             *   높이는 광고 크리에이티브에 맡깁니다.
+             * 높이는 광고 크리에이티브에 맡깁니다.
              */
             .content-wrap { flex-direction: column; }
 
@@ -594,20 +584,7 @@
             .article-thumb { width: 100%; height: 150px; margin-right: 0; margin-bottom: 10px; }
         }
         
-        /*
-         * [콘텐츠 박스 · .sidebar-box]
-         * - 사이드/본문 공용 콘텐츠 박스 컨테이너입니다.
-         * - padding은 0으로 두고, 내부 요소(h3, ul 등) 단위에서 여백을 개별 제어하는 방향을 가정합니다.
-         *   → 광고/콘텐츠 혼합 활용 시 최대 폭을 확보하기 위한 설정입니다.
-         */
-        .sidebar-box { 
-            background-color: #fff; 
-            padding: 0;                 /* 기존 설정 유지 */
-            border: 1px solid #ddd; 
-            margin-bottom: 20px; 
-            border-radius: 5px; 
-        }
-
+        .sidebar-box { background-color: #fff; padding: 15px; border: 1px solid #ddd; margin-bottom: 20px; border-radius: 5px; }
         .article-list { list-style: none; padding: 0; margin: 0; }
         .article-item { display: flex; padding: 15px 0; border-bottom: 1px solid #eee; align-items: flex-start; }
         .article-thumb { width: 120px; height: 80px; background-color: #ddd; flex-shrink: 0; margin-right: 15px; border-radius: 3px; }
@@ -640,12 +617,6 @@
     
     <div class="container">
         
-        <!-- 
-            [TC_billboard_leaderboard]
-            - 경제 > 정책 리스트 페이지 상단 빌보드 인벤토리
-            - JS 상단에서 Eager 로딩(display + refresh)을 이미 호출하므로,
-              이 영역에는 별도의 <script> 삽입 없이 빈 컨테이너만 두면 됩니다.
-        -->
         <div id="TC_billboard_leaderboard" class="ad-slot ad-1-tc">
             
         </div>
@@ -717,12 +688,6 @@
                     </ul>
                 </div>
                 
-                <!-- 
-                    [MR_halfpage_rectangle]
-                    - 리스트 페이지 우측 레일에 위치한 MR 인벤토리
-                    - Lazy Load 대상이므로, 아래 IntersectionObserver 기반 JS에서
-                      뷰포트 근접 시점에 display() + refresh()를 호출합니다.
-                -->
                 <div id="MR_halfpage_rectangle" class="ad-slot ad-2-mr">
                     
                 </div>
@@ -779,14 +744,15 @@
         // Lazy Load용 전역 상태 (View/Home/Section/List GPT 공통 패턴)
         // ----------------------------------------------------------
         /*
-         * [Lazy Load 인프라 개요]
-         * - LAZY_AD_SLOT_IDS : Lazy 로드 대상이 되는 광고 슬롯 ID 배열
-         * - lazyAdSlotsHTML  : 실제 DOM 요소(Node) 리스트
-         * - lazyGamSlots     : GAM에 정의된 슬롯 중 Lazy 대상만 모은 배열
-         * - lazyObserver     : IntersectionObserver 인스턴스
+         * [공통 · Lazy Load 인프라 개요]
+         * - LAZY_AD_SLOT_IDS         : Lazy 로딩 대상이 되는 광고 슬롯 ID 배열
+         * - lazyAdSlotsHTML          : 실제 DOM 요소(Node) 리스트
+         * - lazyGamSlots             : GAM에서 정의된 슬롯 객체 중 Lazy 대상만 모은 배열
+         * - lazyObserver (IntersectionObserver 인스턴스)
          *
-         * - List GPT에서는 현재 MR_halfpage_rectangle만 Lazy 대상으로 설정했습니다.
-         *   향후 Lazy 대상 슬롯이 늘어날 경우, 해당 ID를 배열에 추가하면 공통 로직으로 처리 가능합니다.
+         * - List GPT에서는 현재 MR_halfpage_rectangle만 Lazy 대상입니다.
+         * 향후 추가 섹션 슬롯이 생길 경우, ID를 LAZY_AD_SLOT_IDS 배열에 추가하는 것만으로
+         * 동일한 로직을 재사용할 수 있습니다.
          */
         const LAZY_AD_SLOT_IDS = [
             'MR_halfpage_rectangle'  // 현재는 MR만 Lazy 대상, 향후 추가 시 이 배열에 ID만 추가
@@ -803,7 +769,7 @@
             // 1) DOM 상에서 Lazy 대상 슬롯 수집
             /*
              * - .ad-slot 클래스를 가진 요소들 중에서,
-             *   LAZY_AD_SLOT_IDS에 포함되는 ID만 lazyAdSlotsHTML에 등록합니다.
+             * LAZY_AD_SLOT_IDS에 포함되는 ID만 lazyAdSlotsHTML에 등록합니다.
              * - 이 배열은 나중에 IntersectionObserver가 어떤 DOM 요소를 관찰할지 결정합니다.
              */
             const allAdSlots = document.querySelectorAll('.ad-slot');
@@ -818,9 +784,9 @@
             // 2) GAM에 정의된 슬롯 객체 중 Lazy 대상만 필터링
             /*
              * - googletag.pubads().getSlots()로 현재 페이지에 정의된 모든 슬롯을 가져온 뒤,
-             *   getSlotElementId()가 LAZY_AD_SLOT_IDS에 포함되는 슬롯만 lazyGamSlots에 저장합니다.
+             * getSlotElementId()가 LAZY_AD_SLOT_IDS에 포함되는 슬롯만 lazyGamSlots에 저장합니다.
              * - 이 작업은 googletag.cmd.push 내부에서 수행해야, 
-             *   defineSlot/enableServices 등이 끝난 후 안전하게 슬롯 정보를 조회할 수 있습니다.
+             * defineSlot/enableServices 등이 끝난 후 안전하게 슬롯 정보를 조회할 수 있습니다.
              */
             lazyGamSlots = [];
             if (window.googletag && googletag.cmd) {
@@ -832,28 +798,48 @@
                 });
             }
 
+            // --- [객관적 최적화: 디바이스별 rootMargin 동적 할당] ---
+            /*
+             * [업데이트 된 로직 설명]
+             * - 기존에는 100px 고정이었으나, 한국의 네트워크 환경과 스크롤 패턴을 반영하여
+             * 디바이스별 최적의 마진 값을 적용합니다.
+             * - Smartphone: 600px (빠른 플릭 대응)
+             * - Tablet: 500px
+             * - Desktop: 400px
+             */
+            const ua = navigator.userAgent.toLowerCase();
+            let marginValue = '400px'; // 기본값 (Desktop)
+
+            if (/mobile|android|iphone|ipad|ipod/.test(ua) || window.innerWidth <= 768) {
+                marginValue = '600px'; // Smartphone
+            } else if (window.innerWidth <= 1024) {
+                marginValue = '500px'; // Tablet
+            }
+
             // 3) IntersectionObserver 생성
             /*
              * - root      : null → 브라우저 viewport 기준
-             * - rootMargin: '0px 0px 100px 0px'
-             *   → 실제 뷰포트 하단보다 100px 앞서 미리 로딩 시작(프리로딩 효과)
+             * - rootMargin: 동적으로 할당된 marginValue 적용
+             * → 실제 뷰포트 하단보다 지정된 픽셀만큼 앞서 미리 로딩 시작(프리로딩 효과)
              * - threshold : 0.0
-             *   → 요소가 1px만 보이기 시작해도 isIntersecting === true
+             * → 요소가 1px만 보이기 시작해도 isIntersecting === true
              */
             const options = {
                 root: null, 
-                rootMargin: '0px 0px 100px 0px', 
+                rootMargin: `0px 0px ${marginValue} 0px`, // ✅ 최적화 반영
                 threshold: 0.0 
             };
+
+            console.log(`🚀 [Lazy Load] rootMargin optimized for ${marginValue} based on device detection.`);
 
             /*
              * [Observer 콜백 함수]
              * - entry.isIntersecting === true 이고, 해당 요소 ID가 Lazy 대상인 경우:
-             *   1) googletag.display(slotId);
-             *   2) googletag.pubads().refresh([slotToRefresh]);
-             *   순서로 호출하여 실제 광고 요청/렌더링을 수행합니다.
+             * 1) googletag.display(slotId);
+             * 2) googletag.pubads().refresh([slotToRefresh]);
+             * 순서로 호출하여 실제 광고 요청/렌더링을 수행합니다.
              * - 처리 이후 observerInstance.unobserve(entry.target)으로
-             *   같은 슬롯에 대해 중복 호출이 일어나지 않도록 관찰을 해제합니다.
+             * 같은 슬롯에 대해 중복 호출이 일어나지 않도록 관찰을 해제합니다.
              */
             lazyObserver = new IntersectionObserver(function(entries, observerInstance) {
                 entries.forEach(entry => {
@@ -872,12 +858,11 @@
                                 // disableInitialLoad() 환경이므로 display + refresh 패턴 적용
                                 googletag.display(slotId);
                                 googletag.pubads().refresh([slotToRefresh]);
-                                console.log(`✅ [Lazy Load] ${slotId} DISPLAY + REFRESH (뷰포트 근접 시 호출)`);
+                                console.log(`✅ [Lazy Load] ${slotId} DISPLAY + REFRESH (margin: ${marginValue})`);
                             }
                         });
                     }
 
-                    // 한 번 Lazy 로드된 슬롯은 더 이상 관찰하지 않음
                     observerInstance.unobserve(entry.target);
                 });
             }, options);
@@ -889,9 +874,9 @@
         function startObservingLazySlots() {
             /*
              * - setupLazyLoading()에서 생성한 lazyObserver와 lazyAdSlotsHTML 배열을 사용해
-             *   각 Lazy 대상 DOM 요소에 대해 observe()를 호출합니다.
-             * - HOME/SECTION/VIEW/LIST GPT 모두 동일 패턴으로 구현하여,
-             *   차후 공통 유틸로 분리하기 쉬운 구조입니다.
+             * 각 Lazy 대상 DOM 요소에 대해 observe()를 호출합니다.
+             * - HOME/VIEW/SECTION/LIST GPT 모두 동일 패턴으로 구현하여,
+             * 차후 공통 유틸로 분리하기 쉬운 구조입니다.
              */
             if (!lazyObserver || !lazyAdSlotsHTML || lazyAdSlotsHTML.length === 0) return;
             lazyAdSlotsHTML.forEach(slot => {
@@ -906,10 +891,10 @@
             /*
              * [DOMContentLoaded 사용 이유]
              * - 이 시점이면 HTML 구조와 광고 슬롯 DIV가 이미 렌더링 완료된 상태입니다.
-             *   - Lazy 대상 슬롯 수집
-             *   - GAM 슬롯 매핑
-             *   - IntersectionObserver 초기화/등록
-             *   을 안정적으로 수행할 수 있습니다.
+             * - Lazy 대상 슬롯 수집
+             * - GAM 슬롯 매핑
+             * - IntersectionObserver 초기화/등록
+             * 을 안정적으로 수행할 수 있습니다.
              * - List GPT는 in-article 광고 재배치 없이, Lazy MR 슬롯만 관리합니다.
              */
             setupLazyLoading();        // Lazy 대상 수집 + GAM 슬롯 매핑 + Observer 생성

@@ -143,7 +143,7 @@
             const userAgent = navigator.userAgent.toLowerCase();
             let deviceCategory = 'desktop';
             if (/mobile|android|iphone|ipad|ipod/.test(userAgent) || window.innerWidth <= 768) {
-                deviceCategory = 'smartphone'; // 'mobile' 대신 'smartphone' 사용
+                deviceCategory = 'smartphone'; // 'mobile' 대신 'smartphone' 사용 (✅ 수정됨)
             } else if (window.innerWidth <= 1024) {
                 deviceCategory = 'tablet';
             }
@@ -266,7 +266,7 @@
                 ])
                 .build();
 
-                // 0-3. 본문 박스형 배너용 사이즈 매핑 (MC)
+            // 0-3. 본문 박스형 배너용 사이즈 매핑 (MC)
             //   · 데스크탑/태블릿 구간([1024,0]), ([768,0])에는 중형 직사각형, 모바일([0,0]),박스형 직사각형 최우선 사이즈로 추가            
             const sizeMapping_article_horizontal = googletag.sizeMapping()
                 .addSize([1024, 0], [
@@ -513,6 +513,7 @@
             //   · 우측 컬럼의 '**이 시각 주요 뉴스** (10개로 확장)' 리스트 내부.
             // - 디바이스 정책:
             //   · 모바일/태블릿 전용 슬롯 (데스크탑에서는 defineSlot 자체를 하지 않음)
+            //   · (✅ 업데이트) deviceCategory 가 'smartphone' 또는 'tablet'인 경우 활성화
             // - UI 정책:
             //   · 에디토리얼 기사 리스트와 동일한 한 줄 높이를 사용하되,
             //     광고 LI 자체에는 번호/라벨을 표시하지 않습니다.
@@ -522,7 +523,7 @@
             //   · shufflePopularNewsNativeAds()에서 "기사 순서는 고정"된 상태에서
             //     광고만 기사 사이의 여러 위치 중 랜덤하게 섞입니다.
             // ------------------------------------------------------------------
-            if (deviceCategory === 'mobile' || deviceCategory === 'tablet') {
+            if (deviceCategory === 'smartphone' || deviceCategory === 'tablet') {
                 const BC_native_list_1_slot = googletag.defineSlot(
                     AdUnitPath,
                     [[320, 100], [320, 50], [1, 1], 'fluid'],
@@ -1149,7 +1150,7 @@
 
                     <p>새로운 기술의 물결은 멈추지 않습니다. 인공지능의 발전 속도에 발맞춰, 양자 컴퓨팅, 뉴로모픽 칩 등 차세대 반도체 기술에 대한 선도적인 연구가 병행되어야 합니다. 정부와 민간은 장기적인 관점에서 기초 과학 연구에 대한 투자를 강화하고, 실패를 용인하는 혁신적인 연구 문화를 조성함으로써, 미래 반도체 기술의 '씨앗'을 뿌려야 합니다. 이러한 선순환 구조를 통해 한국은 단순히 패스트 팔로워가 아닌, 기술 혁신을 주도하는 리더 국가로 자리매김할 수 있을 것입니다。</p>
                     <p>궁극적으로, 고성능 컴퓨팅(HPC)과 엣지 디바이스(Edge Device)를 위한 저전력 고효율 NPU 개발이 핵심 과제입니다. 서버급 AI 칩뿐만 아니라, 모바일, 자율주행, IoT 등 다양한 분야에서 맞춤형 칩 수요가 증가하고 있기 때문입니다. 이를 위해 정부 차원의 R&D 지원과 함께, 국내 반도체 학과 및 연구소의 인력 양성 프로그램 확대가 시급합니다. 인재 확보야말로 장기적인 '초격차'를 유지할 수 있는 근본적인 힘입니다。</p>
-                    <p>최근에는 칩렛(Chiplet) 기술과 첨단 패키징(Advanced Packaging) 기술의 중요성이 더욱 부각되고 있습니다. 서로 다른 기능을 하는 반도체를 하나의 패키지에 통합하여 성능을 극대화하는 이 기술은 AI 칩의 성능을 결정하는 핵심 요소가 되었습니다. 한국 기업들은 HBM과 같은 독보적인 메모리 기술을 활용하여, 칩렛 기반의 고성능 AI 반도체 솔루션을 세계 시장에 선제적으로 제시해야 합니다. 이는 메모리 강국에서 AI 반도체 강국으로 도약하는 중요한 분기점이 될 것입니다 Scarborough.</p>
+                    <p>최근에는 칩렛(Chiplet) 기술과 첨단 패키징(Advanced Packaging) 기술의 중요성이 더욱 부각되고 있습니다. 서로 다른 기능을 하는 반도체를 하나의 패키지에 통합하여 성능을 극대화하는 이 기술은 AI 칩의 성능을 결정하는 핵심 요소가 되었습니다. 한국 기업들은 HBM과 같은 독보적인 메모리 기술을 활용하여, 칩렛 기반의 고성능 AI 반도체 솔루션을 세계 시장에 선제적으로 제시해야 합니다. 이는 메모리 강국에서 AI 반도체 강국으로 도약하는 중요한 분기점이 될 것입니다。</p>
                     <p>또한, AI 반도체 스타트업 생태계 활성화가 필요합니다. 대기업의 파운드리 역량과 유망 스타트업의 혁신적인 NPU 설계 아이디어가 결합될 때 시너지가 발생합니다. 정부는 스타트업이 초기 개발 단계에서 겪는 테스트베드 접근성 문제나 자금 조달 문제를 해소하는 데 집중해야 합니다. 궁극적으로, 한국이 AI 반도체 분야에서 글로벌 리더십을 확보하기 위해서는 민간의 혁신 의지와 정부의 전략적 지원이 유기적으로 결합되는 'K-칩스 동맹'이 필수적입니다. 향후 5년이 한국 반도체 산업의 미래 50년을 좌우할 중요한 시기가 될 것입니다.</p>
 
                     <p><strong>[본문 4: 미래 전망과 정책 방향]</strong> AI 반도체 시장의 승자는 기술력과 더불어 '생태계 확장' 능력에 따라 결정될 것입니다. 단순히 칩의 성능을 높이는 것을 넘어, 그 칩을 활용할 수 있는 소프트웨어 플랫폼과 개발자 커뮤니티를 얼마나 빠르게 구축하느냐가 중요합니다. 엔비디아의 CUDA 생태계처럼, 한국형 AI 칩도 자체적인 소프트웨어 인프라를 구축하고, 국내외 개발자들에게 개방하여 활용도를 높여야 합니다. 이를 위해, 국내 기업들은 오픈소스 기반의 AI 플랫폼 개발에 적극 참여하고, 협력사들과의 데이터 공유 및 공동 개발을 위한 협의체를 구성하는 것이 시급합니다.</p>
@@ -1252,10 +1253,10 @@
         //
         // - 동작 흐름:
         //   1) DOMContentLoaded 시:
-        //      · setupInArticleAds() → 본문 내 in-article 슬롯 재배치
-        //      · setupLazyLoading()  → LAZY_AD_SLOT_IDS 기반으로 관찰 대상 수집 + GAM 슬롯 매핑
-        //      · shufflePopularNewsNativeAds() → 우측 '이 시각 주요 뉴스' + Native 랜덤 섞기
-        //      · startObservingLazySlots()     → IntersectionObserver 관찰 시작
+        //      · setupInArticleAds()            → 본문 내 in-article 슬롯 재배치
+        //      · shufflePopularNewsNativeAds()  → (✅ 순서 변경됨) 우측 Native 광고 셔플 먼저 실행 (DOM 위치 확정)
+        //      · setupLazyLoading()             → LAZY_AD_SLOT_IDS 기반으로 관찰 대상 수집 + GAM 슬롯 매핑
+        //      · startObservingLazySlots()      → IntersectionObserver 관찰 시작
         //   2) 사용자가 스크롤해서 광고 div가 뷰포트 근처에 도달하면:
         //      · observer 콜백에서 해당 slotId에 대해
         //        googletag.display(slotId) + pubads().refresh([slot]) 호출
@@ -1755,14 +1756,14 @@
         //
         // - 실행 순서:
         //   1) setupInArticleAds()            → 본문 내 in-article 동적 배치 + 미사용 슬롯 제거
-        //   2) setupLazyLoading()             → Lazy 대상 슬롯 수집 + GAM 슬롯 매핑 + Observer 생성
-        //   3) shufflePopularNewsNativeAds() → 우측 '이 시각 주요 뉴스' 내 Native 광고 랜덤 배치 (기사 순서 고정, 광고만 셔플)
-        //   4) startObservingLazySlots()     → IntersectionObserver 관찰 시작
+        //   2) shufflePopularNewsNativeAds()  → (✅ 순서 변경됨) 우측 Native 광고 셔플 먼저 실행 (DOM 위치 확정)
+        //   3) setupLazyLoading()             → Lazy 대상 슬롯 수집 + GAM 슬롯 매핑 + Observer 생성
+        //   4) startObservingLazySlots()      → IntersectionObserver 관찰 시작
         // ==========================================================
         document.addEventListener('DOMContentLoaded', function () {
             setupInArticleAds();             // 본문 in-article 광고 동적 주입
-            setupLazyLoading();              // Lazy Load 대상 수집 및 Observer 초기화
             shufflePopularNewsNativeAds();   // 우측 '이 시각 주요 뉴스' 내 Native 광고 랜덤 배치 (기사 순서 고정, 광고만 셔플)
+            setupLazyLoading();              // Lazy Load 대상 수집 및 Observer 초기화
             startObservingLazySlots();       // Lazy 대상 슬롯 관찰 시작
         });
     </script>

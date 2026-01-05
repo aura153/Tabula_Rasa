@@ -6,12 +6,11 @@
     <title>HOME GPT</title>
     
     <style>
-        /* 
-         * [공통 · 레이아웃 설명]
+        /* * [공통 · 레이아웃 설명]
          * - 이 스타일 시트는 HOME GPT 레이아웃에 대한 기본 스타일이며,
-         *   광고와 직접적으로 연관된 CSS(.ad-slot, .mk-ad-label 등)에 주석을 특히 강화하였습니다.
+         * 광고와 직접적으로 연관된 CSS(.ad-slot, .mk-ad-label 등)에 주석을 특히 강화하였습니다.
          * - View / Section / List GPT에서도 동일한 패턴을 유지하면
-         *   광고개발자가 공통 로직과 파일별 차이를 한 번에 이해하기 용이합니다.
+         * 광고개발자가 공통 로직과 파일별 차이를 한 번에 이해하기 용이합니다.
          */
 
         body { font-family: 'Malgun Gothic', 'Dotum', Arial, sans-serif; margin: 0; padding: 0; background-color: #f6f6f6; color: #333; }
@@ -20,8 +19,8 @@
         /*
          * [변경 · 컨테이너 폭 정책]
          * - max-width: 1210px → 1246px로 확대
-         *   · 기존: 메인 + 사이드(300px) 기준으로 약 1210px 구성
-         *   · 변경: 우측 사이드레일을 336px까지 확장하면서 전체 폭도 1246px로 조정
+         * · 기존: 메인 + 사이드(300px) 기준으로 약 1210px 구성
+         * · 변경: 우측 사이드레일을 336px까지 확장하면서 전체 폭도 1246px로 조정
          * - 패딩(좌우 10px)은 그대로 유지하여 전체 레이아웃 톤은 유지
          */
         .container { max-width: 1246px; margin: 0 auto; padding: 0 10px; }
@@ -39,24 +38,24 @@
          * [레이아웃 · 메인/우측 컬럼 비율 전략 – View GPT와의 정렬]
          *
          * - 목적:
-         *   1) 데스크탑에서 우측 사이드바 내 336px 컨테이너 폭을 확보하여,
-         *      300x250, 300x600, 336x280 등 다양한 세로형/박스형 광고가
-         *      잘리지 않고 온전히 노출되도록 "사이드바 영역 폭"을 보장
-         *   2) 모바일/태블릿에서는 우측 컬럼이 메인 아래로 내려가면서 폭 100%를 사용하도록 설정
+         * 1) 데스크탑에서 우측 사이드바 내 336px 컨테이너 폭을 확보하여,
+         * 300x250, 300x600, 336x280 등 다양한 세로형/박스형 광고가
+         * 잘리지 않고 온전히 노출되도록 "사이드바 영역 폭"을 보장
+         * 2) 모바일/태블릿에서는 우측 컬럼이 메인 아래로 내려가면서 폭 100%를 사용하도록 설정
          *
          * - View GPT의 .related-area 전략:
-         *   - 데스크탑: min-width 336px 이상 확보
-         *   - 모바일/태블릿: width: 100%로 전환
+         * - 데스크탑: min-width 336px 이상 확보
+         * - 모바일/태블릿: width: 100%로 전환
          *
          * - HOME GPT의 .sidebar 전략:
-         *   - 외곽 padding을 0으로 두고, 전체 컨테이너 폭을 336px로 고정
-         *     → 336x280 크리에이티브는 풀폭, 300x250/300x600 소재는 좌우 여백을 두고 중앙 정렬
-         *   - 데스크탑(≥1025px): flex: 0 0 336px; min-width: 336px; max-width: 336px
-         *   - 모바일/태블릿(≤1024px): width: 100%; flex: 1 1 auto; min-width: 0;
+         * - 외곽 padding을 0으로 두고, 전체 컨테이너 폭을 336px로 고정
+         * → 336x280 크리에이티브는 풀폭, 300x250/300x600 소재는 좌우 여백을 두고 중앙 정렬
+         * - 데스크탑(≥1025px): flex: 0 0 336px; min-width: 336px; max-width: 336px
+         * - 모바일/태블릿(≤1024px): width: 100%; flex: 1 1 auto; min-width: 0;
          *
          * - 결과:
-         *   - 데스크탑에서는 우측 영역 내 모든 ad-slot이 336px 폭 컨테이너를 기반으로 안정적으로 노출
-         *   - 모바일/태블릿에서는 레이아웃이 세로 스택이 되며, 사이드바 폭 100%로 자연스럽게 확장
+         * - 데스크탑에서는 우측 영역 내 모든 ad-slot이 336px 폭 컨테이너를 기반으로 안정적으로 노출
+         * - 모바일/태블릿에서는 레이아웃이 세로 스택이 되며, 사이드바 폭 100%로 자연스럽게 확장
          */
         .main-content {
             flex: 1 1 auto;  /* 남은 공간을 유연하게 차지 */
@@ -64,8 +63,7 @@
         }
 
         .sidebar {
-            /* 
-             * [사이드바 공통 스타일]
+            /* * [사이드바 공통 스타일]
              * - 광고 수익 테스트를 위해 외곽 padding을 0으로 설정
              * - 우측 레일 전체 폭(336px 컨테이너) 안에서 광고/콘텐츠를 최대한 넓게 쓰기 위함
              * - 텍스트/콘텐츠 여백이 필요하면 .sidebar-item 등 내부 요소에서 padding을 부여
@@ -80,26 +78,26 @@
          * [광고 공통 · .ad-slot 래퍼 설명 – View GPT와 정렬된 전략]
          *
          * - 이 클래스는 GPT 광고 DIV의 공통 래퍼이며,
-         *   실제 GAM에서 정의한 슬롯 ID(TC_billboard_leaderboard 등)를 그대로 사용합니다.
+         * 실제 GAM에서 정의한 슬롯 ID(TC_billboard_leaderboard 등)를 그대로 사용합니다.
          *
          * - 핵심 전략:
-         *   1) "슬롯의 폭"은 부모 컨테이너(메인 영역/사이드바/전체 컨테이너)의 폭을 100% 사용
-         *      → 광고 크기 제약은 GAM sizeMapping과 상위 레이아웃(예: .sidebar min-width)에서 제어
-         *   2) height/min-height를 강제하지 않고, 실제 크리에이티브/iframe 높이에 맡김
-         *      → PageSettingsConfig.collapseDiv = 'BEFORE_FETCH'와 결합해
-         *        광고가 없을 때 불필요한 공백을 남기지 않음
-         *   3) 라벨(Advertisement)이 들어갈 상단 여백만 padding-top으로 최소한 확보
+         * 1) "슬롯의 폭"은 부모 컨테이너(메인 영역/사이드바/전체 컨테이너)의 폭을 100% 사용
+         * → 광고 크기 제약은 GAM sizeMapping과 상위 레이아웃(예: .sidebar min-width)에서 제어
+         * 2) height/min-height를 강제하지 않고, 실제 크리에이티브/iframe 높이에 맡김
+         * → PageSettingsConfig.collapseDiv = 'BEFORE_FETCH'와 결합해
+         * 광고가 없을 때 불필요한 공백을 남기지 않음
+         * 3) 라벨(Advertisement)이 들어갈 상단 여백만 padding-top으로 최소한 확보
          *
          * - View GPT와의 차이/유사점:
-         *   - View GPT: .ad-slot가 flex 컨테이너로 동작하며, 광고 내용을 수평/수직 중앙 정렬
-         *   - HOME GPT: 동일하게 flex 정렬을 사용하되, 일부 영역은 .gam-container와 병행 사용
+         * - View GPT: .ad-slot가 flex 컨테이너로 동작하며, 광고 내용을 수평/수직 중앙 정렬
+         * - HOME GPT: 동일하게 flex 정렬을 사용하되, 일부 영역은 .gam-container와 병행 사용
          *
          * - 주의사항:
-         *   - max-width는 전역에서 제거했습니다.
-         *     → 우측 사이드바, 메인, 하단 등 서로 다른 레이아웃 컨텍스트에서
-         *       공통 .ad-slot을 사용할 때, 의도치 않은 사이즈 제한을 피하기 위함입니다.
-         *   - height/min-height를 다시 추가할 경우,
-         *     "광고 미노출 시 공백" 문제가 발생할 수 있으므로 반드시 사전 검토 필요.
+         * - max-width는 전역에서 제거했습니다.
+         * → 우측 사이드바, 메인, 하단 등 서로 다른 레이아웃 컨텍스트에서
+         * 공통 .ad-slot을 사용할 때, 의도치 않은 사이즈 제한을 피하기 위함입니다.
+         * - height/min-height를 다시 추가할 경우,
+         * "광고 미노출 시 공백" 문제가 발생할 수 있으므로 반드시 사전 검토 필요.
          */
         .ad-slot {
             position: relative;
@@ -127,11 +125,11 @@
          *
          * - 일부 영역에서 .ad-slot 안쪽에 한 번 더 감싸는 용도로 사용되는 래퍼입니다.
          * - 역할:
-         *   - display:flex로 다양한 사이즈의 광고 크리에이티브를 수평/수직 중앙 정렬
-         *   - width: 100%로 부모(ad-slot) 폭에 맞추어 확장
+         * - display:flex로 다양한 사이즈의 광고 크리에이티브를 수평/수직 중앙 정렬
+         * - width: 100%로 부모(ad-slot) 폭에 맞추어 확장
          *
          * - View GPT에서는 .gam-container 없이 .ad-slot만으로 정렬을 처리하고 있으나,
-         *   HOME GPT는 기존 마크업 호환을 유지하기 위해 .gam-container를 유지합니다.
+         * HOME GPT는 기존 마크업 호환을 유지하기 위해 .gam-container를 유지합니다.
          *
          * - min-height는 0으로 두어, 광고가 없는 경우 불필요한 공백이 생기지 않도록 합니다.
          */
@@ -147,9 +145,9 @@
         /*
          * [광고 개별 ID 스타일]
          * - TC_billboard_leaderboard / MC_billboard_rectangle / MR_halfpage_rectangle에 대해서는
-         *   background, border를 강제로 투명 처리하여, 광고 크리에이티브만 노출되도록 합니다.
+         * background, border를 강제로 투명 처리하여, 광고 크리에이티브만 노출되도록 합니다.
          * - 운영 환경에서 디버깅을 위해 임시로 배경색/테두리를 넣고 싶을 때는
-         *   아래 !important 설정과 충돌할 수 있으니, 별도 디버그 클래스 추가를 추천드립니다.
+         * 아래 !important 설정과 충돌할 수 있으니, 별도 디버그 클래스 추가를 추천드립니다.
          */
         #TC_billboard_leaderboard, #MC_billboard_rectangle, #MR_halfpage_rectangle { 
             background-color: transparent !important; 
@@ -160,9 +158,9 @@
          * [디버그 · .ad-loaded 설명]
          * - 이 클래스는 광고가 실제로 로드된 슬롯에만 동적으로 부여할 때 사용하는 디버깅용입니다.
          * - 현재 HOME GPT에서는 JS에서 직접 .ad-loaded를 붙이지 않고 있으나,
-         *   향후 slotRenderEnded 이벤트에서 상태를 태깅할 때 재사용할 수 있습니다.
+         * 향후 slotRenderEnded 이벤트에서 상태를 태깅할 때 재사용할 수 있습니다.
          * - 주의사항:
-         *   - 운영 반영 시에는 실제 서비스 사용자에게 노출되지 않도록 제거 또는 색상 변경을 추천드립니다.
+         * - 운영 반영 시에는 실제 서비스 사용자에게 노출되지 않도록 제거 또는 색상 변경을 추천드립니다.
          */
         .ad-loaded { background-color: #c00 !important; color: #fff; }
         
@@ -170,21 +168,21 @@
          * [공통 · mk-ad-label (Advertisement 라벨) 설명]
          * - 광고 슬롯 상단에 “Advertisement” 문구를 노출하는 라벨입니다.
          * - View / HOME / Section / List GPT 공통 가이드:
-         *   - 위치: .ad-slot 기준 absolute, 상단에서 -15px (슬롯 외부 위쪽에 위치)
-         *   - 크기: font-size 13px, 대문자 표기(text-transform: uppercase)
-         *   - 역할:
-         *     1) 국내·글로벌 광고 가이드라인의 "광고 표시" 요건 충족
-         *     2) slotRenderEnded 이벤트에서만 추가되어, 실제 광고가 채워졌을 때만 노출
+         * - 위치: .ad-slot 기준 absolute, 상단에서 -15px (슬롯 외부 위쪽에 위치)
+         * - 크기: font-size 13px, 대문자 표기(text-transform: uppercase)
+         * - 역할:
+         * 1) 국내·글로벌 광고 가이드라인의 "광고 표시" 요건 충족
+         * 2) slotRenderEnded 이벤트에서만 추가되어, 실제 광고가 채워졌을 때만 노출
          * - HOME 전용 특이사항:
-         *   - HOME 페이지 특성상 배경이 밝은 영역이 많아, 기본 색상을 #5A5A5A로 설정했습니다.
+         * - HOME 페이지 특성상 배경이 밝은 영역이 많아, 기본 색상을 #5A5A5A로 설정했습니다.
          * - 추후 다국어 적용 시:
-         *   - labelElement.textContent 값을 Locale에 따라 동적으로 변경하는 방향으로 확장 가능합니다.
+         * - labelElement.textContent 값을 Locale에 따라 동적으로 변경하는 방향으로 확장 가능합니다.
          *
          * - 추가 정책:
-         *   - HOME GPT의 상단 TC_billboard_leaderboard 슬롯은
-         *     별도 닫기 버튼 UI와 함께 "브랜드/메인 크리에이티브 영역"으로 사용될 수 있으므로
-         *     이 슬롯에는 'Advertisement' 라벨을 붙이지 않습니다.
-         *     (slotRenderEnded 핸들러에서 TC는 예외 처리)
+         * - HOME GPT의 상단 TC_billboard_leaderboard 슬롯은
+         * 별도 닫기 버튼 UI와 함께 "브랜드/메인 크리에이티브 영역"으로 사용될 수 있으므로
+         * 이 슬롯에는 'Advertisement' 라벨을 붙이지 않습니다.
+         * (slotRenderEnded 핸들러에서 TC는 예외 처리)
          */
         .mk-ad-label {
             position: absolute;
@@ -207,22 +205,22 @@
          * [TC 전용 · 상단 닫기 버튼 UI (.mk-ad-close-*)]
          *
          * - HOME GPT의 상단 TC_billboard_leaderboard에만 적용되는 닫기 버튼입니다.
-         *   · 데스크탑에서만 노출 (모바일/태블릿은 기능 비활성화 – JS 로직에서 제어)
-         *   · "□ 오늘하루 | 닫기 X" 형태로 노출
-         *   · "오늘하루" 클릭 시 체크박스 토글
-         *   · "닫기 X" 클릭 시:
-         *       - 체크박스 O → 오늘 하루(자정까지) 상단 배너 숨김 + 광고 미호출
-         *       - 체크박스 X → 이번 세션에서만 배너 닫기
+         * · 데스크탑에서만 노출 (모바일/태블릿은 기능 비활성화 – JS 로직에서 제어)
+         * · "□ 오늘하루 | 닫기 X" 형태로 노출
+         * · "오늘하루" 클릭 시 체크박스 토글
+         * · "닫기 X" 클릭 시:
+         * - 체크박스 O → 오늘 하루(자정까지) 상단 배너 숨김 + 광고 미호출
+         * - 체크박스 X → 이번 세션에서만 배너 닫기
          *
          * - 시각 디자인:
-         *   · 텍스트/아이콘은 14px, 약간 두께감 있는 폰트(weight 500)
-         *   · 상단 오른쪽에 살짝 떠 있는 라벨 느낌 (text-shadow, box-shadow 사용)
-         *   · border는 제거하고, 반투명 배경 + 그림자로만 대비를 확보
+         * · 텍스트/아이콘은 14px, 약간 두께감 있는 폰트(weight 500)
+         * · 상단 오른쪽에 살짝 떠 있는 라벨 느낌 (text-shadow, box-shadow 사용)
+         * · border는 제거하고, 반투명 배경 + 그림자로만 대비를 확보
          *
          * - 주의사항:
-         *   · 이 닫기 UI는 현재 "초기면(HOME)" TC 영역에만 적용하는 정책입니다.
-         *     Section / List GPT에 도입 시 동일 스타일과 로직을 재사용하되,
-         *     각 템플릿의 TC 슬롯에만 한정해서 붙이는 것을 권장합니다.
+         * · 이 닫기 UI는 현재 "초기면(HOME)" TC 영역에만 적용하는 정책입니다.
+         * Section / List GPT에 도입 시 동일 스타일과 로직을 재사용하되,
+         * 각 템플릿의 TC 슬롯에만 한정해서 붙이는 것을 권장합니다.
          */
         .mk-ad-close-button {
             position: absolute;
@@ -292,7 +290,7 @@
              * [Dark Mode · mk-ad-label]
              * - 다크 모드에서 라벨이 지나치게 튀지 않고, 동시에 충분한 대비를 확보하는 정도로 색상을 조정했습니다.
              * - View GPT에서는 약간 다른 스타일(반투명 배경)을 사용하지만,
-             *   HOME에서는 배경이 상대적으로 단순하여 transparent + 회색 텍스트만 사용했습니다.
+             * HOME에서는 배경이 상대적으로 단순하여 transparent + 회색 텍스트만 사용했습니다.
              */
             .mk-ad-label {
                 background-color: transparent;
@@ -325,9 +323,9 @@
              * [반응형 레이아웃 · HOME 전용 – View GPT와 유사 전략]
              * - 1024px 이하에서는 메인/사이드 두 컬럼을 세로 방향(column)으로 배치합니다.
              * - 이 때 .sidebar는 폭 100%를 사용하며, min-width 제약을 제거합니다.
-             *   → View GPT의 .related-area와 동일한 방향성 (모바일에서는 폭 100% 우선)
+             * → View GPT의 .related-area와 동일한 방향성 (모바일에서는 폭 100% 우선)
              * - 광고 자체의 사이즈는 GPT sizeMapping에서 제어하며,
-             *   여기서는 광고 슬롯을 둘러싼 레이아웃 컨테이너 폭만 제어합니다.
+             * 여기서는 광고 슬롯을 둘러싼 레이아웃 컨테이너 폭만 제어합니다.
              */
             .content-wrap { flex-direction: column; }
 
@@ -339,19 +337,13 @@
         }
     </style>
     
-    <!-- 
-        [공통 · GPT 로더 스크립트]
-        - View GPT에서는 securepubads.g.doubleclick.net/tag/js/gpt.js를 사용하고,
-          HOME GPT에서는 기존 호환성을 위해 googletagservices.com/tag/js/gpt.js를 사용하고 있습니다.
-        - 실서비스 전환 시에는 한 가지 방식으로 정리하는 것을 권장드립니다. (동작에는 영향 없음)
-    -->
     <script async src='https://www.googletagservices.com/tag/js/gpt.js'></script>
     <script>
         /*
          * [공통 · googletag 전역 네임스페이스]
          * - GAM에서 제공하는 gpt.js는 window.googletag 객체를 기준으로 동작합니다.
          * - 아래 패턴은 공식 권장 초기화 방식으로, 스크립트 비동기 로딩 시에도
-         *   googletag.cmd.push(...)에 등록한 콜백들이 로더가 준비된 뒤 순차 실행됩니다.
+         * googletag.cmd.push(...)에 등록한 콜백들이 로더가 준비된 뒤 순차 실행됩니다.
          */
         var googletag = googletag || {};
         googletag.cmd = googletag.cmd || [];
@@ -359,32 +351,32 @@
         /*
          * [공통 · 다크 모드 플래그 isDarkMode]
          * - 사용자 OS/브라우저의 prefers-color-scheme: dark 여부를 읽어와,
-         *   페이지 레벨 타게팅 키(is_dark_mode)에 전달합니다.
+         * 페이지 레벨 타게팅 키(is_dark_mode)에 전달합니다.
          * - 역할:
-         *   - 광고주/캠페인 측에서 다크 모드 사용자에게만 노출되는 크리에이티브를 집행하는 등,
-         *     크리에이티브 전략을 세분화할 수 있게 합니다.
+         * - 광고주/캠페인 측에서 다크 모드 사용자에게만 노출되는 크리에이티브를 집행하는 등,
+         * 크리에이티브 전략을 세분화할 수 있게 합니다.
          */
         const isDarkMode = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'true' : 'false';
 
         /*
          * [공통 · AdUnitPath 설명]
          * - AdUnitPath는 GAM 인벤토리 구조의 "광고 단위 경로(ad unit path)"를 의미합니다.
-         *   예시 구조:
-         *   - /7450         : 네트워크 코드 (매일경제 고유 네트워크 ID)
-         *   - /www.mk.co.kr : 사이트 식별자
-         *   - /HOME         : 페이지/섹션 식별자 (홈, 섹션, 뷰 등)
+         * 예시 구조:
+         * - /7450         : 네트워크 코드 (매일경제 고유 네트워크 ID)
+         * - /www.mk.co.kr : 사이트 식별자
+         * - /HOME         : 페이지/섹션 식별자 (홈, 섹션, 뷰 등)
          *
          * - HOME GPT에서는 '/7450/www.mk.co.kr/HOME'으로 고정되어 있으나,
-         *   실제 운영 시에는 다음과 같이 동적으로 변경될 수 있습니다.
-         *   - 예시:
-         *     - 홈:        /7450/www.mk.co.kr/HOME
-         *     - 경제 섹션: /7450/www.mk.co.kr/news/economy
-         *     - 증권 섹션: /7450/www.mk.co.kr/news/stock
+         * 실제 운영 시에는 다음과 같이 동적으로 변경될 수 있습니다.
+         * - 예시:
+         * - 홈:        /7450/www.mk.co.kr/HOME
+         * - 경제 섹션: /7450/www.mk.co.kr/news/economy
+         * - 증권 섹션: /7450/www.mk.co.kr/news/stock
          *
          * - 권장 구현 방식:
-         *   - CMS 또는 템플릿 엔진에서 page_type, section 코드에 따라 AdUnitPath를 동적으로 주입
-         *   - 예: const AdUnitPath = '/7450/www.mk.co.kr/' + PAGE_KEY_FROM_CMS;
-         *   - 이렇게 하면 HOME / VIEW / SECTION / LIST 템플릿이 동일한 JS 구조를 공유할 수 있습니다.
+         * - CMS 또는 템플릿 엔진에서 page_type, section 코드에 따라 AdUnitPath를 동적으로 주입
+         * - 예: const AdUnitPath = '/7450/www.mk.co.kr/' + PAGE_KEY_FROM_CMS;
+         * - 이렇게 하면 HOME / VIEW / SECTION / LIST 템플릿이 동일한 JS 구조를 공유할 수 있습니다.
          */
         const AdUnitPath = '/7450/www.mk.co.kr/HOME';
 
@@ -418,14 +410,14 @@
          * [TC 전용 · 닫기 기능 활성 여부]
          *
          * - window.__MK_TC_CLOSE_ENABLED__:
-         *   · 기본값: undefined → 닫기 기능 ON
-         *   · 명시적으로 false 로 설정하면 "닫기 UI + 오늘 하루 숨김" 기능 전체를 OFF
-         *     (로드블로킹 광고주 요구 대응 용도)
+         * · 기본값: undefined → 닫기 기능 ON
+         * · 명시적으로 false 로 설정하면 "닫기 UI + 오늘 하루 숨김" 기능 전체를 OFF
+         * (로드블로킹 광고주 요구 대응 용도)
          *
          * - window.__MK_DEVICE_CATEGORY__:
-         *   · googletag.cmd 블록 내에서 device_category 산출 시 전역에 저장
-         *   · 여기서는 device === 'desktop' 일 때만 닫기 기능을 활성화
-         *     → 모바일/태블릿에서는 닫기 UI 및 suppression 로직이 완전히 비활성화됨
+         * · googletag.cmd 블록 내에서 device_category 산출 시 전역에 저장
+         * · 여기서는 device === 'desktop' 일 때만 닫기 기능을 활성화
+         * → 모바일/태블릿에서는 닫기 UI 및 suppression 로직이 완전히 비활성화됨
          */
         function isTcBillboardCloseFeatureEnabled() {
             const device = window.__MK_DEVICE_CATEGORY__ || 'desktop';
@@ -466,8 +458,8 @@
         /*
          * [TC 전용 · 닫기 버튼 DOM 생성 함수]
          * - 파라미터: outerSlot
-         *   · TC_billboard_leaderboard를 감싸는 .ad-slot 요소
-         *   · 이 요소 자체를 display:none 처리함으로써, 공백 없이 TC 영역을 제거
+         * · TC_billboard_leaderboard를 감싸는 .ad-slot 요소
+         * · 이 요소 자체를 display:none 처리함으로써, 공백 없이 TC 영역을 제거
          *
          * - 데스크탑 전용이므로, 이 함수는 isTcBillboardCloseFeatureEnabled()가 true인 경우에만 호출됨.
          */
@@ -505,7 +497,7 @@
              * 닫기 버튼 전체 클릭 시 동작:
              * - 체크박스 체크 O → 오늘 하루(자정까지) TC 숨김 + 광고 미호출
              * - 체크박스 체크 X → 현재 세션에서만 TC 영역 닫기
-             *   (페이지 새로고침 시 다시 노출)
+             * (페이지 새로고침 시 다시 노출)
              */
             closeBtn.addEventListener('click', function () {
                 if (checkbox.checked) {
@@ -531,8 +523,8 @@
         // - 역할:
         //   · 납품된 광고(비어 있지 않은 슬롯)에 한해 "Advertisement" 라벨을 자동 삽입
         //   · HOME 상단 TC_billboard_leaderboard는 예외 처리:
-        //       1) "Advertisement" 라벨을 붙이지 않음
-        //       2) (데스크탑 전용) '오늘하루 | 닫기 X' 버튼을 삽입
+        //      1) "Advertisement" 라벨을 붙이지 않음
+        //      2) (데스크탑 전용) '오늘하루 | 닫기 X' 버튼을 삽입
         //
         // - 라벨 자동 삽입:
         //   · 각 페이지(View/HOME/Section/List)의 HTML에 라벨을 하드코딩하지 않고,
@@ -612,14 +604,14 @@
             /*
              * [공통 · 페이지 레벨 동적 키/값 설정]
              * - domain / url / referer:
-             *   - 도메인/현재 URL/레퍼러 정보를 기반으로 구간별 성과 분석 및 리타게팅에 활용 가능
+             * - 도메인/현재 URL/레퍼러 정보를 기반으로 구간별 성과 분석 및 리타게팅에 활용 가능
              * - is_dark_mode:
-             *   - 위에서 계산한 다크 모드 플래그
+             * - 위에서 계산한 다크 모드 플래그
              * - gpt_version:
-             *   - 배포/버전 관리를 위한 내부 용도 (예: 2025 템플릿 버전)
+             * - 배포/버전 관리를 위한 내부 용도 (예: 2025 템플릿 버전)
              * - 특징:
-             *   - 모든 슬롯에 공통으로 적용되는 페이지 레벨 타게팅이므로,
-             *     View / HOME / Section / List 템플릿에 동일 패턴으로 유지하는 것이 좋습니다.
+             * - 모든 슬롯에 공통으로 적용되는 페이지 레벨 타게팅이므로,
+             * View / HOME / Section / List 템플릿에 동일 패턴으로 유지하는 것이 좋습니다.
              */
             googletag.pubads().setTargeting('domain', window.location.hostname);
             googletag.pubads().setTargeting('url', window.location.href);
@@ -636,9 +628,9 @@
              *
              * [동적입력 키]
              * - section_front_nm, section_list_nm, SOURCE_ID 등은
-             *   실제 운영 시 CMS가 각 페이지 특성에 맞게 덮어써야 하는 값입니다.
+             * 실제 운영 시 CMS가 각 페이지 특성에 맞게 덮어써야 하는 값입니다.
              * - HOME에서는 기본적으로 '동적입력' 플레이스홀더를 사용하되,
-             *   템플릿 공통 코드 유지 목적상 View/Section/List와 동일한 키 구조를 유지합니다.
+             * 템플릿 공통 코드 유지 목적상 View/Section/List와 동일한 키 구조를 유지합니다.
              */
             googletag.pubads().setTargeting('web_type', 'responsive');
             googletag.pubads().setTargeting('page_type', 'HOME');
@@ -671,33 +663,33 @@
             /*
              * [공통 · GAM 핵심 API 설명]
              * 1) googletag.defineSlot(adUnitPath, sizeArray, divId)
-             *    - 특정 divId를 가진 DOM 요소와 GAM 인벤토리(adUnitPath)를 연결하는 슬롯을 정의합니다.
-             *    - sizeArray에는 고정 사이즈 또는 'fluid' 등이 포함될 수 있으며,
-             *      이후 defineSizeMapping으로 뷰포트별 실제 노출 사이즈를 제어합니다.
+             * - 특정 divId를 가진 DOM 요소와 GAM 인벤토리(adUnitPath)를 연결하는 슬롯을 정의합니다.
+             * - sizeArray에는 고정 사이즈 또는 'fluid' 등이 포함될 수 있으며,
+             * 이후 defineSizeMapping으로 뷰포트별 실제 노출 사이즈를 제어합니다.
              *
              * 2) googletag.pubads()
-             *    - Publisher Ads Service 객체로, 대부분의 공통 설정(타게팅, SRA 등)을 이 레벨에서 수행합니다.
+             * - Publisher Ads Service 객체로, 대부분의 공통 설정(타게팅, SRA 등)을 이 레벨에서 수행합니다.
              *
              * 3) enableSingleRequest()
-             *    - SRA(Single Request Architecture)를 활성화합니다.
-             *    - 한 페이지의 모든 슬롯을 하나의 네트워크 요청으로 묶어 호출하여
-             *      레이턴시를 줄이고, 라인 아이템 간 경쟁/우선순위를 일관되게 평가하도록 합니다.
+             * - SRA(Single Request Architecture)를 활성화합니다.
+             * - 한 페이지의 모든 슬롯을 하나의 네트워크 요청으로 묶어 호출하여
+             * 레이턴시를 줄이고, 라인 아이템 간 경쟁/우선순위를 일관되게 평가하도록 합니다.
              *
              * 4) PageSettingsConfig.collapseDiv
-             *    - 예전 collapseEmptyDivs(...)의 신규 버전(권장 방식)입니다.
-             *    - collapseDiv: 'BEFORE_FETCH' 설정 시,
-             *      슬롯은 처음에는 접힌 상태로 시작하고, 광고가 반환되면 확장됩니다.
-             *      → 기존 collapseEmptyDivs(true)와 동등한 동작.
+             * - 예전 collapseEmptyDivs(...)의 신규 버전(권장 방식)입니다.
+             * - collapseDiv: 'BEFORE_FETCH' 설정 시,
+             * 슬롯은 처음에는 접힌 상태로 시작하고, 광고가 반환되면 확장됩니다.
+             * → 기존 collapseEmptyDivs(true)와 동등한 동작.
              *
              * 5) disableInitialLoad()
-             *    - 페이지 로드 시점에 자동으로 광고 요청을 보내지 않도록 차단합니다.
-             *    - 이후 개발자가 display() + refresh()를 호출하는 시점에서만 요청이 발생하며,
-             *      이 패턴이 Lazy Load/뷰포트 기반 로딩의 핵심 전제 조건이 됩니다.
+             * - 페이지 로드 시점에 자동으로 광고 요청을 보내지 않도록 차단합니다.
+             * - 이후 개발자가 display() + refresh()를 호출하는 시점에서만 요청이 발생하며,
+             * 이 패턴이 Lazy Load/뷰포트 기반 로딩의 핵심 전제 조건이 됩니다.
              *
              * 6) PageSettingsConfig.centering
-             *    - 작은 사이즈의 광고가 큰 div 안에 들어갈 때, 중앙 정렬되도록 합니다.
-             *    - HOME/VIEW 모두 크기가 다양한 배너를 하나의 슬롯에 집행하는 경우가 많기 때문에,
-             *      화면 균형 측면에서 유용한 옵션입니다.
+             * - 작은 사이즈의 광고가 큰 div 안에 들어갈 때, 중앙 정렬되도록 합니다.
+             * - HOME/VIEW 모두 크기가 다양한 배너를 하나의 슬롯에 집행하는 경우가 많기 때문에,
+             * 화면 균형 측면에서 유용한 옵션입니다.
              */
 
             googletag.pubads().enableSingleRequest();
@@ -718,11 +710,11 @@
              * [공통 · 반응형 광고 구현 로직 개요]
              * - sizeMapping은 "뷰포트 크기에 따라 어떤 사이즈 조합을 허용할지"를 정의하는 객체입니다.
              * - addSize([viewportWidth, viewportHeight], [허용 광고 사이즈 목록])
-             *   예) [1024, 0] 이상일 때는 데스크탑용 대형 배너, 그보다 작으면 모바일용 소형 배너
+             * 예) [1024, 0] 이상일 때는 데스크탑용 대형 배너, 그보다 작으면 모바일용 소형 배너
              *
              * - HOME GPT에서는:
-             *   - sizeMapping_horizontal       : 상단/중단의 가로형 배너(TC, MC)에 공통 적용
-             *   - sizeMapping_siderail_square  : 우측 사이드레일(MR) 박스형/세로형 배너에 적용
+             * - sizeMapping_horizontal       : 상단/중단의 가로형 배너(TC, MC)에 공통 적용
+             * - sizeMapping_siderail_square  : 우측 사이드레일(MR) 박스형/세로형 배너에 적용
              * - 실제 입찰 단계에서 GAM은 이 매핑 정보를 사용해, 뷰포트에 맞는 크리에이티브만 선별하여 노출합니다.
              */
 
@@ -785,15 +777,15 @@
              * [공통 · 슬롯 레벨 타게팅 사용 패턴]
              * - 각 defineSlot 이후 setTargeting('div_id', '...') 등으로 슬롯별 메타 정보를 부여하고 있습니다.
              * - 공통 필드 예:
-             *   - div_id       : DOM ID와 동일 값 (디버깅 및 리포팅 시 유용)
-             *   - load_type    : eager / lazy (로딩 전략 구분용, 리포트에서 필터 가능)
-             *   - position     : TC, MC, MR 등 페이지 내 상대 위치
-             *   - ad_area_type : ATF, in_article, below_comments 등 구체 노출 맥락
-             *   - default_exposure : "기본 노출 여부"나 실험군/대조군 구분에 활용 가능
+             * - div_id       : DOM ID와 동일 값 (디버깅 및 리포팅 시 유용)
+             * - load_type    : eager / lazy (로딩 전략 구분용, 리포트에서 필터 가능)
+             * - position     : TC, MC, MR 등 페이지 내 상대 위치
+             * - ad_area_type : ATF, in_article, below_comments 등 구체 노출 맥락
+             * - default_exposure : "기본 노출 여부"나 실험군/대조군 구분에 활용 가능
              *
              * - 페이지 레벨 키와의 관계:
-             *   - 페이지 레벨 키(예: device_category, page_type)는 전체 공통 필터,
-             *   - 슬롯 레벨 키(예: position, ad_area_type)는 세부 위치/역할 구분에 사용됩니다.
+             * - 페이지 레벨 키(예: device_category, page_type)는 전체 공통 필터,
+             * - 슬롯 레벨 키(예: position, ad_area_type)는 세부 위치/역할 구분에 사용됩니다.
              */
 
             // TC_billboard_leaderboard (Eager Load) - sizeMapping_horizontal 적용
@@ -880,21 +872,21 @@
                      * [HOME 전용 · Eager Load 구현 로직 + '오늘 하루 닫기' 정책]
                      * - disableInitialLoad()를 사용했기 때문에, 광고 호출은 개발자가 직접 제어해야 합니다.
                      * - TC_billboard_leaderboard는 홈 상단 핵심 인벤토리이므로
-                     *   페이지 로드 시점에 바로 display + refresh를 호출하여 즉시 노출하도록 설계했습니다.
+                     * 페이지 로드 시점에 바로 display + refresh를 호출하여 즉시 노출하도록 설계했습니다.
                      *
                      * - 추가 정책:
-                     *   1) 데스크탑 전용 '오늘하루 | 닫기 X' 기능 지원
-                     *      · 닫기 버튼 클릭 시:
-                     *        - 체크박스 O → 오늘 자정까지 TC 미노출 (localStorage 기반)
-                     *        - 체크박스 X → 현재 세션에서만 TC 닫기
-                     *   2) 모바일/태블릿:
-                     *      · 닫기 기능 및 suppression 로직 전체 비활성화
-                     *      · 항상 일반 Eager 인벤토리처럼 동작 (광고주 요구/수익성 고려)
+                     * 1) 데스크탑 전용 '오늘하루 | 닫기 X' 기능 지원
+                     * · 닫기 버튼 클릭 시:
+                     * - 체크박스 O → 오늘 자정까지 TC 미노출 (localStorage 기반)
+                     * - 체크박스 X → 현재 세션에서만 TC 닫기
+                     * 2) 모바일/태블릿:
+                     * · 닫기 기능 및 suppression 로직 전체 비활성화
+                     * · 항상 일반 Eager 인벤토리처럼 동작 (광고주 요구/수익성 고려)
                      *
                      * 동작 순서:
                      * 1) isTcBillboardSuppressedForToday():
-                     *    - 오늘 날짜 기준으로 "닫힘" 상태인지 확인
-                     *    - true이면 display/refresh를 호출하지 않음 → 광고 요청 자체를 막아 비용도 발생하지 않음
+                     * - 오늘 날짜 기준으로 "닫힘" 상태인지 확인
+                     * - true이면 display/refresh를 호출하지 않음 → 광고 요청 자체를 막아 비용도 발생하지 않음
                      * 2) display('TC_billboard_leaderboard') + refresh([TC_billboard_leaderboard_slot])
                      *
                      * 주의사항:
@@ -927,7 +919,6 @@
 
         <div class="content-wrap">
             <div class="main-content">
-                <!-- (콘텐츠 영역: 광고 로직과 직접적인 연관은 없어 주석 생략) -->
                 <section class="highlight-news">
                     <h2>🔥 Main Contents: Highlight News</h2>
                     <p style="font-size: 20px; font-weight: bold; margin-bottom: 5px;">**美 빅테크, AI 주도권 경쟁 심화... 투자 급증 속 규제 리스크 부상**</p>
@@ -976,8 +967,7 @@
         
         <div id="MC_billboard_rectangle" class="ad-slot ad-2">
             <div class="gam-container">
-                <!-- MC_billboard_rectangle는 Lazy Load 대상이므로 여기서는 display 호출을 하지 않습니다. -->
-            </div>
+                </div>
         </div>
 
         <div class="content-wrap">
@@ -1019,8 +1009,7 @@
                 
                 <div id="MR_halfpage_rectangle" class="ad-slot ad-3"> 
                     <div class="gam-container">
-                        <!-- MR_halfpage_rectangle 역시 Lazy Load 대상 → 아래 IntersectionObserver에서 제어 -->
-                    </div>
+                        </div>
                 </div>
                 
                 <h3 style="margin-top: 20px;">📰 Quick Links</h3>
@@ -1050,15 +1039,15 @@
          * [공통 · Lazy Load 개념 및 HOME 적용 범위]
          * - Lazy Load는 "사용자 뷰포트에 근접했을 때만 광고를 요청"하는 전략입니다.
          * - 전제 조건:
-         *   1) googletag.pubads().disableInitialLoad() 호출
-         *   2) IntersectionObserver 또는 스크롤 이벤트를 활용해, 조건을 만족할 때
-         *      googletag.display(slotId) + googletag.pubads().refresh([slot]) 호출
+         * 1) googletag.pubads().disableInitialLoad() 호출
+         * 2) IntersectionObserver 또는 스크롤 이벤트를 활용해, 조건을 만족할 때
+         * googletag.display(slotId) + googletag.pubads().refresh([slot]) 호출
          *
          * - HOME GPT에서 Lazy 대상:
-         *   - MC_billboard_rectangle    : 메인 중간 영역 배너
-         *   - MR_halfpage_rectangle     : 우측 사이드바 하프페이지/박스형 배너
+         * - MC_billboard_rectangle    : 메인 중간 영역 배너
+         * - MR_halfpage_rectangle     : 우측 사이드바 하프페이지/박스형 배너
          * - View GPT에서는 in-article + 하단 BC/Native 슬롯까지 포함하는 등 범위가 더 넓으며,
-         *   HOME은 상대적으로 단순한 구조로 구성되어 있습니다.
+         * HOME은 상대적으로 단순한 구조로 구성되어 있습니다.
          */
         const LAZY_AD_SLOT_IDS = [
             'MC_billboard_rectangle',
@@ -1092,10 +1081,10 @@
             /*
              * [2단계 · GAM에 정의된 슬롯 객체 필터링]
              * - googletag.pubads().getSlots()로 현재 페이지에 정의된 모든 슬롯을 가져온 뒤,
-             *   LAZY_AD_SLOT_IDS에 포함되는 것만 lazyGamSlots에 저장합니다.
+             * LAZY_AD_SLOT_IDS에 포함되는 것만 lazyGamSlots에 저장합니다.
              * - 주의사항:
-             *   - 이 로직은 googletag.cmd.push 내부에서 실행되어야,
-             *     defineSlot/enableServices 이후 안전하게 슬롯 목록을 조회할 수 있습니다.
+             * - 이 로직은 googletag.cmd.push 내부에서 실행되어야,
+             * defineSlot/enableServices 이후 안전하게 슬롯 목록을 조회할 수 있습니다.
              */
             if (window.googletag && googletag.cmd) {
                 googletag.cmd.push(function() {
@@ -1106,32 +1095,48 @@
                 });
             }
 
+            // --- [객관적 최적화: 디바이스별 rootMargin 동적 할당] ---
+            /*
+             * [업데이트 된 로직 설명]
+             * - 기존에는 100px 고정이었으나, 한국의 네트워크 환경과 스크롤 패턴을 반영하여
+             * 디바이스별 최적의 마진 값을 적용합니다.
+             * - Smartphone: 600px (빠른 플릭 대응)
+             * - Tablet: 500px
+             * - Desktop: 400px
+             */
+            const ua = navigator.userAgent.toLowerCase();
+            let marginValue = '400px'; // 기본값 (Desktop)
+
+            if (/mobile|android|iphone|ipad|ipod/.test(ua) || window.innerWidth <= 768) {
+                marginValue = '600px'; // Smartphone
+            } else if (window.innerWidth <= 1024) {
+                marginValue = '500px'; // Tablet
+            }
+
             /*
              * [3단계 · IntersectionObserver 설정]
-             * - root      : null → viewport 기준
-             * - rootMargin: '0px 0px 100px 0px'
-             *   → 실제 뷰포트보다 100px 아래에 도달했을 때 미리 로딩을 시작 (프리-로딩 효과)
-             * - threshold : 0.0
-             *   → 대상 요소가 1px이라도 보이기 시작하면 isIntersecting === true
+             * - rootMargin: 동적으로 할당된 marginValue를 적용합니다.
              */
             const options = {
                 root: null, 
-                rootMargin: '0px 0px 100px 0px', 
+                rootMargin: `0px 0px ${marginValue} 0px`, // ✅ 최적화 반영 완료
                 threshold: 0.0
             };
+
+            console.log(`🚀 [Lazy Load] rootMargin optimized for ${marginValue} based on device detection.`);
 
             /*
              * [4단계 · Observer 콜백]
              * - entry.isIntersecting === true 인 슬롯만 처리합니다.
              * - 처리 순서:
-             *   1) slotId 추출 (entry.target.id)
-             *   2) GAM 슬롯 객체(lazyGamSlots) 중 해당 slotId와 매칭되는 객체 찾기
-             *   3) display(slotId) + refresh([slotToRefresh]) 호출
-             *   4) observerInstance.unobserve(entry.target)로 한 번 로딩된 슬롯은 더 이상 관찰하지 않음
+             * 1) slotId 추출 (entry.target.id)
+             * 2) GAM 슬롯 객체(lazyGamSlots) 중 해당 slotId와 매칭되는 객체 찾기
+             * 3) display(slotId) + refresh([slotToRefresh]) 호출
+             * 4) observerInstance.unobserve(entry.target)로 한 번 로딩된 슬롯은 더 이상 관찰하지 않음
              *
              * - Eager/Lazy 공통 로직 관점:
-             *   - Eager: 페이지 로드시 곧바로 display + refresh
-             *   - Lazy : 페이지 로드 이후, 스크롤/관찰 조건 충족 시점에 display + refresh
+             * - Eager: 페이지 로드시 곧바로 display + refresh
+             * - Lazy : 페이지 로드 이후, 스크롤/관찰 조건 충족 시점에 display + refresh
              */
             lazyObserver = new IntersectionObserver(function(entries, observerInstance) {
                 entries.forEach(entry => {
@@ -1149,7 +1154,7 @@
                                 // disableInitialLoad() 환경 → display + refresh 패턴
                                 googletag.display(slotId); 
                                 googletag.pubads().refresh([slotToRefresh]); 
-                                console.log(`✅ [Lazy Load SUCCESS] Ad ID: ${slotId} | Status: DISPLAY + REFRESH upon scroll.`);
+                                console.log(`✅ [Lazy Load SUCCESS] Ad ID: ${slotId} | Status: DISPLAY + REFRESH upon scroll (margin: ${marginValue}).`);
                             }
                         });
                     }
@@ -1166,9 +1171,9 @@
             /*
              * [공통 · 관찰 시작 함수]
              * - setupLazyLoading()에서 생성된 lazyObserver와 lazyAdSlotsHTML을 사용해
-             *   실제 DOM 요소를 관찰하기 시작합니다.
+             * 실제 DOM 요소를 관찰하기 시작합니다.
              * - HOME/VIEW/SECTION/LIST에서 동일 네이밍과 구조를 사용하면,
-             *   공통 유틸 함수로 묶어 관리하기 용이합니다.
+             * 공통 유틸 함수로 묶어 관리하기 용이합니다.
              */
             if (!lazyObserver || !lazyAdSlotsHTML || lazyAdSlotsHTML.length === 0) return;
 
@@ -1185,13 +1190,13 @@
             /*
              * [공통 · DOMContentLoaded 활용 이유]
              * - DOMContentLoaded 시점에는 HTML 구조와 광고 슬롯 DIV가 모두 렌더링 완료된 상태이므로,
-             *   광고 슬롯 재배치/관찰 설정을 수행하기에 가장 적절합니다.
+             * 광고 슬롯 재배치/관찰 설정을 수행하기에 가장 적절합니다.
              * - HOME GPT에서는:
-             *   - in-article 동적 삽입은 없고, Lazy 대상 슬롯만 IntersectionObserver로 관리합니다.
+             * - in-article 동적 삽입은 없고, Lazy 대상 슬롯만 IntersectionObserver로 관리합니다.
              * - View GPT에서는:
-             *   - DOMContentLoaded에서 in-article 광고 DOM 재배치 + Lazy 설정까지 함께 수행합니다.
+             * - DOMContentLoaded에서 in-article 광고 DOM 재배치 + Lazy 설정까지 함께 수행합니다.
              */
-            setupLazyLoading();        // Lazy 대상 수집 및 Observer 초기화
+            setupLazyLoading();        // Lazy 대상 수집 및 Observer 초기화 (rootMargin 최적화 포함)
             startObservingLazySlots(); // Lazy 대상 슬롯 관찰 시작
         });
 
