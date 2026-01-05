@@ -58,6 +58,16 @@ const sizeMapping_article_horizontal = googletag.sizeMapping()
         [480, 320], [336, 280], [320, 480], 
 (이하생략)
 
+# 5차 업데이트(2026.01.05)
+            // --- [rootMargin 최적화: 디바이스별 rootMargin 동적 할당] ---
+            /*
+             * [업데이트 된 로직 설명]
+             * - 기존에는 100px 고정이었으나, 한국의 네트워크 환경과 스크롤 패턴을 반영하여
+             * 디바이스별 최적의 마진 값을 적용합니다.
+             * - Smartphone: 600px (빠른 플릭 대응)
+             * - Tablet: 500px
+             * - Desktop: 400px
+
 
 ## 0. 개요
 
@@ -636,6 +646,7 @@ let lazyObserver = null;
 
 - 기본 옵션 예시
 
+### 기존
 ```js
 const options = {
   root: null,
@@ -643,6 +654,24 @@ const options = {
   threshold: 0.0
 };
 ```
+### 최적화 변경 (2026-01-05)
+            // --- [rootMargin 최적화: 디바이스별 rootMargin 동적 할당] ---
+            /*
+             * [업데이트 된 로직 설명]
+             * - 기존에는 100px 고정이었으나, 한국의 네트워크 환경과 스크롤 패턴을 반영하여
+             * 디바이스별 최적의 마진 값을 적용합니다.
+             * - Smartphone: 600px (빠른 플릭 대응)
+             * - Tablet: 500px
+             * - Desktop: 400px
+             */
+            const ua = navigator.userAgent.toLowerCase();
+            let marginValue = '400px'; // 기본값 (Desktop)
+
+            if (/mobile|android|iphone|ipad|ipod/.test(ua) || window.innerWidth <= 768) {
+                marginValue = '600px'; // Smartphone
+            } else if (window.innerWidth <= 1024) {
+                marginValue = '500px'; // Tablet
+            }
 
 > 💡 **튜닝 포인트**
 > - `rootMargin` / `threshold`는 **뷰어블 성과 & UX**를 보면서 조정 가능
