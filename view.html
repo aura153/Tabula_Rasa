@@ -130,23 +130,26 @@
 
             // --- [1] device_category 결정 (페이지 레벨 공통 타게팅) -----------------
             //
-            // - UA + viewport 폭을 함께 사용해 3단계로 구분합니다.
-            //   · desktop : 기본값
-            //   · smartphone  : 스마트폰 UA 또는 width <= 768
-            //   · tablet  : 태블릿으로 추정되는 중간 구간(width <= 1024)
+            // - UA(User Agent)와 viewport 폭을 결합하여 디바이스를 3단계로 구분합니다.
+            //   1. smartphone : 스마트폰용 UA 문자열이 포함되어 있거나, 화면 폭이 768px 이하인 경우
+            //   2. tablet     : 스마트폰은 아니지만 태블릿용 UA 문자열이 포함되어 있거나, 화면 폭이 1024px 이하인 경우
+            //   3. desktop    : 위 조건에 해당하지 않는 모든 경우 (기본값)
             //
-            // - 이 값은:
-            //   · 슬롯 정의 여부(if 조건)
-            //   · 타게팅 값(device_category)
-            //   두 군데에서 모두 활용됩니다.
+            // - 이 값은 슬롯 정의 여부(if 조건)와 GAM 타게팅 값(device_category)으로 활용됩니다.
             // ------------------------------------------------------------------
             const userAgent = navigator.userAgent.toLowerCase();
+            const width = window.innerWidth;
             let deviceCategory = 'desktop';
-            if (/mobile|android|iphone|ipad|ipod/.test(userAgent) || window.innerWidth <= 768) {
-                deviceCategory = 'smartphone'; // 'mobile' 대신 'smartphone' 사용 (✅ 수정됨)
-            } else if (window.innerWidth <= 1024) {
+
+            // 1. Smartphone 판별: 모바일 UA(iPad 제외)이거나 폭이 768px 이하인 경우
+            if ((/mobile|android|iphone|ipod/.test(userAgent) && !/ipad/.test(userAgent)) || width <= 768) {
+                deviceCategory = 'smartphone';
+            } 
+            // 2. Tablet 판별: iPad/Tablet UA이거나 폭이 1024px 이하인 경우
+            else if (/ipad|tablet/.test(userAgent) || width <= 1024) {
                 deviceCategory = 'tablet';
             }
+// 3. 그 외: 기본값 desktop 유지
 
             // ------------------------------------------------------------------
             // [페이지 레벨 키/값 설정 – 공통 타게팅]
@@ -249,7 +252,6 @@
                     'fluid'
                 ])
                 .addSize([768, 0], [
-                    [750, 300], [750, 200], [728, 90], 
                     [480, 320], 
                     [336, 280],[320, 480],
                     [320, 100], [320, 50],
@@ -1587,18 +1589,32 @@
              * - Tablet: 500px (넓은 화면비 고려)
              * - Desktop: 400px (글로벌 미디어 표준값)
              */
+            // --- IntersectionObserver 옵션 설정 (디바이스별 rootMargin 최적화) ---
+
             const ua = navigator.userAgent.toLowerCase();
+            const width = window.innerWidth;
             let marginValue = '400px'; // Desktop 기본값
 
-            if (/mobile|android|iphone|ipad|ipod/.test(ua) || window.innerWidth <= 768) {
-                marginValue = '600px'; // Smartphone
-            } else if (window.innerWidth <= 1024) {
-                marginValue = '500px'; // Tablet
+            // 1. Smartphone 판별 로직 적용 (Mobile UA이면서 iPad가 아니거나, 폭이 768px 이하)
+            if ((/mobile|android|iphone|ipod/.test(ua) && !/ipad/.test(ua)) || width <= 768) {
+                marginValue = '600px'; // Smartphone: 모바일의 빠른 스크롤을 고려하여 가장 넓은 여백 설정
+            } 
+            // 2. Tablet 판별 로직 적용 (iPad/Tablet UA이거나, 폭이 1024px 이하)
+            else if (/ipad|tablet/.test(ua) || width <= 1024) {
+                marginValue = '500px'; // Tablet: 중간 정도의 여백 설정
             }
-
+            // 3. 그 외: Desktop (기본값 400px 유지)
+            // IntersectionObserver 생성
+            /*
+             * - root      : null → 브라우저 viewport 기준
+             * - rootMargin: 동적으로 할당된 marginValue 적용
+             * → 실제 뷰포트 하단보다 지정된 픽셀만큼 앞서 미리 로딩 시작(프리로딩 효과)
+             * - threshold : 0.0
+             * → 요소가 1px만 보이기 시작해도 isIntersecting === true
+             */
             const options = {
                 root: null,
-                rootMargin: `0px 0px ${marginValue} 0px`,
+                rootMargin: `0px 0px ${marginValue} 0px`, // 하단 여백을 디바이스별로 다르게 적용
                 threshold: 0.0
             };
 

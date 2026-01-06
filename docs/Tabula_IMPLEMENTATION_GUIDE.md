@@ -68,6 +68,27 @@ const sizeMapping_article_horizontal = googletag.sizeMapping()
              * - Tablet: 500px
              * - Desktop: 400px
 
+# 6차 업데이트
+## 디바이스 카테고리 결정 로직 - 2026.1.6 업데이트
+- UA(User Agent)와 viewport 폭을 결합하여 디바이스를 3단계로 구분합니다.
+  1. smartphone : 스마트폰용 UA 문자열이 포함되어 있거나, 화면 폭이 768px 이하인 경우
+  2. tablet     : 스마트폰은 아니지만 태블릿용 UA 문자열이 포함되어 있거나, 화면 폭이 1024px 이하인 경우
+  3. desktop    : 위 조건에 해당하지 않는 모든 경우 (기본값)
+
+  - 이 값은 슬롯 정의 여부(if 조건)와 GAM 타게팅 값(device_category)으로 활용됩니다.
+```js
+const userAgent = navigator.userAgent.toLowerCase();
+const width = window.innerWidth;
+let deviceCategory = 'desktop';
+
+// 1. Smartphone 판별: 모바일 UA(iPad 제외)이거나 폭이 768px 이하인 경우
+if ((/mobile|android|iphone|ipod/.test(userAgent) && !/ipad/.test(userAgent)) || width <= 768) {
+    deviceCategory = 'smartphone';
+} 
+// 2. Tablet 판별: iPad/Tablet UA이거나 폭이 1024px 이하인 경우
+else if (/ipad|tablet/.test(userAgent) || width <= 1024) {
+    deviceCategory = 'tablet';
+})
 
 ## 0. 개요
 
@@ -369,16 +390,25 @@ googletag.pubads().setTargeting('brandsensitive', '동적입력');
 **공통모듈 구성시 편의상 HOME, section,  list, 기타 페이지에 동일하게 설정해도 무방**
 ---
 
-### 4.4 디바이스 카테고리 결정 로직
+### 4.4 디바이스 카테고리 결정 로직 - 2026.1.6 업데이트
+- UA(User Agent)와 viewport 폭을 결합하여 디바이스를 3단계로 구분합니다.
+  1. smartphone : 스마트폰용 UA 문자열이 포함되어 있거나, 화면 폭이 768px 이하인 경우
+  2. tablet     : 스마트폰은 아니지만 태블릿용 UA 문자열이 포함되어 있거나, 화면 폭이 1024px 이하인 경우
+  3. desktop    : 위 조건에 해당하지 않는 모든 경우 (기본값)
 
+  - 이 값은 슬롯 정의 여부(if 조건)와 GAM 타게팅 값(device_category)으로 활용됩니다.
 ```js
 const userAgent = navigator.userAgent.toLowerCase();
+const width = window.innerWidth;
 let deviceCategory = 'desktop';
 
-if (/mobile|android|iphone|ipad|ipod/.test(userAgent) || window.innerWidth <= 768) {
-  deviceCategory = 'smartphone';
-} else if (window.innerWidth <= 1024) {
-  deviceCategory = 'tablet';
+// 1. Smartphone 판별: 모바일 UA(iPad 제외)이거나 폭이 768px 이하인 경우
+if ((/mobile|android|iphone|ipod/.test(userAgent) && !/ipad/.test(userAgent)) || width <= 768) {
+    deviceCategory = 'smartphone';
+} 
+// 2. Tablet 판별: iPad/Tablet UA이거나 폭이 1024px 이하인 경우
+else if (/ipad|tablet/.test(userAgent) || width <= 1024) {
+    deviceCategory = 'tablet';
 }
 
 googletag.pubads().setTargeting('device_category', deviceCategory);
@@ -655,23 +685,41 @@ const options = {
 };
 ```
 ### 최적화 변경 (2026-01-05)
-            // --- [rootMargin 최적화: 디바이스별 rootMargin 동적 할당] ---
-            /*
-             * [업데이트 된 로직 설명]
-             * - 기존에는 100px 고정이었으나, 한국의 네트워크 환경과 스크롤 패턴을 반영하여
-             * 디바이스별 최적의 마진 값을 적용합니다.
-             * - Smartphone: 600px (빠른 플릭 대응)
-             * - Tablet: 500px
-             * - Desktop: 400px
+            /**
+             * [객관적 최적화: 디바이스별 rootMargin 동적 할당]
+             * - 한국의 안정적인 네트워크 인프라와 사용자 스크롤 속도를 고려한 '스윗 스팟' 수치 적용
+             * - Smartphone: 600px (빠른 플릭 스크롤 대응)
+             * - Tablet: 500px (넓은 화면비 고려)
+             * - Desktop: 400px (글로벌 미디어 표준값)
              */
-            const ua = navigator.userAgent.toLowerCase();
-            let marginValue = '400px'; // 기본값 (Desktop)
+            // --- IntersectionObserver 옵션 설정 (디바이스별 rootMargin 최적화) ---
 
-            if (/mobile|android|iphone|ipad|ipod/.test(ua) || window.innerWidth <= 768) {
-                marginValue = '600px'; // Smartphone
-            } else if (window.innerWidth <= 1024) {
-                marginValue = '500px'; // Tablet
+            const ua = navigator.userAgent.toLowerCase();
+            const width = window.innerWidth;
+            let marginValue = '400px'; // Desktop 기본값
+
+            // 1. Smartphone 판별 로직 적용 (Mobile UA이면서 iPad가 아니거나, 폭이 768px 이하)
+            if ((/mobile|android|iphone|ipod/.test(ua) && !/ipad/.test(ua)) || width <= 768) {
+                marginValue = '600px'; // Smartphone: 모바일의 빠른 스크롤을 고려하여 가장 넓은 여백 설정
+            } 
+            // 2. Tablet 판별 로직 적용 (iPad/Tablet UA이거나, 폭이 1024px 이하)
+            else if (/ipad|tablet/.test(ua) || width <= 1024) {
+                marginValue = '500px'; // Tablet: 중간 정도의 여백 설정
             }
+            // 3. 그 외: Desktop (기본값 400px 유지)
+            // IntersectionObserver 생성
+            /*
+             * - root      : null → 브라우저 viewport 기준
+             * - rootMargin: 동적으로 할당된 marginValue 적용
+             * → 실제 뷰포트 하단보다 지정된 픽셀만큼 앞서 미리 로딩 시작(프리로딩 효과)
+             * - threshold : 0.0
+             * → 요소가 1px만 보이기 시작해도 isIntersecting === true
+             */
+            const options = {
+                root: null,
+                rootMargin: `0px 0px ${marginValue} 0px`, // 하단 여백을 디바이스별로 다르게 적용
+                threshold: 0.0
+            };
 
 > 💡 **튜닝 포인트**
 > - `rootMargin` / `threshold`는 **뷰어블 성과 & UX**를 보면서 조정 가능
