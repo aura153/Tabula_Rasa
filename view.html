@@ -9,31 +9,16 @@
     <script>
         // ------------------------------------------------------------------
         // [GAM 전역 네임스페이스 초기화]
-        //
-        // - window.googletag: GAM(Google Publisher Tag)에서 사용하는 전역 객체입니다.
-        // - cmd 배열:
-        //   · GPT 라이브러리가 완전히 로드되기 전까지 실행해야 하는 설정 함수들을
-        //     큐에 쌓아두는 역할을 합니다.
-        //   · 외부 스크립트(gpt.js)가 로드되면, cmd에 쌓인 함수들을 순차적으로 실행합니다.
-        //   · 따라서, googletag 관련 코드는 항상 googletag.cmd.push(function() { ... }) 안에
-        //     작성해야 합니다. (로드 타이밍 이슈 방지)
         // ------------------------------------------------------------------
         window.googletag = window.googletag || { cmd: [] };
 
         // ------------------------------------------------------------------
         // 1. 광고 단위 경로 (Ad Unit Path)
-        //
-        // - AdUnitPath는 GAM 인벤토리 상의 광고 단위(Ad Unit)를 식별하는 "경로"입니다.
-        //   예: /네트워크코드/사이트/섹션
-        //   여기서는 /7450/www.mk.co.kr/news/economy 를 사용합니다.
         // ------------------------------------------------------------------
         const AdUnitPath = '/7450/www.mk.co.kr/news/economy';
 
         // ------------------------------------------------------------------
         // 다크 모드 여부 감지
-        //
-        // - 'prefers-color-scheme: dark' 미디어쿼리 결과를 기반으로
-        //   is_dark_mode 키를 GAM에 전달합니다.
         // ------------------------------------------------------------------
         const isDarkMode = window.matchMedia &&
             window.matchMedia('(prefers-color-scheme: dark)').matches
@@ -41,17 +26,6 @@
 
         // ***************************************************
         // ✅ 광고 렌더링 완료 시 'Advertisement' 라벨을 삽입하는 함수 (GAM 이벤트 리스너)
-        //
-        // - GAM의 slotRenderEnded 이벤트에 연결되는 공통 핸들러입니다.
-        // - 역할:
-        //   · 납품된 광고(비어 있지 않은 슬롯)에 한해 "Advertisement" 라벨을 자동으로 삽입합니다.
-        //   · 슬롯마다 HTML에 라벨을 직접 하드코딩하지 않고, 광고가 실제로 렌더링된 경우에만
-        //     라벨을 노출함으로써 "빈 슬롯에 라벨만 떠 있는 상황"을 피합니다.
-        //
-        // - 예외 처리:
-        //   · BC_native_list_* 슬롯은 에디토리얼 뉴스 리스트와 자연스럽게 섞이는
-        //     Native 형태이므로, 리스트 UI에서 별도 "Advertisement" 라벨을 붙이지 않습니다.
-        //   · TC_billboard_X(상단 빌보드)는 "Advertisement" 라벨을 붙이지 않는 예외 슬롯으로 처리합니다.
         // ***************************************************
         function addAdLabel(event) {
             const slotId = event.slot.getSlotElementId();
@@ -67,8 +41,6 @@
 
             const slotElement = document.getElementById(slotId);
 
-            // - event.isEmpty === false: GAM이 이 슬롯에 실제 크리에이티브를 반환했다는 의미입니다.
-            // - slotElement 존재 여부: DOM 상에 해당 id를 가진 요소가 실제 존재하는지 이중 확인합니다.
             if (event.isEmpty === false && slotElement) {
                 const outerSlot = slotElement.closest('.ad-slot');
                 if (!outerSlot) return;
@@ -98,14 +70,6 @@
         googletag.cmd.push(function () {
 
             // --- [1] device_category 결정 (페이지 레벨 공통 타게팅) -----------------
-            //
-            // - UA(User Agent)와 viewport 폭을 결합하여 디바이스를 3단계로 구분합니다.
-            //   1. smartphone : 스마트폰용 UA 문자열이 포함되어 있거나, 화면 폭이 768px 이하인 경우
-            //   2. tablet     : 스마트폰은 아니지만 태블릿용 UA 문자열이 포함되어 있거나, 화면 폭이 1024px 이하인 경우
-            //   3. desktop    : 위 조건에 해당하지 않는 모든 경우 (기본값)
-            //
-            // - 이 값은 슬롯 정의 여부(if 조건)와 GAM 타게팅 값(device_category)으로 활용됩니다.
-            // ------------------------------------------------------------------
             const userAgent = navigator.userAgent.toLowerCase();
             const width = window.innerWidth;
             let deviceCategory = 'desktop';
@@ -124,8 +88,6 @@
             // [페이지 레벨 키/값 설정 – 공통 타게팅]
             // ------------------------------------------------------------------
             googletag.pubads().setTargeting('device_category', deviceCategory);
-
-            // 기본 예시(고정 값)
             googletag.pubads().setTargeting('page_type', 'view');
             googletag.pubads().setTargeting('section_front_nm', 'economy');
             googletag.pubads().setTargeting('is_dark_mode', isDarkMode);
@@ -135,7 +97,6 @@
             // ▼▼▼ 동적 입력 키-값 (실제 운영 시 CMS 치환) ▼▼▼
             googletag.pubads().setTargeting('domain', window.location.hostname);
             googletag.pubads().setTargeting('url', window.location.href);
-            // ... (기타 동적 타게팅 키값은 기존 코드와 동일) ...
             // ▲▲▲ 동적 입력 키-값 ▲▲▲
 
             // ✅ GAM 이벤트 리스너 추가
@@ -147,80 +108,23 @@
             
             // 0-1. 가로형 배너용 사이즈 매핑 (TC)
             const sizeMapping_horizontal = googletag.sizeMapping()
-                .addSize([1024, 0], [
-                    [1246, 100], [1200, 300], [1200, 100], 
-                    [980, 120], [970, 250], [930, 180], [970, 90], 
-                    [728, 90], 
-                    [2, 1], [1, 1], 
-                    'fluid'
-                ])
-                .addSize([768, 0], [
-                    [750, 300], [750, 200], [728, 90], 
-                    [480, 320], 
-                    [336, 280], [320, 480], [300, 250], 
-                    [2, 1], [1, 1], 
-                    'fluid'
-                ])
-                .addSize([0, 0], [
-                    [336, 280], [320, 480],
-                    [320, 100], [320, 50], 
-                    [300, 250], [250, 250], [200, 200], 
-                    [2, 1], [1, 1], 
-                    'fluid'
-                ])
+                .addSize([1024, 0], [[1246, 100], [1200, 300], [1200, 100], [980, 120], [970, 250], [930, 180], [970, 90], [728, 90], [2, 1], [1, 1], 'fluid'])
+                .addSize([768, 0], [[750, 300], [750, 200], [728, 90], [480, 320], [336, 280], [320, 480], [300, 250], [2, 1], [1, 1], 'fluid'])
+                .addSize([0, 0], [[336, 280], [320, 480], [320, 100], [320, 50], [300, 250], [250, 250], [200, 200], [2, 1], [1, 1], 'fluid'])
                 .build();
 
             // 0-2. 우측 사이드레일 박스형 배너용 사이즈 매핑 (MR)
             const sizeMapping_siderail_square = googletag.sizeMapping()
-                .addSize([1024, 0], [
-                    [336, 280], [320, 480], [300, 600], [300, 250], 
-                    [250, 250], [200, 200],
-                    [2, 1], [1, 1], 
-                    'fluid'
-                ])
-                .addSize([768, 0], [
-                    [480, 320], 
-                    [336, 280],[320, 480],
-                    [320, 100], [320, 50],
-                    [300, 250], [250, 250], [200, 200],
-                    [2, 1], [1, 1], 
-                    'fluid'
-                ])
-                .addSize([0, 0], [
-                    [336, 280], [320, 480],
-                    [320, 100], [320, 50],
-                    [300, 250], [250, 250], [200, 200],
-                    [2, 1], [1, 1], 
-                    'fluid'
-                ])
+                .addSize([1024, 0], [[336, 280], [320, 480], [300, 600], [300, 250], [250, 250], [200, 200], [2, 1], [1, 1], 'fluid'])
+                .addSize([768, 0], [[480, 320], [336, 280],[320, 480], [320, 100], [320, 50], [300, 250], [250, 250], [200, 200], [2, 1], [1, 1], 'fluid'])
+                .addSize([0, 0], [[336, 280], [320, 480], [320, 100], [320, 50], [300, 250], [250, 250], [200, 200], [2, 1], [1, 1], 'fluid'])
                 .build();
 
             // 0-3. 본문 박스형 배너용 사이즈 매핑 (MC)
             const sizeMapping_article_horizontal = googletag.sizeMapping()
-                .addSize([1024, 0], [
-                    [480, 320], [336, 280],[320,480], 
-                    [320, 100], [320, 50],
-                    [300, 250],
-                    [300, 251], [300, 252], [300, 253], [300, 254], [300, 255], [300, 256], [300, 257], [300, 258],
-                    [250, 250],[200, 200],
-                    [2, 1], [1, 1], 'fluid'
-                ])
-                .addSize([768, 0], [
-                    [480, 320], [336, 280], [320,480], 
-                    [320, 100], [320, 50],
-                    [300, 250],
-                    [300, 251], [300, 252], [300, 253], [300, 254], [300, 255], [300, 256], [300, 257], [300, 258],
-                    [250, 250], [200, 200],
-                    [2, 1], [1, 1], 'fluid'
-                ])
-                .addSize([0, 0], [
-                    [336, 280], [320, 480],
-                    [320, 100], [320, 50],
-                    [300, 250],
-                    [300, 251], [300, 252], [300, 253], [300, 254], [300, 255], [300, 256], [300, 257], [300, 258],
-                    [250, 250], [200, 200],
-                    [2, 1], [1, 1], 'fluid'
-                ])
+                .addSize([1024, 0], [[480, 320], [336, 280],[320,480], [320, 100], [320, 50], [300, 250], [300, 251], [300, 252], [300, 253], [300, 254], [300, 255], [300, 256], [300, 257], [300, 258], [250, 250],[200, 200], [2, 1], [1, 1], 'fluid'])
+                .addSize([768, 0], [[480, 320], [336, 280], [320,480], [320, 100], [320, 50], [300, 250], [300, 251], [300, 252], [300, 253], [300, 254], [300, 255], [300, 256], [300, 257], [300, 258], [250, 250], [200, 200], [2, 1], [1, 1], 'fluid'])
+                .addSize([0, 0], [[336, 280], [320, 480], [320, 100], [320, 50], [300, 250], [300, 251], [300, 252], [300, 253], [300, 254], [300, 255], [300, 256], [300, 257], [300, 258], [250, 250], [200, 200], [2, 1], [1, 1], 'fluid'])
                 .build();
 
 
@@ -240,7 +144,6 @@
 
             // ------------------------------------------------------------------
             // 5-1. TC_billboard_X (Eager Load, ATF)
-            // 💡 [수정 작업 2] 기존 desktop, tablet 호출에서 -> desktop 일때만 호출되도록 수정
             // ------------------------------------------------------------------
             if (deviceCategory === 'desktop') {
                 TC_billboard_X_slot = googletag.defineSlot(
@@ -258,8 +161,7 @@
             }
 
             // ------------------------------------------------------------------
-            // 5-2. MR_side_rail_X (ATF)
-            // 💡 [수정 작업 3] 'load_type'을 'lazy'에서 'eager'로 수정 (Desktop 전용)
+            // 5-2. MR_side_rail_X (ATF) - Desktop Eager
             // ------------------------------------------------------------------
             if (deviceCategory === 'desktop') {
                 MR_side_rail_X_slot = googletag.defineSlot(AdUnitPath, 
@@ -271,13 +173,12 @@
                     .setTargeting('position', 'MR')
                     .setTargeting('ad_area_type', 'ATF')
                     .setTargeting('default_exposure', '')
-                    .setTargeting('load_type', 'eager') // 💡 Eager로 변경됨
+                    .setTargeting('load_type', 'eager') 
                     .addService(googletag.pubads());
             }
 
             // ------------------------------------------------------------------
             // 5-3 ~ 5-10. MC in-article 슬롯 (모두 Lazy Load)
-            // - ad_area_type = 'in_article'
             // ------------------------------------------------------------------
             MC_article_rectangle_1_slot = googletag.defineSlot(AdUnitPath, [[750, 300], [750, 200], [728, 90], [480, 320], [336, 280], [320, 480], [300, 250], [300, 251], [250, 250], [200, 200],  [2, 1], [1, 1], 'fluid'], 'MC_article_rectangle_1')
                 .defineSizeMapping(sizeMapping_article_horizontal).setTargeting('position', 'MC').setTargeting('ad_area_type', 'in_article').setTargeting('load_type', 'lazy').addService(googletag.pubads());
@@ -336,8 +237,6 @@
 
             // ------------------------------------------------------------------
             // 5-13, 5-14. BC_native_list_1/2
-            // 💡 [수정 작업 1] 데스크톱일 때도 기본 호출되도록 if 조건문 제거
-            // 💡 'load_type'을 디바이스에 따라 동적 설정: Desktop이면 'eager', 아니면 'lazy'
             // ------------------------------------------------------------------
             const BC_native_list_1_slot = googletag.defineSlot(
                 AdUnitPath,
@@ -365,13 +264,12 @@
 
             // ------------------------------------------------------------------
             // 6. GAM 핵심 기능 & PageSettingsConfig 설정 (최신화)
-            // 💡 [수정 작업 4] 메서드 호출을 setConfig 하나로 통합
             // ------------------------------------------------------------------
             googletag.setConfig({
-                // 1. Single Request Architecture 활성화 (지원 중단된 enableSingleRequest 대체)
+                // 1. Single Request Architecture 활성화
                 singleRequest: true, 
                 
-                // 2. 초기 로딩 방지 (IntersectionObserver 기반 Lazy Load 필수 설정 - disableInitialLoad 대체)
+                // 2. 초기 로딩 방지 (IntersectionObserver 기반 Lazy Load 필수 설정)
                 disableInitialLoad: true,
                 
                 // 3. 광고 iframe 중앙 정렬
@@ -385,22 +283,40 @@
             googletag.enableServices();
 
             // ------------------------------------------------------------------
-            // [Eager Load 처리] – 데스크탑 TC_billboard_X
-            // - TC_billboard_X_slot이 정의된 경우에만 refresh()를 호출합니다.
+            // [Eager Load 처리 - ATF 슬롯 즉시 호출]
+            // 💡 [수정 내용] TC(상단)뿐만 아니라, Desktop 환경의 MR(사이드레일) 및
+            //                Native 광고도 Head에서 일괄적으로 refresh() 하여 즉시 노출합니다.
             // ------------------------------------------------------------------
             googletag.cmd.push(function () {
+                var eagerSlotsToRefresh = [];
+
+                // 1. 상단 빌보드 (존재 시 항상 Eager)
                 if (TC_billboard_X_slot) {
-                    googletag.pubads().refresh([TC_billboard_X_slot]);
+                    eagerSlotsToRefresh.push(TC_billboard_X_slot);
+                }
+
+                // 2. 데스크탑 환경일 경우 추가 Eager 슬롯 (MR 및 Native)
+                if (deviceCategory === 'desktop') {
+                    // 우측 사이드레일 (ATF)
+                    if (MR_side_rail_X_slot) {
+                        eagerSlotsToRefresh.push(MR_side_rail_X_slot);
+                    }
+                    // 네이티브 리스트 광고 (데스크탑 Eager 설정)
+                    if (BC_native_list_1_slot) eagerSlotsToRefresh.push(BC_native_list_1_slot);
+                    if (BC_native_list_2_slot) eagerSlotsToRefresh.push(BC_native_list_2_slot);
+                }
+
+                // 3. 수집된 Eager 슬롯이 있다면 일괄 Refresh 호출
+                if (eagerSlotsToRefresh.length > 0) {
+                    googletag.pubads().refresh(eagerSlotsToRefresh);
+                    console.log("⚡ [Head Eager Load] Immediately refreshed slots:", eagerSlotsToRefresh.map(s => s.getSlotElementId()));
                 }
             });
         });
     </script>
 
     <style>
-        /* [기존 View Mockup 스타일 유지]
-           - 이 영역은 기사 본문/레이아웃 전반에 대한 스타일을 정의합니다.
-           - 광고 관련 CSS는 별도 주석으로 설명을 덧붙였습니다.
-        */
+        /* [기존 View Mockup 스타일 유지] */
         body {
             font-family: 'Malgun Gothic', 'Dotum', Arial, sans-serif;
             margin: 0;
@@ -445,7 +361,6 @@
             position: sticky;
             top: 20px;
             height: fit-content;
-            /* padding 없음 – 우측 레일 폭을 100% 광고에 사용하기 위한 공통 정책 */
         }
 
         .sidebar {
@@ -458,7 +373,7 @@
             border: 1px solid #ddd;
             border-radius: 5px;
             margin-bottom: 20px;
-            padding: 0; /* ✅ 광고 슬롯이 직접 들어가는 컨테이너에는 padding을 주지 않는 공통 규칙 */
+            padding: 0; 
         }
 
         .article-body img {
@@ -538,11 +453,11 @@
             box-sizing: border-box;
             border: none;
             transition: background-color 0.5s ease;
-            width: 100%;    /* 부모 컨테이너(기사 본문/우측 컬럼/바이라인 등)의 폭을 100% 사용 */
-            height: auto;   /* 높이는 실제 크리에이티브/iframe에 의해 결정 */
+            width: 100%;    
+            height: auto;   
             position: relative;
             z-index: 10;
-            padding-top: 10px; /* 라벨/크리에이티브와 상단 요소 간 최소 간격 확보 */
+            padding-top: 10px; 
         }
 
         /* in-article 및 테스트 시각화를 위한 임시 스타일 */
@@ -590,11 +505,9 @@
 
         /* ------------------------------------------------------------------
            Native 광고용 LI 컨테이너 (.native-ad-list-item)
-           - 💡 [수정 작업 1 관련] Desktop에서도 노출해야 하므로 기존의 display: none (기본값) 정책 수정
-           - 기본적으로 display: flex를 유지하고, 미디어쿼리 제한을 해제함
         ------------------------------------------------------------------ */
         .native-ad-list-item {
-            display: flex; /* 💡 수정: 기본값 flex로 변경하여 데스크탑 노출 허용 */
+            display: flex; 
             align-items: center;
             justify-content: center;
             text-align: center;
@@ -605,7 +518,7 @@
             margin: 0;
             font-weight: normal;
             font-size: 15px;
-            width: 100%;   /* 부모 UL(li) 폭을 그대로 사용 */
+            width: 100%;   
             height: auto;
             overflow: visible;
             transition: none;
@@ -634,7 +547,7 @@
         }
         .related-list li {
             position: relative;
-            padding: 10px 0 12px 0; /* 기본: 좌측 패딩 없음, 세로 여백만 */
+            padding: 10px 0 12px 0; 
             font-size: 14px;
             line-height: 1.5;
         }
@@ -644,7 +557,7 @@
 
         /* 기사 LI(번호 표시 대상)에만 번호/좌측 패딩 적용 */
         .related-list li.article-item {
-            padding-left: 26px; /* 좌측 번호 영역 확보 */
+            padding-left: 26px; 
         }
 
         /* 기본: 기사 LI(.article-item)에 대해서만 카운터 증가 + 숫자 노출 */
@@ -662,7 +575,7 @@
 
         /* Native 광고 LI: 카운터 증가 X, 화면상 라벨/번호 없음 */
         .related-list .native-ad-list-item::before {
-            counter-increment: none;  /* 기사 카운트에 영향 없음 */
+            counter-increment: none; 
             content: "";
         }
 
@@ -683,8 +596,6 @@
 
         /* ------------------------------------------------------------------
            디바이스별 광고 노출 제어 – .ad-tc, .ad-mr
-           - ad-tc: 상단 TC 빌보드 그룹
-           - ad-mr: 우측 MR 사이드 레일 그룹
         ------------------------------------------------------------------ */
         .ad-tc,
         .ad-mr {
@@ -693,8 +604,6 @@
 
         /* ------------------------------
            데스크탑 레이아웃 (>= 1025px)
-           - 우측 컬럼 최소 336px 확보
-           - MR_side_rail_X 노출
         ------------------------------ */
         @media (min-width: 1025px) {
             .ad-tc {
@@ -720,7 +629,6 @@
 
         /* ------------------------------
            태블릿/모바일 레이아웃 (<= 1024px)
-           - 우측 컬럼 아래로 내려오고 폭 100%
         ------------------------------ */
         @media (max-width: 1024px) {
             .content-wrap {
@@ -731,8 +639,6 @@
                 max-width: none;
                 position: static;
             }
-            
-            /* Native LI 노출 제어는 위쪽 기본값(display: flex)으로 통일됨 */
         }
 
         /* ------------------------------------------------------------------
@@ -985,22 +891,23 @@
         // - 이 블록은 View/Home/Section/List GPT에서 공통으로 사용할 수 있는
         //   IntersectionObserver 기반 Lazy Load 구현 패턴입니다.
         //
-        // - 💡 [수정 작업 5] 최적화: 소수의 FALSE(즉시 로드) 슬롯만 관리하는 제외 방식
+        // - 💡 [수정 작업 5] 최적화: 소수의 EAGER(즉시 로드) 슬롯만 관리하는 제외 방식
         //   · LAZY_AD_SLOT_IDS (상수) → EAGER_AD_SLOT_IDS (관리 포인트)로 변경
         //   · 제외 목록에 없는 슬롯만 자동으로 Lazy Load 대상으로 수집
         //
         // - 구성 요소:
-        //   · EAGER_AD_SLOT_IDS     : 즉시 로드(Eager) 대상 광고 div id 리스트
-        //   · lazyAdSlotsHTML       : DOM에서 관찰할 실제 요소 목록 (자동 수집)
-        //   · lazyGamSlots          : GAM에 정의된 슬롯 객체 목록 (자동 수집)
-        //   · lazyObserver          : IntersectionObserver 인스턴스
+        //   · EAGER_AD_SLOT_IDS      : 즉시 로드(Eager) 대상 광고 div id 리스트
+        //   · lazyAdSlotsHTML        : DOM에서 관찰할 실제 요소 목록 (자동 수집)
+        //   · lazyGamSlots           : GAM에 정의된 슬롯 객체 목록 (자동 수집)
+        //   · lazyObserver           : IntersectionObserver 인스턴스
         //
         // - 동작 흐름:
         //   1) DOMContentLoaded 시:
-        //      · setupInArticleAds()            → 본문 내 in-article 슬롯 재배치
-        //      · shufflePopularNewsNativeAds()  → 우측 Native 광고 셔플 먼저 실행 (DOM 위치 확정)
-        //      · setupLazyLoading()             → Lazy 대상 자동 수집 (EAGER 제외) + Eager 슬롯 즉시 refresh
-        //      · startObservingLazySlots()      → IntersectionObserver 관찰 시작
+        //      · setupInArticleAds()             → 본문 내 in-article 슬롯 재배치
+        //      · shufflePopularNewsNativeAds()   → 우측 Native 광고 셔플 먼저 실행 (DOM 위치 확정)
+        //      · setupLazyLoading()              → Lazy 대상 자동 수집 (EAGER 제외)
+        //                                          (💡 수정: Eager 슬롯 refresh는 Head에서 이미 수행됨)
+        //      · startObservingLazySlots()       → IntersectionObserver 관찰 시작
         //   2) 사용자가 스크롤해서 광고 div가 뷰포트 근처에 도달하면:
         //      · observer 콜백에서 해당 slotId에 대해
         //        googletag.display(slotId) + pubads().refresh([slot]) 호출
@@ -1012,16 +919,16 @@
         const width = window.innerWidth;
         const isDesktop = !(/mobile|android|iphone|ipod/.test(userAgent) && !/ipad/.test(userAgent)) && width > 1024;
 
-        // 💡 [수정 작업 5] 즉시 로딩(Eager)이 필요한 슬롯만 정의 (소수 관리)
+        // 💡 [수정 내용] Head에서 호출한 Eager 슬롯들을 Lazy 감시 목록에서 확실히 제외하기 위해 정의
         const EAGER_AD_SLOT_IDS = [
-            'TC_billboard_leaderboard', // 상단 빌보드 (Home/Section 등에서 사용, 안전장치)
+            'TC_billboard_leaderboard', // 상단 빌보드 (안전장치)
             'TC_billboard_X'            // View 상단 빌보드
         ];
 
-        // 💡 [수정 작업 3, 5] 데스크톱일 때 추가로 즉시 로드할 슬롯들 반영
+        // 💡 [수정 내용] 데스크톱일 경우, Head에서 호출된 추가 Eager 슬롯들도 제외 목록에 포함
         if (isDesktop) {
             EAGER_AD_SLOT_IDS.push('MR_side_rail_X'); // 우측 레일
-            EAGER_AD_SLOT_IDS.push('BC_native_list_1', 'BC_native_list_2'); // Native 리스트 광고 (데스크톱 Eager)
+            EAGER_AD_SLOT_IDS.push('BC_native_list_1', 'BC_native_list_2'); // Native 리스트 광고
         }
 
         let lazyAdSlotsHTML = []; 
@@ -1030,32 +937,6 @@
 
         // ==========================================================
         // 함수 1. 본문 in-article 광고 동적 주입
-        //
-        // [핵심 개념 정리]
-        // - 목적:
-        //   · 기사마다 본문 길이/구성이 달라져도,
-        //     in-article 광고가 "적절한 간격"으로 노출되도록 동적으로 위치를 계산합니다.
-        //
-        // - 기준:
-        //   · "텍스트 높이"만을 누적하여, 순수 텍스트 기준 거리로 뷰포트 간격을 계산합니다.
-        //   · 이미지/영상/데이터박스 등 시각 블록은 거리 계산에서는 제외하되,
-        //     "이후 광고 최소 간격"을 따로 적용합니다.
-        //
-        // - 규칙:
-        //   1) 짧은 기사(totalTextHeight < 1 뷰포트):
-        //      · 가장 마지막 본문 블록 뒤에 MC_article_rectangle_1 하나만 삽입
-        //      · 나머지 in-article 슬롯(MC_article_rectangle_2~8)은 DOM 제거 + GAM 슬롯 destroy
-        //
-        //   2) 일반 기사:
-        //      · 광고 간 최소 간격: VIEWPORT_GAP_BETWEEN_ADS (1.0 뷰포트)
-        //      · 마지막 시각 블록 이후 최소 간격: VIEWPORT_AFTER_VISUAL_MIN (0.5 뷰포트)
-        //      · 시각 블록(이미지/iframe/테이블 등) 바로 위/아래에는 광고를 붙이지 않음
-        //        (독자 경험 보호)
-        //
-        // - 기사 내용 변경 시:
-        //   · 이 JS는 "현재 렌더된 .article-body DOM 상태"를 기준으로만 계산합니다.
-        //   · CMS에서 본문 구조가 변하거나 문단이 늘어나는 경우에도,
-        //     페이지 로딩 시점에 다시 계산되므로 새로운 본문 구조에 맞게 배치됩니다.
         // ==========================================================
         function setupInArticleAds() {
             const MC_IN_ARTICLE_SLOT_IDS = [
@@ -1324,17 +1205,11 @@
                         !EAGER_AD_SLOT_IDS.includes(slot.getSlotElementId())
                     );
 
-                    // [추가 기능] 즉시 로드 대상(Eager)은 이 시점에 바로 refresh 호출
-                    const eagerSlots = definedSlots.filter(slot =>
-                        EAGER_AD_SLOT_IDS.includes(slot.getSlotElementId())
-                    );
-                    if (eagerSlots.length > 0) {
-                        // TC_billboard_X 등 이미 상단에서 호출된 것과 중복되지 않도록 refresh
-                        // (필요 시 중복 호출 방지 로직 추가 가능, 여기서는 명시적 호출 보장)
-                        // 단, display()는 body 내 script에서 이미 처리됨을 가정하거나 확인 필요
-                        googletag.pubads().refresh(eagerSlots);
-                        console.log("⚡ [Eager Load] Immediate refresh for:", eagerSlots.map(s => s.getSlotElementId()));
-                    }
+                    /* ❌ [삭제/주석처리] 
+                       기존 코드에 있던 "이 시점에 Eager 슬롯 refresh 호출" 로직은 제거합니다.
+                       이유: 상단 <head>의 마지막 스크립트에서 Eager 슬롯(TC, MR, Native)을
+                             이미 일괄적으로 refresh() 했기 때문에, 여기서 중복 호출할 필요가 없습니다.
+                    */
                 });
             }
 
@@ -1405,30 +1280,6 @@
 
         // ==========================================================
         // 함수 3. "이 시각 주요 뉴스" 내 Native Ad 슬롯 랜덤 배치
-        //
-        // - 요구사항 정리
-        //   · 뉴스 목록(기사 LI)의 "순서"와 "번호"는 항상 고정
-        //     → HTML에 정의된 기사 순서를 그대로 유지
-        //   · 광고 LI(BC_native_list_1, BC_native_list_2)만
-        //     기사 사이의 여러 후보 위치 중 랜덤하게 삽입
-        //   · CSS 카운터 구조와 결합하여
-        //     기사 번호는 1~5로 연속 유지, 광고는 별도 라벨 없이 노출
-        //
-        // - 구현 방식
-        //   1) UL(.related-list) 하위 LI를 기사/광고로 분리
-        //   2) 기사 LI 배열(articleItems)의 순서는 절대 변경하지 않음
-        //   3) "기사 사이 틈(gap)" 목록을 구성
-        //      · gap index = 1 ~ (기사 개수 - 1)
-        //      · 예: 기사 5개 → gap 후보는 [1,2,3,4]
-        //      · gap = 2 라는 의미는 "2번 기사 뒤"를 의미
-        //   4) 광고 개수만큼 gap을 랜덤 선택 + 광고 배열 자체도 랜덤 셔플
-        //   5) 새 UL을 구성할 때:
-        //      · 기사 i를 append
-        //      · 만약 i 뒤에 광고를 넣기로 한 gap이면, 그 다음에 광고 LI를 append
-        //
-        // - 결과
-        //   · 기사 노출 순서/번호: 항상 동일
-        //   · 광고 위치/순서: 페이지 로드마다 무작위
         // ==========================================================
         function shufflePopularNewsNativeAds() {
             const relatedList = document.querySelector('.related-list');
@@ -1518,19 +1369,6 @@
 
         // ==========================================================
         // DOMContentLoaded 시점에 주요 로직 실행
-        //
-        // - View GPT에서 DOMContentLoaded를 사용하는 이유:
-        //   · 기사 본문(.article-body) DOM 구조가 완전히 구성된 이후에
-        //     in-article 광고 위치를 계산해야 하기 때문입니다.
-        //   · 이미지/임베드 등의 높이는 레이아웃에 영향을 주지만,
-        //     이 로직에서는 "텍스트 기준 거리"만 누적하므로
-        //     DOM이 준비된 시점에 getBoundingClientRect()를 사용하는 것이 안정적입니다.
-        //
-        // - 실행 순서:
-        //   1) setupInArticleAds()            → 본문 내 in-article 동적 배치 + 미사용 슬롯 제거
-        //   2) shufflePopularNewsNativeAds()  → (✅ 순서 변경됨) 우측 Native 광고 셔플 먼저 실행 (DOM 위치 확정)
-        //   3) setupLazyLoading()             → Lazy 대상 수집 + GAM 슬롯 매핑 + Observer 생성
-        //   4) startObservingLazySlots()      → IntersectionObserver 관찰 시작
         // ==========================================================
         document.addEventListener('DOMContentLoaded', function () {
             setupInArticleAds();             // 본문 in-article 광고 동적 주입
