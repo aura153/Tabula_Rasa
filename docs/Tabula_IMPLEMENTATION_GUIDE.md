@@ -173,23 +173,17 @@ googletag.pubads().setTargeting('keywords', '동적입력');
 - `device_category, page_type, section_home_nm, section_front_nm, section_list_nm, SOURCE_ID` 등
 
 #### 2.2.3 공통 GAM 설정 패턴
+    ```javascript
+    googletag.setConfig({
+        singleRequest: true,        // SRA(Single Request Architecture) 활성화
+        disableInitialLoad: true,   // 초기 로드 방지 (Lazy Load 필수 전제) ; 모든 슬롯은 **display() + refresh()**가 호출될 때만 요청
+        centering: true,            // 크리에이티브 수평 중앙 정렬
+        collapseDiv: 'BEFORE_FETCH' // 빈 슬롯 영역 선제적 붕괴 (CLS 방지); 광고가 없거나 요청 전인 슬롯은 **0px로 접힘**
+    });
 
-```js
-googletag.pubads().enableSingleRequest();
-googletag.pubads().disableInitialLoad();
-googletag.pubads().setPublisherProvidedId('PPID_DYNAMIC_HASHED_ID (SERVER_HASHED_ID)');
-googletag.setConfig({
-  centering: true,
-  collapseDiv: 'BEFORE_FETCH'
-});
-googletag.pubads().addEventListener('slotRenderEnded', addAdLabel);
+googletag.pubads().addEventListener('slotRenderEnded', addAdLabel); //`slotRenderEnded + addAdLabel()`; 렌더 완료 시 자동으로 “Advertisement” 라벨 삽입
 googletag.enableServices();
 ```
-
-- `enableSingleRequest()` : SRA 기반 요청
-- `disableInitialLoad()` : 모든 슬롯은 **display() + refresh()**가 호출될 때만 요청
-- `collapseDiv: 'BEFORE_FETCH'` : 광고가 없거나 요청 전인 슬롯은 **0px로 접힘**
-- `slotRenderEnded + addAdLabel()` : 렌더 완료 시 자동으로 “Advertisement” 라벨 삽입
 
 ### 2.3 수익화 관점 (Monetization)
 
@@ -212,7 +206,7 @@ googletag.enableServices();
 ### 2.4 SEO & Performance (Core Web Vitals 관점)
 
 1. **초기 로딩 부담 최소화**
-   - 상단 핵심 슬롯(예: HOME `TC_billboard_leaderboard`, View `TC_billboard_X`)만 **Eager**
+   - 상단 핵심 슬롯(예: HOME `TC_billboard_leaderboard`, View `TC_billboard_X`) 등 **Eager**
    - 그 외 중단/하단/사이드/인아티클 광고는 모두 Lazy
    - => HTML / 주요 기사 콘텐츠가 먼저 렌더링 → **LCP, FCP 개선**
 2. **화이트 스페이스 및 CLS 최소화**
@@ -228,7 +222,7 @@ googletag.enableServices();
    - `setupInArticleAds()`에서 문단/시각 블록 구조를 분석
    - 텍스트 기준 누적 높이로 광고 삽입 위치 계산
    - 짧은 기사에는 1개만 사용 후 나머지 슬롯은 `destroy`
-3. **데이터 절약 & 배터리 효율**
+3. **리소스 효율**
    - **IntersectionObserver** 기반 Lazy Load로  
      보지 않는 영역 광고에 대한 네트워크 요청 자체를 지연/생략
    - 모바일에서 자원(통신, 트래픽/배터리) 소비 절감
