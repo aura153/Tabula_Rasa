@@ -15,7 +15,7 @@
             --c-txt: #212121;
             --c-line: #dadada;
             --c-source: #888888;
-            --c-ad-bg: rgba(165, 165, 165, 0.7); /* 이전 요청 스타일 계승 */
+            --c-ad-bg: rgba(165, 165, 165, 0.7); /* 기존 attribution 스타일 */
             --c-ad-txt: #ffffff;
         }
 
@@ -58,16 +58,14 @@
         @media only screen and (min-width: 768px) {
             .widget-grid { grid-template-columns: repeat(4, 1fr); } 
             .grid-item {
-                padding: 12.5px 12px; /* 900px 너비에 맞춰 내부 여백 소폭 조정 */
+                padding: 12.5px 15px; /* 세로 여백 25px 유지 (상하 12.5) */
                 border-left: 1px solid var(--c-line);
                 display: flex; flex-direction: column;
             }
-            /* 4열 기준 구분선 제어 */
+            /* 4열 기준 구분선 및 패딩 최적화 */
             .grid-item:nth-child(4n+1) { border-left: none; padding-left: 0; }
             .grid-item:nth-child(4n) { padding-right: 0; }
         }
-
-        /*  */
 
         /* [6. Smartphone (< 768px) Grid] */
         @media only screen and (max-width: 767px) {
@@ -96,29 +94,29 @@
         }
         .grid-item a:hover img { transform: scale(1.05); }
 
-        /* AD 뱃지 (기존 attribution 스타일 계승) */
+        /* AD 뱃지 스타일 */
         .grid-item.is-ad .img-wrapper::after {
             content: 'AD'; position: absolute; top: 0; left: 0;
             background-color: var(--c-ad-bg); color: var(--c-ad-txt);
             font-size: 1.1rem; font-weight: 400; padding: 3px 7px; z-index: 10;
         }
 
-        /* Typography */
+        /* [8. Typography] - 폰트 크기 원복 (기존 요청값 유지) */
         .txt-area { padding-top: 15px; }
         .ad-title {
-            font-size: 1.45rem; /* 900px 너비 가독성을 위해 소폭 축소 */
+            font-size: 1.6rem; /* 기존 1.6rem 복구 */
             font-weight: 600; line-height: 1.4; color: var(--c-txt);
-            margin: 0 0 10px 0 !important; 
+            margin: 0 0 10px 0 !important; /* 기사제목-출처 사이 여백 10px */
             display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
-            overflow: hidden; min-height: 4.0rem;
+            overflow: hidden; min-height: 4.4rem; /* 1.6rem * 1.4 * 2줄 높이 확보 */
         }
 
         .bottom-info { display: flex; justify-content: space-between; align-items: center; }
-        .source { font-size: 1.2rem; color: var(--c-source); font-weight: 400; }
+        .source { font-size: 1.25rem; color: var(--c-source); font-weight: 400; } /* 기존 1.25rem 복구 */
 
         .cta-button {
-            padding: 3px 6px; border: 1px solid var(--c-line); border-radius: 2px;
-            font-size: 1.0rem; font-weight: 600; color: var(--c-txt); background: var(--c-bg);
+            padding: 3px 8px; border: 1px solid var(--c-line); border-radius: 2px;
+            font-size: 1.1rem; font-weight: 600; color: var(--c-txt); background: var(--c-bg);
             white-space: nowrap;
         }
     </style>
