@@ -58,6 +58,8 @@ const sizeMapping_article_horizontal = googletag.sizeMapping()
         [480, 320], [336, 280], [320, 480], 
 (이하생략)
 
+ ## sizeMapping_article_horizontal 이 적용되는 슬롯(MC_article_rectangle_1~8)에서 [750, 300] , 768 폭에서 '[750, 300], [750, 200], [728, 90], ' 사이즈 삭제 ##
+
 # 5차 업데이트(2026.01.05)
             // --- [rootMargin 최적화: 디바이스별 rootMargin 동적 할당] ---
             /*
