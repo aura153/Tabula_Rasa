@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Premier View GPT (Layout Update: Sticky Title & 3-Col)</title>
+    <title>Premier View GPT (Ad Position Update)</title>
 
     <script async src="https://securepubads.g.doubleclick.net/tag/js/gpt.js"></script>
     <script>
@@ -228,236 +228,86 @@
         }
         a { text-decoration: none; color: inherit; }
 
-        /* * [레이아웃 실험: Premier 3단 구조]
-         * - .premier-layout: 좌측 액션바 + 타이틀 사이드바 + 메인 콘텐츠
-         */
-        .premier-layout {
-            display: flex;
-            max-width: 1246px; 
-            margin: 0 auto;
-            padding-top: 40px;
-            gap: 30px;
-            justify-content: center; /* 전체 중앙 정렬 */
-        }
-
-        /* 1. 좌측 스티키 액션 바 (Column 1) */
-        .left-action-bar {
-            flex: 0 0 60px;
-            position: sticky;
-            top: 100px;
-            height: fit-content;
-            display: flex;
-            flex-direction: column;
-            gap: 20px;
-            align-items: center;
-            padding-right: 10px;
-        }
-
-        .action-icon {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            border: 1px solid #ddd;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            font-size: 18px;
-            color: #555;
-            transition: all 0.2s;
-        }
+        /* 레이아웃 구조 */
+        .premier-layout { display: flex; max-width: 1246px; margin: 0 auto; padding-top: 40px; gap: 30px; justify-content: center; }
+        
+        .left-action-bar { flex: 0 0 60px; position: sticky; top: 100px; height: fit-content; display: flex; flex-direction: column; gap: 20px; align-items: center; padding-right: 10px; }
+        .action-icon { width: 40px; height: 40px; border-radius: 50%; border: 1px solid #ddd; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 18px; color: #555; transition: all 0.2s; }
         .action-icon:hover { background-color: #f5f5f5; color: #000; }
         .action-label { font-size: 11px; color: #888; margin-top: -15px; }
 
-        /* 2. 타이틀 & 정보 사이드바 (Column 2 - Sticky) 
-         * - 노란색 하이라이트 된 영역을 이쪽으로 이동
-         */
-        .title-sidebar {
-            flex: 0 0 280px; 
-            position: sticky;
-            top: 100px;
-            height: fit-content;
-            border-right: 1px solid #eee; /* 구분선 */
-            padding-right: 30px;
-            text-align: left;
-        }
+        .title-sidebar { flex: 0 0 280px; position: sticky; top: 100px; height: fit-content; border-right: 1px solid #eee; padding-right: 30px; text-align: left; }
 
-        /* 3. 메인 콘텐츠 영역 (Column 3 - Max 700px) */
-        .article-container {
-            flex: 0 1 700px; /* flex-grow 0, flex-shrink 1, basis 700px */
-            max-width: 700px; 
-            min-width: 0; /* Flexbox overflow 방지 */
-        }
+        .article-container { flex: 0 1 700px; max-width: 700px; min-width: 0; }
 
-        /* Header (M Premier 스타일) */
-        header {
-            width: 100%;
-            background-color: #fff;
-            border-bottom: 1px solid #eee;
-            padding: 15px 0;
-        }
-        .header-inner {
-            max-width: 1246px;
-            margin: 0 auto;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 0 10px;
-        }
-        .logo { 
-            font-size: 24px; 
-            font-weight: 800; 
-            color: #000; 
-            display: flex; 
-            align-items: center; 
-            gap: 5px; 
-        }
+        /* Header */
+        header { width: 100%; background-color: #fff; border-bottom: 1px solid #eee; padding: 15px 0; }
+        .header-inner { max-width: 1246px; margin: 0 auto; display: flex; align-items: center; justify-content: space-between; padding: 0 10px; }
+        .logo { font-size: 24px; font-weight: 800; color: #000; display: flex; align-items: center; gap: 5px; }
         .logo span { color: #FF6600; } 
-
-        .header-nav {
-            display: flex;
-            gap: 25px;
-            font-size: 15px;
-            font-weight: 500;
-            color: #333;
-        }
+        .header-nav { display: flex; gap: 25px; font-size: 15px; font-weight: 500; color: #333; }
         .header-nav span { cursor: pointer; }
         .header-icons { display: flex; gap: 15px; font-size: 18px; }
 
-        /* Title Sidebar Styles */
-        .badge-area { margin-bottom: 20px; }
-        .badge {
-            display: inline-block;
-            padding: 4px 8px;
-            background-color: #fce8cc; /* 연한 주황 배경 */
-            color: #e65f00;
-            font-size: 12px;
-            font-weight: bold;
-            border-radius: 4px;
-            margin-right: 5px;
-            margin-bottom: 5px;
-        }
+        /* Sidebar Elements */
+        .badge { display: inline-block; padding: 4px 8px; background-color: #fce8cc; color: #e65f00; font-size: 12px; font-weight: bold; border-radius: 4px; margin-right: 5px; margin-bottom: 5px; }
         .badge-tag { color: #666; font-size: 13px; display: inline-block; }
-
-        .article-header h1 {
-            font-size: 32px; /* 사이드바 폭에 맞춰 조정 */
-            line-height: 1.4;
-            margin: 0 0 30px 0;
-            font-weight: 700;
-            letter-spacing: -0.5px;
-            color: #111;
-            word-break: keep-all;
-        }
-        
-        .article-byline {
-            display: flex;
-            flex-direction: column;
-            margin-bottom: 30px;
-            font-size: 14px;
-            color: #777;
-        }
+        .article-header h1 { font-size: 32px; line-height: 1.4; margin: 0 0 30px 0; font-weight: 700; letter-spacing: -0.5px; color: #111; word-break: keep-all; }
+        .article-byline { display: flex; flex-direction: column; margin-bottom: 30px; font-size: 14px; color: #777; }
         .journalist { font-weight: bold; color: #000; margin-bottom: 5px; font-size: 15px; }
-
-        .sidebar-summary-box {
-            background-color: #f9f9f9;
-            border-radius: 8px;
-            padding: 20px;
-            font-size: 14px;
-            line-height: 1.6;
-            color: #444;
-        }
+        .sidebar-summary-box { background-color: #f9f9f9; border-radius: 8px; padding: 20px; font-size: 14px; line-height: 1.6; color: #444; }
         .sidebar-summary-box strong { display: block; margin-bottom: 10px; color: #000; font-size: 15px;}
 
-        /* Main Body Styles */
-        .article-body { 
-            font-size: 18px; 
-            line-height: 1.8; 
-            word-break: keep-all; 
-            color: #222;
-            margin-bottom: 60px; 
-        }
+        /* Main Body */
+        .article-body { font-size: 18px; line-height: 1.8; word-break: keep-all; color: #222; margin-bottom: 60px; }
         .article-body p { margin-bottom: 24px; }
-        
-        .article-image { margin: 0 0 30px 0; /* 상단 여백 제거 */ }
+        .article-image { margin: 0 0 30px 0; }
         .article-image img { width: 100%; border-radius: 4px; display: block;}
         .img-caption { font-size: 13px; color: #777; margin-top: 10px; border-bottom: 1px solid #eee; padding-bottom: 15px; }
-
-        /* YouTube Optimization (Responsive) */
         .article-embed { margin: 25px 0; }
-        .embed-wrapper {
-            position: relative;
-            width: 100%;
-            padding-bottom: 56.25%; /* 16:9 Aspect Ratio */
-            height: 0;
-            overflow: hidden;
-            background-color: #000;
-        }
-        .embed-wrapper iframe {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            border: 0;
-        }
-        .embed-caption { font-size: 13px; color: #888; margin-top: 5px; }
+        .embed-wrapper { position: relative; width: 100%; padding-bottom: 56.25%; height: 0; overflow: hidden; background-color: #000; }
+        .embed-wrapper iframe { position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: 0; }
+        .dummy-data-box { background-color: #f9f9f9; border-left: 4px solid #333; padding: 20px; margin: 30px 0; font-size: 16px; }
 
-        /* 광고 슬롯 스타일 (700px 폭 실험) */
-        .ad-slot {
-            position: relative;
-            text-align: center;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin: 0 auto;
-            box-sizing: border-box;
-            padding: 10px 0 0 0;
-            width: 100%;    
-            height: auto;   
-            z-index: 10;
-        }
-        
-        .mk-ad-label {
-            position: absolute;
-            top: -15px;
-            left: 50%;
-            transform: translateX(-50%);
-            z-index: 100;
-            padding: 0;
-            background-color: transparent;
-            color: #999;
-            font-size: 11px;
-            text-transform: uppercase;
-        }
+        /* 광고 슬롯 */
+        .ad-slot { position: relative; text-align: center; display: flex; align-items: center; justify-content: center; margin: 0 auto; box-sizing: border-box; padding: 10px 0 0 0; width: 100%; height: auto; z-index: 10; }
+        .mk-ad-label { position: absolute; top: -15px; left: 50%; transform: translateX(-50%); z-index: 100; padding: 0; background-color: transparent; color: #999; font-size: 11px; text-transform: uppercase; }
 
         /* 하단 콘텐츠 섹션 */
-        .bottom-content-area, .comment-section, .extra-content-section {
-            width: 100%; /* 부모(article-container, 700px)를 따름 */
-            margin-bottom: 50px;
-        }
+        .bottom-content-area, .comment-section, .extra-content-section { width: 100%; margin-bottom: 50px; }
+        .bottom-section-title { font-size: 18px; font-weight: 800; color: #000; border-bottom: 2px solid #000; padding-bottom: 10px; margin-bottom: 20px; margin-top: 40px; }
 
-        .bottom-section-title {
-            font-size: 20px;
-            font-weight: bold;
-            margin-bottom: 15px;
-            border-bottom: 2px solid #000;
-            padding-bottom: 10px;
-        }
+        /* Lists & Grids */
+        .premier-list, .premier-rank-list, .comment-list { list-style: none; padding: 0; margin: 0; }
+        .premier-list li { display: flex; justify-content: space-between; align-items: flex-start; padding: 20px 0; border-bottom: 1px solid #eee; gap: 20px; cursor: pointer; }
+        .premier-list li:hover .list-text h4 { text-decoration: underline; }
+        .list-text { flex: 1; }
+        .list-text h4 { font-size: 16px; font-weight: bold; margin: 0 0 8px 0; line-height: 1.4; color: #222; }
+        .list-text p { font-size: 13px; color: #666; margin: 0; line-height: 1.5; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+        .list-thumb { width: 120px; height: 80px; border-radius: 4px; overflow: hidden; flex-shrink: 0; background-color: #eee; }
+        .list-thumb img { width: 100%; height: 100%; object-fit: cover; }
 
-        .related-list, .comment-list, .popular-list {
-            list-style: none;
-            padding: 0;
-            margin: 0;
-        }
-        .related-list li, .comment-list li, .popular-list li {
-            padding: 12px 0;
-            border-bottom: 1px solid #eee;
-            font-size: 16px;
-            line-height: 1.5;
-        }
-        .related-list li a:hover, .popular-list li:hover { text-decoration: underline; cursor: pointer; }
+        .premier-rank-list li { display: flex; align-items: flex-start; padding: 20px 0; border-bottom: 1px solid #eee; gap: 15px; cursor: pointer; }
+        .rank-num { font-size: 24px; font-weight: 800; color: #000; line-height: 1; width: 25px; flex-shrink: 0; }
+        .rank-content { flex: 1; }
+        .rank-content h4 { font-size: 16px; margin: 0 0 5px 0; line-height: 1.4; color: #222; }
+        .rank-tag { font-size: 12px; color: #888; font-weight: bold; }
+        .rank-thumb { width: 100px; height: 66px; border-radius: 4px; overflow: hidden; flex-shrink: 0; background-color: #eee; }
+        .rank-thumb img { width: 100%; height: 100%; object-fit: cover; }
 
-        /* 다크모드 대응 */
+        .grid-gallery { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; }
+        .grid-item { cursor: pointer; }
+        .grid-thumb { width: 100%; padding-bottom: 66%; position: relative; border-radius: 4px; overflow: hidden; background-color: #eee; margin-bottom: 10px; }
+        .grid-thumb img { position: absolute; top:0; left:0; width:100%; height:100%; object-fit: cover; transition: transform 0.3s; }
+        .grid-item:hover img { transform: scale(1.05); }
+        .grid-title { font-size: 14px; font-weight: bold; line-height: 1.4; color: #333; }
+
+        .shorts-container { display: flex; gap: 15px; }
+        .shorts-item { flex: 1; aspect-ratio: 9 / 16; background-color: #000; border-radius: 8px; overflow: hidden; position: relative; }
+        .shorts-item iframe { width: 100%; height: 100%; border: none; }
+
+        .comment-list li { padding: 15px 0; border-bottom: 1px solid #eee; font-size: 15px; }
+
         @media (prefers-color-scheme: dark) {
             body { background-color: #1a1a1a; color: #e0e0e0; }
             header { background-color: #1a1a1a; border-bottom-color: #444; }
@@ -471,41 +321,22 @@
             .article-body { color: #d0d0d0; }
             .action-icon { border-color: #444; color: #ccc; }
             .action-icon:hover { background-color: #333; color: #fff; }
-            .related-list li, .comment-list li, .popular-list li { border-bottom-color: #333; }
-            .bottom-section-title { border-bottom-color: #666; }
+            .bottom-section-title { border-bottom-color: #666; color: #e0e0e0; }
             .mk-ad-label { color: #666; }
             .badge { background-color: #4a2c10; color: #ff9d5c; }
             .badge-tag { color: #999; }
+            .premier-list li, .premier-rank-list li, .comment-list li { border-bottom-color: #333; }
+            .list-text h4, .rank-content h4, .grid-title { color: #e0e0e0; }
+            .list-text p { color: #999; }
+            .rank-num { color: #e0e0e0; }
         }
-        
-        /* 모바일 대응 (반응형) */
+
         @media (max-width: 1024px) {
-            .premier-layout {
-                flex-direction: column;
-                padding-top: 20px;
-                gap: 20px;
-            }
-            .left-action-bar { 
-                display: none; /* 모바일에서는 좌측 액션바 숨김 (보통 하단 고정바 등으로 대체) */
-            }
-            .title-sidebar {
-                flex: none;
-                width: 100%;
-                position: static;
-                border-right: none;
-                padding-right: 0;
-                padding: 0 15px;
-                box-sizing: border-box;
-                border-bottom: 1px solid #eee;
-                padding-bottom: 20px;
-            }
-            .article-header h1 { font-size: 26px; }
-            .article-container {
-                max-width: 100%;
-                flex: none;
-                padding: 0 15px;
-                box-sizing: border-box;
-            }
+            .premier-layout { flex-direction: column; padding-top: 20px; gap: 20px; }
+            .left-action-bar { display: none; }
+            .title-sidebar { flex: none; width: 100%; position: static; border-right: none; padding: 0 15px; border-bottom: 1px solid #eee; padding-bottom: 20px; }
+            .article-container { max-width: 100%; flex: none; padding: 0 15px; }
+            .grid-gallery { grid-template-columns: repeat(2, 1fr); }
         }
     </style>
 </head>
@@ -533,16 +364,11 @@
     <div class="premier-layout">
         
         <aside class="left-action-bar">
-            <div class="action-icon">🔗</div>
-            <span class="action-label">공유</span>
-            <div class="action-icon">A+</div>
-            <span class="action-label">크게</span>
-            <div class="action-icon">🖨️</div>
-            <span class="action-label">인쇄</span>
-            <div class="action-icon">🔖</div>
-            <span class="action-label">저장</span>
-            <div class="action-icon">💬</div>
-            <span class="action-label">댓글</span>
+            <div class="action-icon">🔗</div><span class="action-label">공유</span>
+            <div class="action-icon">A+</div><span class="action-label">크게</span>
+            <div class="action-icon">🖨️</div><span class="action-label">인쇄</span>
+            <div class="action-icon">🔖</div><span class="action-label">저장</span>
+            <div class="action-icon">💬</div><span class="action-label">댓글</span>
         </aside>
 
         <aside class="title-sidebar">
@@ -560,7 +386,6 @@
                 <span class="journalist">임형준 기자</span>
                 <span class="datetime">입력 : 2026.01.16 06:00</span>
             </div>
-            
             <div class="sidebar-summary-box">
                 <strong>뉴스 쉽게보기 M+ 최신 글</strong>
                 <ul style="padding-left: 20px; margin: 0;">
@@ -578,44 +403,49 @@
             </div>
 
             <div class="article-body">
-                <p>최근 며칠 동안 세계의 언론들은 한 중동 국가에서 벌어진 대규모 시위 장면을 열심히 전하고 있어요. 거리의 건물과 차량 등 곳곳에서 빨갛게 솟아오르는 불길은 상황이 얼마나 심각한지를 명확하게 보여줘요. 많은 이들이 이미 목숨을 잃었고, 그 숫자는 빠르게 늘어날 거라는 걱정도 커져만 가요.</p>
+                <p>최근 며칠 동안 세계의 언론들은 한 중동 국가에서 벌어진 대규모 시위 장면을 열심히 전하고 있어요. 거리의 건물과 차량 등 곳곳에서 빨갛게 솟아오르는 불길은 상황이 얼마나 심각한지를 명확하게 보여줘요. 많은 이들이 이미 목숨을 잃었고, 그 숫자는 빠르게 늘어날 거라는 걱정도 커져만 가요. 이란 전역으로 확산된 이번 시위는 단순한 정치적 반대를 넘어, 수십 년간 누적된 경제적 빈곤과 사회적 억압에 대한 분노가 폭발한 것으로 해석됩니다.</p>
+                
+                <p>시민들은 "빵, 일자리, 자유"를 외치며 거리로 쏟아져 나왔습니다. 특히 젊은 층의 참여가 두드러지는데, 이는 이란의 높은 청년 실업률과 암울한 미래에 대한 절망감을 반영합니다. 소셜 미디어를 통해 공유되는 현장의 영상들은 시위대의 절박함과 정부의 무자비한 진압을 생생하게 보여주고 있습니다. 국제사회는 이란 정부에 평화적인 시위 보장과 폭력 사용 중단을 강력히 촉구하고 있습니다.</p>
 
-                <div id="MC_article_rectangle_1" class="ad-slot ad-mc-article"></div>
+                <p>지난해 12월 28일 이란에서 시작된 반정부 시위는 2주가 지나도록 계속되고 있어요. 이란 정부가 물러서지 않고 무력을 사용하면서 사상자도 발생했어요. 미국 기반 인권단체인 인권운동가통신(HRANA)은 이번 사태로 지난 13일(현지시간) 기준 약 2000명이 숨졌다고 전했어요. 사망자의 숫자는 계속해서 늘어나고 있으며, 부상자와 체포된 사람들의 수도 기하급수적으로 증가하고 있어 인권 상황에 대한 우려가 커지고 있습니다.</p>
 
-                <p>지난해 12월 28일 이란에서 시작된 반정부 시위는 2주가 지나도록 계속되고 있어요. 이란 정부가 물러서지 않고 무력을 사용하면서 사상자도 발생했어요. 미국 기반 인권단체인 인권운동가통신(HRANA)은 이번 사태로 지난 13일(현지시간) 기준 약 2000명이 숨졌다고 전했어요.</p>
+                <p>사망자 중 1847명은 시위 참가자, 135명은 군대와 경찰관 등 정부 측 관계자라고 해요. 사망자 중에는 어린이 9명, 시위대와 무관한 시민 9명 등도 포함됐대요. 체포된 인원은 1만 6700명이 넘는 것으로 이 단체는 추정했어요. 노르웨이 기반 단체인 이란인권(IHR)은 지난 14일(현지시간)까지 시위 참가자가 최소 3428명 숨진 것으로 집계했고요. 이러한 통계는 이란 정부의 공식 발표와는 큰 차이를 보이고 있어, 실제 피해 규모는 더욱 클 것으로 예상됩니다.</p>
 
-                <p>사망자 중 1847명은 시위 참가자, 135명은 군대와 경찰관 등 정부 측 관계자라고 해요. 사망자 중에는 어린이 9명, 시위대와 무관한 시민 9명 등도 포함됐대요. 체포된 인원은 1만 6700명이 넘는 것으로 이 단체는 추정했어요. 노르웨이 기반 단체인 이란인권(IHR)은 지난 14일(현지시간)까지 시위 참가자가 최소 3428명 숨진 것으로 집계했고요.</p>
+                <p>이번 시위의 원인은 복합적이지만, 경제난과 억압적인 정치 체제에 대한 불만이 폭발한 것이라는 분석이 지배적입니다. 이란 경제는 미국의 제재와 내부의 부패, 비효율적인 경제 정책으로 인해 오랫동안 침체기를 겪어왔습니다. 물가는 치솟고 화폐 가치는 폭락하여 국민들의 생활고는 극에 달했습니다. 여기에 엄격한 종교적 규율과 표현의 자유 억압이 더해져 시민들의 분노에 기름을 부었습니다.</p>
 
-                <div id="MC_article_rectangle_2" class="ad-slot ad-mc-article"></div>
-
-                <p>이번 시위의 원인은 복합적이지만, 경제난과 억압적인 정치 체제에 대한 불만이 폭발한 것이라는 분석이 지배적입니다. 특히 젊은 층을 중심으로 확산되고 있는 이번 시위는 과거와 달리 소셜 미디어를 통해 빠르게 조직화되고 있다는 점이 특징입니다.</p>
-
-                <div id="MC_article_rectangle_3" class="ad-slot ad-mc-article"></div>
+                <p>특히 이번 시위는 특정 지도자나 정당이 주도하는 것이 아니라, 일반 시민들이 자발적으로 참여하는 '풀뿌리 운동'의 성격을 띠고 있습니다. 이는 이란 사회 전반에 걸쳐 변화에 대한 열망이 얼마나 광범위하게 퍼져 있는지를 보여줍니다. 시위대는 현 정권의 퇴진뿐만 아니라, 이슬람 공화국 체제 자체에 대한 근본적인 변화를 요구하고 있습니다.</p>
 
                 <div class="article-embed">
                     <div class="embed-wrapper">
-                        <iframe
-                            src="https://www.youtube.com/embed/F0XOK4n6-e4"
-                            title="YouTube 영상: 이란 시위 현장"
-                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                            referrerpolicy="strict-origin-when-cross-origin"
-                            allowfullscreen>
-                        </iframe>
+                        <iframe src="https://www.youtube.com/embed/F0XOK4n6-e4" allowfullscreen></iframe>
                     </div>
                     <p class="embed-caption">관련 영상: 이란 테헤란 시위 현장 분석</p>
                 </div>
 
-                <div id="MC_article_rectangle_4" class="ad-slot ad-mc-article"></div>
+                <p>국제 사회도 우려의 목소리를 높이고 있습니다. 유엔은 즉각적인 폭력 중단과 대화를 촉구했으며, 서방 국가들은 이란 정부에 대한 추가 제재를 검토하고 있습니다. 그러나 이란 정부는 이번 시위를 '외세의 개입'으로 규정하며 강경 대응을 고수하고 있어 사태 해결이 쉽지 않아 보입니다. 외교적 해법을 찾기 위한 국제사회의 노력이 절실한 시점입니다.</p>
 
-                <p>국제 사회도 우려의 목소리를 높이고 있습니다. 유엔은 즉각적인 폭력 중단과 대화를 촉구했으며, 서방 국가들은 이란 정부에 대한 추가 제재를 검토하고 있습니다. 그러나 이란 정부는 이번 시위를 '외세의 개입'으로 규정하며 강경 대응을 고수하고 있어 사태 해결이 쉽지 않아 보입니다.</p>
+                <p>한편, 이번 시위는 이란 내부의 권력 투쟁과도 연관되어 있다는 분석이 나옵니다. 강경파와 온건파 사이의 갈등이 시위를 계기로 표면화되고 있으며, 이는 향후 이란의 정치 지형에 큰 변화를 가져올 수 있습니다. 최고 지도자의 건강 이상설까지 제기되면서, 권력 승계를 둘러싼 불확실성도 커지고 있는 상황입니다. 이란의 미래가 안개 속에 휩싸여 있습니다.</p>
 
-                <div id="MC_article_rectangle_5" class="ad-slot ad-mc-article"></div>
-                <div id="MC_article_rectangle_6" class="ad-slot ad-mc-article"></div>
-                <div id="MC_article_rectangle_7" class="ad-slot ad-mc-article"></div>
-                <div id="MC_article_rectangle_8" class="ad-slot ad-mc-article"></div>
+                <p>역사는 반복된다고 하지만, 이번 시위가 이란 역사에 어떤 기록으로 남을지는 아무도 장담할 수 없습니다. 47년 묵은 체제의 변화를 갈망하는 시민들의 외침이 과연 진정한 민주화로 이어질 수 있을지, 아니면 또 다른 비극으로 끝날지 지켜봐야 할 것입니다. 분명한 것은, 지금 이 순간에도 수많은 사람들이 자유를 위해 피를 흘리고 있다는 사실입니다. 그들의 희생이 헛되지 않기를 바랄 뿐입니다.</p>
 
-                <p>앞으로 이란 정세가 어떻게 흘러갈지 전 세계가 주목하고 있습니다. [끝]</p>
+                <p>우리는 이들의 목소리에 귀를 기울여야 합니다. 먼 나라의 이야기라고 외면하기에는, 인권과 자유라는 보편적 가치가 심각하게 위협받고 있기 때문입니다. 작은 관심과 연대가 모여 큰 변화를 만들어낼 수 있음을 기억해야 합니다. 이란의 봄은 과연 올 것인가, 전 세계가 숨죽여 지켜보고 있습니다. 국제사회의 지속적인 관심과 지지가 절실합니다.</p>
+
+                <p>마지막으로, 현지 교민들의 안전 또한 우려되는 상황입니다. 정부는 비상 연락망을 가동하고 만일의 사태에 대비한 대피 계획을 점검하는 등 교민 보호에 만전을 기해야 할 것입니다. 여행객들 또한 당분간 이란 방문을 자제하고, 현지 상황을 예의주시해야 합니다. 안전이 최우선입니다.</p>
+                
+                <p>이란의 상황은 중동 정세뿐만 아니라 국제 유가와 세계 경제에도 큰 영향을 미칠 수 있습니다. 에너지 수급 불안은 글로벌 인플레이션을 자극할 수 있으며, 지정학적 리스크 증가는 금융 시장의 변동성을 키울 수 있습니다. 우리 정부와 기업들도 이러한 파장에 대비하여 면밀한 모니터링과 대응책 마련이 필요합니다. 위기 속에서 기회를 찾는 지혜가 필요한 시점입니다.</p>
+
+                <p>결국, 이란 사태의 평화적 해결은 이란 국민들의 의지와 국제사회의 협력에 달려 있습니다. 대화와 타협을 통해 갈등을 해소하고, 모든 국민이 자유롭고 번영된 삶을 누릴 수 있는 새로운 이란을 만들어가기를 희망합니다. 긴 어둠 끝에 빛이 찾아오듯, 이란 땅에도 평화의 빛이 비추기를 간절히 기원합니다. [끝]</p>
             </div>
+            
+            <div id="MC_article_rectangle_1" class="ad-slot ad-mc-article"></div>
+            <div id="MC_article_rectangle_2" class="ad-slot ad-mc-article"></div>
+            <div id="MC_article_rectangle_3" class="ad-slot ad-mc-article"></div>
+            <div id="MC_article_rectangle_4" class="ad-slot ad-mc-article"></div>
+            <div id="MC_article_rectangle_5" class="ad-slot ad-mc-article"></div>
+            <div id="MC_article_rectangle_6" class="ad-slot ad-mc-article"></div>
+            <div id="MC_article_rectangle_7" class="ad-slot ad-mc-article"></div>
+            <div id="MC_article_rectangle_8" class="ad-slot ad-mc-article"></div>
+
 
             <div class="like-share-section" style="border-top: 1px solid #000; padding-top: 30px; margin-bottom: 50px;">
                 <p style="text-align: center;">이 기사가 유익했나요?</p>
@@ -624,23 +454,34 @@
                 </div>
             </div>
 
+            <div id="BC_byline_rectangle" class="ad-slot ad-bc-byline" style="margin: 40px 0;"></div>
+
             <div class="bottom-content-area">
-                <h3 class="bottom-section-title">이 시각 주요 뉴스</h3>
-                <ul class="related-list">
-                    <li><a href="#">금리 추가 인상 없을 듯... 가계 부담 완화 기대</a></li>
-                    <li><a href="#">주요 기업, 하반기 채용 규모 전년 대비 20% 확대</a></li>
-                    <li><a href="#">정부, 청년 주거 정책 특별 대책 발표</a></li>
-                    <li><a href="#">글로벌 증시, AI 기술주 실적에 따라 희비 교차</a></li>
-                    <li><a href="#">유럽 경제, 긴축 완화 시그널 포착</a></li>
-                    <li><a href="#">[속보] 코스피, 외국인 매수세에 2600선 회복</a></li>
-                    <li><a href="#">국제 유가, 중동 정세 불안에 소폭 상승</a></li>
-                    <li><a href="#">전기차 보조금 개편안 발표... 국산차 혜택 강화</a></li>
-                    <li><a href="#">주말 날씨: 전국 맑음, 나들이하기 좋은 날씨</a></li>
-                    <li><a href="#">프로야구: 한국시리즈 예매 일정 안내</a></li>
+                <h3 class="bottom-section-title">방금 올라온 PREMIER 콘텐츠</h3>
+                <ul class="premier-list">
+                    <li>
+                        <div class="list-text">
+                            <h4>삼성전자 장 초반 팔아치운 초고수들...상승 전환에 후회할까</h4>
+                            <p>주식 초고수는 지금 매도 우위... 반도체 섹터의 향방은 어디로 갈 것인가 심층 분석. 시장의 변동성이 확대되는 가운데, 개인 투자자들의 불안 심리가 매도세로 이어지고 있다는 분석이 나옵니다.</p>
+                        </div>
+                        <div class="list-thumb"><img src="https://via.placeholder.com/120x80/eee/999?text=IMG" alt=""></div>
+                    </li>
+                    <li>
+                        <div class="list-text">
+                            <h4>"월급 240만원 울아들, 적금은 커녕 국민연금 붓기도 힘들다는데"</h4>
+                            <p>나라에서 3년간 80% 대신 내주는 '이 제도' 활용법 완벽 정리. 청년들의 자산 형성을 돕기 위한 정부의 파격적인 지원 정책, 놓치지 말고 신청하세요. 자격 요건부터 신청 방법까지 상세하게 안내해 드립니다.</p>
+                        </div>
+                        <div class="list-thumb"><img src="https://via.placeholder.com/120x80/eee/999?text=IMG" alt=""></div>
+                    </li>
+                    <li>
+                        <div class="list-text">
+                            <h4>전기차 보조금 개편안 발표... 국산차 혜택 강화, 수입차는?</h4>
+                            <p>올해부터 달라지는 전기차 구매 보조금 정책, 차종별 지원금 확인하기. 배터리 효율성과 재활용 가치를 고려한 새로운 기준이 적용됩니다. 테슬라 등 수입 전기차에 대한 보조금은 축소될 전망입니다.</p>
+                        </div>
+                        <div class="list-thumb"><img src="https://via.placeholder.com/120x80/eee/999?text=IMG" alt=""></div>
+                    </li>
                 </ul>
             </div>
-
-            <div id="BC_byline_rectangle" class="ad-slot ad-bc-byline" style="margin: 40px 0;"></div>
 
             <div class="comment-section">
                 <h3 class="bottom-section-title">전체 댓글 리스트 (158개)</h3>
@@ -653,18 +494,6 @@
                         <strong>독자B</strong>: 평화로운 해결을 바랍니다.
                         <div style="color:#999; font-size:12px;">2026.01.16</div>
                     </li>
-                    <li>
-                        <strong>독자C</strong>: 본문 디자인이 깔끔해져서 보기 좋네요.
-                        <div style="color:#999; font-size:12px;">2026.01.16</div>
-                    </li>
-                    <li>
-                        <strong>독자D</strong>: 700px 폭 실험, 광고가 어떻게 나올지 궁금하네요.
-                        <div style="color:#999; font-size:12px;">2026.01.16</div>
-                    </li>
-                    <li>
-                        <strong>독자E</strong>: 세계 경제가 걱정입니다.
-                        <div style="color:#999; font-size:12px;">2026.01.16</div>
-                    </li>
                 </ul>
                 <div style="text-align: center; margin-top: 15px; cursor: pointer; color: #666;">더보기 +</div>
             </div>
@@ -672,16 +501,137 @@
             <div id="BC_billboard_rectangle" class="ad-slot ad-bc-comment" style="margin: 40px 0;"></div>
 
             <div class="extra-content-section">
-                <h3 class="bottom-section-title">🔥 인기뉴스</h3>
-                <ul class="popular-list">
-                    <li><span style="color:#ff6600; margin-right:5px;">1</span>주식 시장, 금리 인상 종료 기대감에 강세 마감</li>
-                    <li><span style="color:#ff6600; margin-right:5px;">2</span>대규모 신도시 개발 계획 발표, 지역 부동산 시장 요동</li>
-                    <li><span style="color:#ff6600; margin-right:5px;">3</span>세계 경제, 고금리 시대 장기화 우려</li>
-                    <li><span style="color:#ff6600; margin-right:5px;">4</span>부동산 시장, 급매물 소진되며 거래량 회복세</li>
-                    <li><span style="color:#ff6600; margin-right:5px;">5</span>AI 기술, 제조업 혁신 주도... 생산성 획기적 개선</li>
-                    <li><span style="color:#ff6600; margin-right:5px;">6</span>국내 스타트업, 시리즈 C 투자 유치 성공</li>
-                    <li><span style="color:#ff6600; margin-right:5px;">7</span>친환경 에너지 전환, 정부 정책 추진 가속화</li>
+                <h3 class="bottom-section-title">많이 본 PREMIER 콘텐츠</h3>
+                <ul class="premier-rank-list">
+                    <li>
+                        <div class="rank-num">1</div>
+                        <div class="rank-content">
+                            <h4>삼성전자 장 초반 팔아치운 초고수들...상승 전환에 후회할까</h4>
+                            <span class="rank-tag">[주식 초고수는 지금]</span>
+                        </div>
+                        <div class="rank-thumb"><img src="https://via.placeholder.com/100x66/eee/999?text=1" alt=""></div>
+                    </li>
+                    <li>
+                        <div class="rank-num">2</div>
+                        <div class="rank-content">
+                            <h4>"월급 240만원 울아들, 적금은 커녕 국민연금 붓기도 힘들다는데"</h4>
+                            <span class="rank-tag">[언제까지 직장인]</span>
+                        </div>
+                        <div class="rank-thumb"><img src="https://via.placeholder.com/100x66/eee/999?text=2" alt=""></div>
+                    </li>
+                    <li>
+                        <div class="rank-num">3</div>
+                        <div class="rank-content">
+                            <h4>주식 초고수, 로봇주 또 담았다... 레인보우로보틱스 집중 매수</h4>
+                            <span class="rank-tag">[주식 초고수는 지금]</span>
+                        </div>
+                        <div class="rank-thumb"><img src="https://via.placeholder.com/100x66/eee/999?text=3" alt=""></div>
+                    </li>
+                    <li>
+                        <div class="rank-num">4</div>
+                        <div class="rank-content">
+                            <h4>주식 초고수, 바이오·조선주에서 순환매 기회 모색</h4>
+                            <span class="rank-tag">[마켓 인사이드]</span>
+                        </div>
+                        <div class="rank-thumb"><img src="https://via.placeholder.com/100x66/eee/999?text=4" alt=""></div>
+                    </li>
+                    <li>
+                        <div class="rank-num">5</div>
+                        <div class="rank-content">
+                            <h4>초고수, 반도체·로봇·원전 등 메가트렌드 주목</h4>
+                            <span class="rank-tag">[주식 초고수는 지금]</span>
+                        </div>
+                        <div class="rank-thumb"><img src="https://via.placeholder.com/100x66/eee/999?text=5" alt=""></div>
+                    </li>
                 </ul>
+            </div>
+
+            <div class="bottom-content-area">
+                <h3 class="bottom-section-title">추천 PREMIER 시리즈</h3>
+                <ul class="premier-list">
+                    <li>
+                        <div class="list-text">
+                            <h4>언제까지 직장인</h4>
+                            <p>직장인들의 로망, 행복한 노후 만들기 프로젝트. 은퇴 준비부터 제2의 인생 설계까지, 전문가들이 제안하는 현실적인 솔루션을 만나보세요. 100세 시대, 당신의 노후는 안녕하십니까?</p>
+                        </div>
+                        <div class="list-thumb" style="border-radius: 8px;"><img src="https://via.placeholder.com/120x80/cce5ff/004085?text=Series" alt=""></div>
+                    </li>
+                    <li>
+                        <div class="list-text">
+                            <h4>부동산 이기자</h4>
+                            <p>알기 쉬운 부동산 트렌드. 매주 쏟아지는 정책과 시장 변화를 기자의 시선으로 분석합니다. 내 집 마련의 꿈, '부동산 이기자'와 함께라면 더 이상 꿈이 아닙니다. 핫한 분양 현장부터 숨은 알짜 매물까지!</p>
+                        </div>
+                        <div class="list-thumb" style="border-radius: 8px;"><img src="https://via.placeholder.com/120x80/d4edda/155724?text=Series" alt=""></div>
+                    </li>
+                    <li>
+                        <div class="list-text">
+                            <h4>오찬종의 매일뉴욕</h4>
+                            <p>미국 시장에서 가장 핫한 브랜드의 성공 노하우 분석. 현지에서 생생하게 전해드립니다. 월스트리트의 최신 트렌드부터 실리콘밸리의 혁신 기업까지, 글로벌 비즈니스 인사이트를 얻어가세요.</p>
+                        </div>
+                        <div class="list-thumb" style="border-radius: 8px;"><img src="https://via.placeholder.com/120x80/fff3cd/856404?text=Series" alt=""></div>
+                    </li>
+                    <li>
+                        <div class="list-text">
+                            <h4>전자만사</h4>
+                            <p>전자산업에 대한 모든 것. 반도체부터 가전까지, 기술 트렌드의 최전선을 달립니다. 삼성전자, SK하이닉스, LG전자의 최신 동향과 미래 전략을 심층 분석합니다. 테크 마니아라면 필독!</p>
+                        </div>
+                        <div class="list-thumb" style="border-radius: 8px;"><img src="https://via.placeholder.com/120x80/f8d7da/721c24?text=Series" alt=""></div>
+                    </li>
+                </ul>
+            </div>
+
+            <div class="bottom-content-area">
+                <h3 class="bottom-section-title">당신이 좋아할 만한 콘텐츠</h3>
+                <div class="grid-gallery">
+                    <div class="grid-item">
+                        <div class="grid-thumb"><img src="https://via.placeholder.com/300x200/eee/999?text=Content+1" alt=""></div>
+                        <div class="grid-title">2026년 경제 전망: 금리 인하 시점은?</div>
+                    </div>
+                    <div class="grid-item">
+                        <div class="grid-thumb"><img src="https://via.placeholder.com/300x200/eee/999?text=Content+2" alt=""></div>
+                        <div class="grid-title">AI가 바꿀 미래 일자리 지도</div>
+                    </div>
+                    <div class="grid-item">
+                        <div class="grid-thumb"><img src="https://via.placeholder.com/300x200/eee/999?text=Content+3" alt=""></div>
+                        <div class="grid-title">은퇴 후 살기 좋은 도시 TOP 5</div>
+                    </div>
+                    <div class="grid-item">
+                        <div class="grid-thumb"><img src="https://via.placeholder.com/300x200/eee/999?text=Content+4" alt=""></div>
+                        <div class="grid-title">전기차 vs 하이브리드, 당신의 선택은?</div>
+                    </div>
+                    <div class="grid-item">
+                        <div class="grid-thumb"><img src="https://via.placeholder.com/300x200/eee/999?text=Content+5" alt=""></div>
+                        <div class="grid-title">성공하는 스타트업의 3가지 공통점</div>
+                    </div>
+                    <div class="grid-item">
+                        <div class="grid-thumb"><img src="https://via.placeholder.com/300x200/eee/999?text=Content+6" alt=""></div>
+                        <div class="grid-title">미국 주식, 지금이 매수 타이밍일까</div>
+                    </div>
+                    <div class="grid-item">
+                        <div class="grid-thumb"><img src="https://via.placeholder.com/300x200/eee/999?text=Content+7" alt=""></div>
+                        <div class="grid-title">건강한 수면을 위한 5가지 습관</div>
+                    </div>
+                    <div class="grid-item">
+                        <div class="grid-thumb"><img src="https://via.placeholder.com/300x200/eee/999?text=Content+8" alt=""></div>
+                        <div class="grid-title">여행 고수들이 추천하는 숨은 명소</div>
+                    </div>
+                    <div class="grid-item">
+                        <div class="grid-thumb"><img src="https://via.placeholder.com/300x200/eee/999?text=Content+9" alt=""></div>
+                        <div class="grid-title">와인 입문자를 위한 가이드</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bottom-content-area">
+                <h3 class="bottom-section-title">Shorts</h3>
+                <div class="shorts-container">
+                    <div class="shorts-item">
+                        <iframe src="https://www.youtube.com/embed/5F2v_7o-e-E" title="Shorts 1" allowfullscreen></iframe>
+                    </div>
+                    <div class="shorts-item">
+                        <iframe src="https://www.youtube.com/embed/S2pEUPjJ7i0" title="Shorts 2" allowfullscreen></iframe>
+                    </div>
+                </div>
             </div>
 
         </main>
@@ -694,62 +644,26 @@
     </footer>
 
     <script>
-        // ----------------------------------------------------------
-        // [Lazy Load 인프라] - 기존 로직 유지
-        // ----------------------------------------------------------
-
-        // 1. 디바이스 카테고리 확인
         const userAgent = navigator.userAgent.toLowerCase();
         const width = window.innerWidth;
         const isDesktop = !(/mobile|android|iphone|ipod/.test(userAgent) && !/ipad/.test(userAgent)) && width > 1024;
-
-        // Eager 로드 대상(TC, MR)이 모두 삭제되었으므로 리스트는 비워둠
         const EAGER_AD_SLOT_IDS = [];
+        let lazyAdSlotsHTML = [], lazyGamSlots = [], lazyObserver = null;
 
-        let lazyAdSlotsHTML = []; 
-        let lazyGamSlots = [];    
-        let lazyObserver = null;  
-
-        // ==========================================================
-        // 함수 1. 본문 in-article 광고 동적 주입
-        // ==========================================================
         function setupInArticleAds() {
-            const MC_IN_ARTICLE_SLOT_IDS = [
-                'MC_article_rectangle_1',
-                'MC_article_rectangle_2',
-                'MC_article_rectangle_3',
-                'MC_article_rectangle_4',
-                'MC_article_rectangle_5',
-                'MC_article_rectangle_6',
-                'MC_article_rectangle_7',
-                'MC_article_rectangle_8'
-            ];
-
+            const MC_IN_ARTICLE_SLOT_IDS = ['MC_article_rectangle_1', 'MC_article_rectangle_2', 'MC_article_rectangle_3', 'MC_article_rectangle_4', 'MC_article_rectangle_5', 'MC_article_rectangle_6', 'MC_article_rectangle_7', 'MC_article_rectangle_8'];
             const articleBody = document.querySelector('.article-body');
             if (!articleBody) return;
-
             const viewportHeight = window.innerHeight || 800;
-
-            const VIEWPORT_GAP_BETWEEN_ADS = 1.0;
-            const VIEWPORT_AFTER_VISUAL_MIN = 0.5;
-
-            const VISUAL_BLOCK_CLASSES = [
-                'article-image', 'article-embed', 'dummy-data-box', 'visual-block', 'data-table', 'chart-box'
-            ];
-
+            const VIEWPORT_GAP_BETWEEN_ADS = 1.0, VIEWPORT_AFTER_VISUAL_MIN = 0.5;
+            const VISUAL_BLOCK_CLASSES = ['article-image', 'article-embed', 'dummy-data-box', 'visual-block', 'data-table', 'chart-box'];
             const isVisualBlock = (el) => {
                 if (!el) return false;
                 if (VISUAL_BLOCK_CLASSES.some(cls => el.classList.contains(cls))) return true;
                 if (el.matches('figure, table, iframe, video')) return true;
                 return false;
             };
-
-            const contentBlocks = Array.from(
-                articleBody.querySelectorAll(
-                    'p, .article-image, .article-embed, .dummy-data-box, figure, table, iframe, video, .data-table, .chart-box'
-                )
-            );
-
+            const contentBlocks = Array.from(articleBody.querySelectorAll('p, .article-image, .article-embed, .dummy-data-box, figure, table, iframe, video, .data-table, .chart-box'));
             let cumulativeTextHeight = 0;
             const anchors = contentBlocks.map(el => {
                 const visual = isVisualBlock(el);
@@ -761,12 +675,10 @@
                 }
                 return { element: el, isVisual: visual, textHeight, cumulativeTextHeight };
             });
-
             const totalTextHeight = anchors.length > 0 ? anchors[anchors.length - 1].cumulativeTextHeight : 0;
             const isShortArticle = totalTextHeight < viewportHeight;
             const lastContentBlock = anchors.length > 0 ? anchors[anchors.length - 1].element : null;
             const placedSlotIds = new Set();
-
             if (isShortArticle && lastContentBlock) {
                 const firstSlotId = MC_IN_ARTICLE_SLOT_IDS[0];
                 const firstSlotEl = document.getElementById(firstSlotId);
@@ -788,13 +700,11 @@
                 }
                 if (isShortArticle && lastContentBlock) return;
             }
-
             if (!isShortArticle && anchors.length > 0) {
                 const anchorsForPlacement = anchors.length > 1 ? anchors.slice(0, -1) : [];
                 let lastAdTextHeight = 0;
                 let lastVisualTextHeight = -Infinity;
                 let slotIndex = 0;
-
                 const findNonAdPrevSibling = (el) => {
                     let prev = el.previousElementSibling;
                     while (prev && prev.classList.contains('ad-slot')) prev = prev.previousElementSibling;
@@ -805,32 +715,25 @@
                     while (next && next.classList.contains('ad-slot')) next = next.nextElementSibling;
                     return next;
                 };
-
                 for (let i = 0; i < anchorsForPlacement.length; i++) {
                     if (slotIndex >= MC_IN_ARTICLE_SLOT_IDS.length) break;
                     const a = anchorsForPlacement[i];
                     if (a.isVisual) { lastVisualTextHeight = a.cumulativeTextHeight; continue; }
-
                     const textSinceLastAd = a.cumulativeTextHeight - lastAdTextHeight;
                     const textSinceLastVisual = a.cumulativeTextHeight - lastVisualTextHeight;
-
                     if (textSinceLastAd < viewportHeight * VIEWPORT_GAP_BETWEEN_ADS) continue;
                     if (textSinceLastVisual < viewportHeight * VIEWPORT_AFTER_VISUAL_MIN) continue;
-
                     const prevSibling = findNonAdPrevSibling(a.element);
                     const nextSibling = findNonAdNextSibling(a.element);
                     if ((prevSibling && isVisualBlock(prevSibling)) || (nextSibling && isVisualBlock(nextSibling))) continue;
-
                     const slotId = MC_IN_ARTICLE_SLOT_IDS[slotIndex];
                     const slotEl = document.getElementById(slotId);
                     if (!slotEl) { slotIndex++; continue; }
-
                     articleBody.insertBefore(slotEl, a.element);
                     placedSlotIds.add(slotId);
                     lastAdTextHeight = a.cumulativeTextHeight;
                     slotIndex++;
                 }
-
                 const unusedSlotIds = MC_IN_ARTICLE_SLOT_IDS.filter(id => !placedSlotIds.has(id));
                 unusedSlotIds.forEach(slotId => {
                     const el = document.getElementById(slotId);
@@ -845,20 +748,14 @@
                 }
             }
         }
-
-        // ==========================================================
-        // 함수 2. Lazy Load 대상 광고 슬롯 설정 및 Observer 생성
-        // ==========================================================
         function setupLazyLoading() {
             const allAdSlots = document.querySelectorAll('.ad-slot, .native-ad-list-item');
             lazyAdSlotsHTML = [];
-
             allAdSlots.forEach(slot => {
                 if (slot.id && !EAGER_AD_SLOT_IDS.includes(slot.id)) {
                     lazyAdSlotsHTML.push(slot);
                 }
             });
-
             lazyGamSlots = [];
             if (window.googletag && googletag.cmd) {
                 googletag.cmd.push(function () {
@@ -866,30 +763,24 @@
                     lazyGamSlots = definedSlots.filter(slot => !EAGER_AD_SLOT_IDS.includes(slot.getSlotElementId()));
                 });
             }
-
             const ua = navigator.userAgent.toLowerCase();
             const width = window.innerWidth;
             let marginValue = '400px';
-
             if ((/mobile|android|iphone|ipod/.test(ua) && !/ipad/.test(ua)) || width <= 768) {
                 marginValue = '600px';
             } else if (/ipad|tablet/.test(ua) || width <= 1024) {
                 marginValue = '500px';
             }
-
             const options = {
                 root: null,
                 rootMargin: `0px 0px ${marginValue} 0px`,
                 threshold: 0.0
             };
-
             console.log(`🚀 [Lazy Load] rootMargin optimized for ${marginValue} based on device detection.`);
-
             lazyObserver = new IntersectionObserver(function (entries, observerInstance) {
                 entries.forEach(entry => {
                     const slotId = entry.target.id;
                     if (!entry.isIntersecting) return;
-
                     if (window.googletag && googletag.cmd) {
                         googletag.cmd.push(function () {
                             const slotToRefresh = lazyGamSlots.find(s => s.getSlotElementId() === slotId);
@@ -904,17 +795,12 @@
                 });
             }, options);
         }
-
         function startObservingLazySlots() {
             if (!lazyObserver || !lazyAdSlotsHTML || lazyAdSlotsHTML.length === 0) return;
             lazyAdSlotsHTML.forEach(slot => {
                 lazyObserver.observe(slot);
             });
         }
-
-        // ==========================================================
-        // DOMContentLoaded 시점에 주요 로직 실행
-        // ==========================================================
         document.addEventListener('DOMContentLoaded', function () {
             setupInArticleAds();
             setupLazyLoading();
