@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GAM Passback Tag For Teads</title>
+</head>
+<body>
+
+    <script async src="https://securepubads.g.doubleclick.net/tag/js/gpt.js" crossorigin="anonymous"></script>
+
+    <div id="gpt-passback" style="text-align: center;">
+        <script>
+            window.googletag = window.googletag || {cmd: []};
+            
+            googletag.cmd.push(function() {
+                // 1. Responsive size mapping
+                var teads_size = googletag.sizeMapping()
+                    // Desktop (1024px ~)
+                    .addSize([1024, 0], [
+                        [480, 320], [336, 280],
+                        [300, 250]
+                    ])
+                    // Tablet (768px ~)
+                    .addSize([768, 0], [
+                        [480, 320], [336, 280], [320, 480],
+                        [300, 250]
+                    ])
+                    // Mobile (0px ~)
+                    .addSize([0, 0], [
+                        [336, 280], [320, 480],
+                        [300, 250]
+                    ])
+                    .build();
+
+                // 2. Ad Slot & Mapping definiton
+                googletag.defineSlot('/7450/www.mk.co.kr/passback/teads', [[336, 280], [300, 250], [320, 480], [480, 320]], 'gpt-passback')
+                    .defineSizeMapping(teads_size)
+                    .addService(googletag.pubads())
+                    .setTargeting('ad_area_type', ['in_article'])
+                    .setTargeting('position', ['MC']);
+
+                // 3. Centering & collapse
+                googletag.pubads().collapseEmptyDivs(true); 
+                googletag.pubads().setCentering(true);
+
+                googletag.enableServices();
+                googletag.display('gpt-passback');
+            });
+        </script>
+    </div>
+
+</body>
+</html>
