@@ -50,15 +50,14 @@
  ## sizeMapping_article_horizontal 에서 1024 폭에서 [750, 300] , 768 폭에서 '[750, 300], [750, 200], [728, 90], ' 사이즈 삭제 ##
  MC_article_rectangle_1~2 슬롯 사이즈에 삭제된 사이즈가 존재하는지 확인하고, 삭제 요망
     .addSize([1024, 0], [
-        [750, 300], [480, 320], [336, 280],[320, 480], 
+        [480, 320], [336, 280],[320, 480], 
 
 const sizeMapping_article_horizontal = googletag.sizeMapping()
     .addSize([768, 0], [
-        [750, 300], [750, 200], [728, 90], 
         [480, 320], [336, 280], [320, 480], 
 (이하생략)
 
- ## sizeMapping_article_horizontal 이 적용되는 슬롯(MC_article_rectangle_1~8)에서 [750, 300] , 768 폭에서 '[750, 300], [750, 200], [728, 90], ' 사이즈 삭제 ##
+ ## sizeMapping_article_horizontal 이 적용되는 광고슬롯(MC_article_rectangle_1~8)에서 [750, 300] , 768 폭에서 '[750, 300], [750, 200], [728, 90], ' 사이즈 삭제 ##
 
 # 5차 업데이트(2026.01.05)
             // --- [rootMargin 최적화: 디바이스별 rootMargin 동적 할당] ---
@@ -535,7 +534,6 @@ const sizeMapping_article_horizontal = googletag.sizeMapping()
         [2, 1], [1, 1], 'fluid'
     ])
     .addSize([768, 0], [
-        [750, 300], [750, 200], [728, 90], 
         [480, 320], [336, 280], [320,480], 
         [320, 100], [320, 50],
         [300, 250],
