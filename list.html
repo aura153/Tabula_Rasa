@@ -1,9 +1,9 @@
-<!DOCTYPE html> 
+<!DOCTYPE html>
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>List GPT (Optimized: Hybrid MR Loading)</title> 
+    <title>List GPT (Optimized: Hybrid MR Loading)</title>
 
     <script async src="https://securepubads.g.doubleclick.net/tag/js/gpt.js"></script>
     <script>
@@ -82,7 +82,7 @@
             /*
              * [List GPT 전용 · 페이지 레벨 고정 값]
              */
-            googletag.pubads().setTargeting('page_type', 'section_front');
+            googletag.pubads().setTargeting('page_type', 'section_front'); // List 페이지도 section_front 타입 사용 (기존 로직 유지)
             googletag.pubads().setTargeting('section_home_nm', ''); 
             googletag.pubads().setTargeting('section_front_nm', ''); 
             googletag.pubads().setTargeting('is_dark_mode', isDarkMode);
@@ -129,48 +129,40 @@
                     [1246, 100], [1200, 300], [1200, 100], 
                     [980, 120], [970, 250], [930, 180], [970, 90], 
                     [728, 90], 
-                    [2, 1], [1, 1], 
-                    'fluid'
+                    [2, 1], [1, 1], 'fluid'
                 ])
                 .addSize([768, 0], [
                     [750, 300], [750, 200], [728, 90], 
                     [480, 320], 
                     [336, 280], [320, 480], [300, 250], 
-                    [2, 1], [1, 1], 
-                    'fluid'
+                    [2, 1], [1, 1], 'fluid'
                 ])
                 .addSize([0, 0], [
-                    [336, 280], [320, 480],
+                    [336, 280], [320, 480], 
                     [320, 100], [320, 50], 
                     [300, 250], [250, 250], [200, 200], 
-                    [2, 1], [1, 1], 
-                    'fluid'
+                    [2, 1], [1, 1], 'fluid'
                 ])
                 .build();
 
             // 0-2. 우측 사이드레일 박스형 배너용 사이즈 매핑 (MR)
             const sizeMapping_siderail_square = googletag.sizeMapping()
                 .addSize([1024, 0], [
-                    [336, 280], [320, 480], [300, 600], [300, 250], 
-                    [250, 250], [200, 200],
-                    [2, 1], [1, 1], 
-                    'fluid'
+                    [336, 280], [320, 480], [300, 600], 
+                    [300, 250], [250, 250], [200, 200], 
+                    [2, 1], [1, 1], 'fluid'
                 ])
                 .addSize([768, 0], [
                     [750, 300], [750, 200], [728, 90], 
                     [480, 320], 
-                    [336, 280],[320, 480],
-                    [320, 100], [320, 50],
+                    [336, 280],[320, 480], 
                     [300, 250], [250, 250], [200, 200],
-                    [2, 1], [1, 1], 
-                    'fluid'
+                    [2, 1], [1, 1], 'fluid'
                 ])
                 .addSize([0, 0], [
-                    [336, 280], [320, 480],
-                    [320, 100], [320, 50],
-                    [300, 250], [250, 250], [200, 200],
-                    [2, 1], [1, 1], 
-                    'fluid'
+                    [336, 280], [320, 480], 
+                    [300, 250], [250, 250], [200, 200], 
+                    [2, 1], [1, 1], 'fluid'
                 ])
                 .build();
 
@@ -179,30 +171,42 @@
             // 5-1. TC_billboard_leaderboard (Eager Load)
             TC_billboard_leaderboard_slot = googletag.defineSlot(
                 AdUnitPath, 
-                [[1246, 100], [1200, 300], [1200, 100], [980, 120], [970, 250], [930, 180], [970, 90], [728, 90], [320, 100], [320, 50], [2, 1], [1, 1], 'fluid'],
+                [
+                    [1246, 100], [1200, 300], [1200, 100], 
+                    [980, 120], [970, 250], [930, 180], [970, 90], 
+                    [728, 90], 
+                    [320, 100], [320, 50], 
+                    [2, 1], [1, 1], 'fluid'
+                ], 
                 'TC_billboard_leaderboard'
             )
                 .defineSizeMapping(sizeMapping_horizontal) 
                 .setTargeting('div_id', 'TC_billboard_leaderboard')
+                .setTargeting('load_type', 'eager')        // 페이지 진입 즉시 노출
                 .setTargeting('position', 'TC')
                 .setTargeting('ad_area_type', 'ATF')
                 .setTargeting('default_exposure', 'hidden')
-                .setTargeting('load_type', 'eager')         // 페이지 진입 시 즉시 로드
                 .addService(googletag.pubads());
 
 
             // 5-2. MR_halfpage_rectangle (Hybrid Load)
             // 💡 [수정 작업 1] MR_halfpage_rectangle_slot은 Desktop일 때는 eager, 그 외는 lazy로 로딩
             MR_halfpage_rectangle_slot = googletag.defineSlot(
-                AdUnitPath,
-                [[750, 300], [750, 200], [728, 90], [480, 320], [336, 280], [320, 480], [320, 100], [320, 50], [300, 600], [300, 250], [250, 250], [200, 200], [2, 1], [1, 1], 'fluid'],
+                AdUnitPath, 
+                [
+                    [750, 300], [750, 200], [728, 90], 
+                    [480, 320], [336, 280], [320, 480], 
+                    [300, 600], [300, 250], 
+                    [250, 250], [200, 200], 
+                    [2, 1], [1, 1], 'fluid'
+                ], 
                 'MR_halfpage_rectangle'
             )
                 .defineSizeMapping(sizeMapping_siderail_square) 
                 .setTargeting('div_id', 'MR_halfpage_rectangle')
                 .setTargeting('position', 'MR')
                 .setTargeting('ad_area_type', 'ATF')
-                .setTargeting('default_exposure', '')               
+                .setTargeting('default_exposure', '')              
                 // 💡 load_type 분기: Desktop -> eager, Others -> lazy
                 .setTargeting('load_type', deviceCategory === 'desktop' ? 'eager' : 'lazy') 
                 .addService(googletag.pubads());
@@ -376,7 +380,7 @@
             .ranking-list li { color: #ccc; }
 
             .spacer-section {
-                background-color: #1a1a1a;
+                background-color: #1a1a1a;   /* 다크 모드에서 본문과 동일한 배경 */
             }
             .spacer-section:not([style*="border-left-color"]) {
                 border-left-color: #900;
@@ -472,7 +476,7 @@
                 
                 <h2 class="section-header">TODAY'S TOP NEWS LIST</h2>
                 
-                <section class="sidebar-box">
+                <section class="sidebar-box" style="padding: 20px;">
                     <article style="margin-bottom: 25px; padding-bottom: 15px; border-bottom: 2px solid #f0f0f0;">
                         <div style="width: 100%; height: 250px; background-color: #ccc; margin-bottom: 10px; border-radius: 5px;">[Feature Image Placeholder]</div>
                         <h3 style="font-size: 24px; color: #000; margin-bottom: 5px;">**[특집] 금리 인상 사이클 종료 임박? 시장 변동성 확대 분석**</h3>
@@ -679,7 +683,7 @@
                      */
                 });
             }
-            
+
             /**
              * [객관적 최적화: 디바이스별 rootMargin 동적 할당]
              * - 한국의 안정적인 네트워크 인프라와 사용자 스크롤 속도를 고려한 '스윗 스팟' 수치 적용
@@ -708,30 +712,25 @@
                 rootMargin: `0px 0px ${marginValue} 0px`, // 하단 여백을 디바이스별로 다르게 적용
                 threshold: 0.0
             };
-            
+
             console.log(`🚀 [Lazy Load] rootMargin optimized for ${marginValue} based on device detection.`);
 
-            /*
-             * [Observer 콜백]
-             */
             lazyObserver = new IntersectionObserver(function(entries, observerInstance) {
                 entries.forEach(entry => {
-                    if (!entry.isIntersecting) return;
-
                     const slotId = entry.target.id;
+                    if (!entry.isIntersecting) return;
 
                     if (window.googletag && googletag.cmd) {
                         googletag.cmd.push(function() {
-                            // LAZY_AD_SLOT_IDS 내의 어떤 슬롯이든 공통 처리
                             const slotToRefresh = lazyGamSlots.find(
                                 s => s.getSlotElementId() === slotId
                             );
 
                             if (slotToRefresh) {
-                                // disableInitialLoad() 환경이므로 display + refresh 패턴 적용
+                                // disableInitialLoad() 상태이므로 display + refresh로 최초 요청
                                 googletag.display(slotId);
                                 googletag.pubads().refresh([slotToRefresh]);
-                                console.log(`✅ [Lazy Load] ${slotId} DISPLAY + REFRESH (margin: ${marginValue})`);
+                                console.log(`✅ [Lazy Load SUCCESS] Ad ID: ${slotId} | Status: GAM DISPLAYED & REFRESHED upon Scroll.`);
                             }
                         });
                     }

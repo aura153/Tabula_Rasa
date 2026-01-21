@@ -95,22 +95,19 @@
                     [1246, 100], [1200, 300], [1200, 100], 
                     [980, 120], [970, 250], [930, 180], [970, 90], 
                     [728, 90], 
-                    [2, 1], [1, 1], 
-                    'fluid'
+                    [2, 1], [1, 1], 'fluid'
                 ])
                 .addSize([768, 0], [
-                    
+                    [750, 300], [750, 200], [728, 90], 
                     [480, 320], 
                     [336, 280], [320, 480], [300, 250], 
-                    [2, 1], [1, 1], 
-                    'fluid'
+                    [2, 1], [1, 1], 'fluid'
                 ])
                 .addSize([0, 0], [
-                    [336, 280], [320, 480],
+                    [336, 280], [320, 480], 
                     [320, 100], [320, 50], 
                     [300, 250], [250, 250], [200, 200], 
-                    [2, 1], [1, 1], 
-                    'fluid'
+                    [2, 1], [1, 1], 'fluid'
                 ])
                 .build();
 
@@ -120,7 +117,8 @@
                     [480, 320], [336, 280],[320,480], 
                     [320, 100], [320, 50],
                     [300, 250],
-                    [300, 251], [300, 252], [300, 253], [300, 254], [300, 255], [300, 256], [300, 257], [300, 258],
+                    [300, 251], [300, 252], [300, 253], [300, 254], 
+                    [300, 255], [300, 256], [300, 257], [300, 258],
                     [250, 250],[200, 200],
                     [2, 1], [1, 1], 'fluid'
                 ])
@@ -128,15 +126,17 @@
                     [480, 320], [336, 280], [320,480], 
                     [320, 100], [320, 50],
                     [300, 250],
-                    [300, 251], [300, 252], [300, 253], [300, 254], [300, 255], [300, 256], [300, 257], [300, 258],
+                    [300, 251], [300, 252], [300, 253], [300, 254], 
+                    [300, 255], [300, 256], [300, 257], [300, 258],
                     [250, 250], [200, 200],
                     [2, 1], [1, 1], 'fluid'
                 ])
                 .addSize([0, 0], [
-                    [336, 280], [320, 480],
+                    [336, 280], [320, 480], 
                     [320, 100], [320, 50],
                     [300, 250],
-                    [300, 251], [300, 252], [300, 253], [300, 254], [300, 255], [300, 256], [300, 257], [300, 258],
+                    [300, 251], [300, 252], [300, 253], [300, 254], 
+                    [300, 255], [300, 256], [300, 257], [300, 258],
                     [250, 250], [200, 200],
                     [2, 1], [1, 1], 'fluid'
                 ])
@@ -153,37 +153,155 @@
             let MC_article_rectangle_8_slot = null;
 
             // 5-3 ~ 5-10. MC in-article 슬롯 (모두 Lazy Load)
-            MC_article_rectangle_1_slot = googletag.defineSlot(AdUnitPath, [[480, 320], [336, 280], [320, 480], [300, 250], [300, 251], [250, 250], [200, 200],  [2, 1], [1, 1], 'fluid'], 'MC_article_rectangle_1')
-                .defineSizeMapping(sizeMapping_article_horizontal).setTargeting('position', 'MC').setTargeting('ad_area_type', 'in_article').setTargeting('load_type', 'lazy').addService(googletag.pubads());
+            MC_article_rectangle_1_slot = googletag.defineSlot(
+                AdUnitPath, 
+                [
+                    [750, 300], [750, 200], [728, 90], 
+                    [480, 320], [336, 280], [320, 480], 
+                    [300, 250], [300, 251], 
+                    [250, 250], [200, 200],  
+                    [2, 1], [1, 1], 'fluid'
+                ], 
+                'MC_article_rectangle_1'
+            )
+                .defineSizeMapping(sizeMapping_article_horizontal)
+                .setTargeting('position', 'MC')
+                .setTargeting('ad_area_type', 'in_article')
+                .setTargeting('load_type', 'lazy')
+                .addService(googletag.pubads());
 
-            MC_article_rectangle_2_slot = googletag.defineSlot(AdUnitPath, [[480, 320], [336, 280], [320, 480], [300, 250], [300, 252], [250, 250], [200, 200], [2, 1], [1, 1], 'fluid'], 'MC_article_rectangle_2')
-                .defineSizeMapping(sizeMapping_article_horizontal).setTargeting('position', 'MC').setTargeting('ad_area_type', 'in_article').setTargeting('load_type', 'lazy').addService(googletag.pubads());
+            MC_article_rectangle_2_slot = googletag.defineSlot(
+                AdUnitPath, 
+                [
+                    [750, 300], [750, 200], [728, 90], 
+                    [480, 320], [336, 280], [320, 480], 
+                    [300, 250], [300, 252], 
+                    [250, 250], [200, 200], 
+                    [2, 1], [1, 1], 'fluid'
+                ], 
+                'MC_article_rectangle_2'
+            )
+                .defineSizeMapping(sizeMapping_article_horizontal)
+                .setTargeting('position', 'MC')
+                .setTargeting('ad_area_type', 'in_article')
+                .setTargeting('load_type', 'lazy')
+                .addService(googletag.pubads());
 
-            MC_article_rectangle_3_slot = googletag.defineSlot(AdUnitPath, [[480, 320], [336, 280], [320, 480], [300, 250], [300, 253], [250, 250], [200, 200], [2, 1], [1, 1], 'fluid'], 'MC_article_rectangle_3')
-                .defineSizeMapping(sizeMapping_article_horizontal).setTargeting('position', 'MC').setTargeting('ad_area_type', 'in_article').setTargeting('load_type', 'lazy').addService(googletag.pubads());
+            MC_article_rectangle_3_slot = googletag.defineSlot(
+                AdUnitPath, 
+                [
+                    [750, 300], [750, 200], [728, 90], 
+                    [480, 320], [336, 280], [320, 480], 
+                    [300, 250], [300, 253], 
+                    [250, 250], [200, 200], 
+                    [2, 1], [1, 1], 'fluid'
+                ], 
+                'MC_article_rectangle_3'
+            )
+                .defineSizeMapping(sizeMapping_article_horizontal)
+                .setTargeting('position', 'MC')
+                .setTargeting('ad_area_type', 'in_article')
+                .setTargeting('load_type', 'lazy')
+                .addService(googletag.pubads());
 
-            MC_article_rectangle_4_slot = googletag.defineSlot(AdUnitPath, [[480, 320], [336, 280], [320, 480], [300, 250], [300, 254], [250, 250], [200, 200], [2, 1], [1, 1], 'fluid'], 'MC_article_rectangle_4')
-                .defineSizeMapping(sizeMapping_article_horizontal).setTargeting('position', 'MC').setTargeting('ad_area_type', 'in_article').setTargeting('load_type', 'lazy').addService(googletag.pubads());
+            MC_article_rectangle_4_slot = googletag.defineSlot(
+                AdUnitPath, 
+                [
+                    [750, 300], [750, 200], [728, 90], 
+                    [480, 320], [336, 280], [320, 480], 
+                    [300, 250], [300, 254], 
+                    [250, 250], [200, 200], 
+                    [2, 1], [1, 1], 'fluid'
+                ], 
+                'MC_article_rectangle_4'
+            )
+                .defineSizeMapping(sizeMapping_article_horizontal)
+                .setTargeting('position', 'MC')
+                .setTargeting('ad_area_type', 'in_article')
+                .setTargeting('load_type', 'lazy')
+                .addService(googletag.pubads());
 
-            MC_article_rectangle_5_slot = googletag.defineSlot(AdUnitPath, [[480, 320], [336, 280], [320, 480], [300, 250], [300, 255], [250, 250], [200, 200], [2, 1], [1, 1], 'fluid'], 'MC_article_rectangle_5')
-                .defineSizeMapping(sizeMapping_article_horizontal).setTargeting('position', 'MC').setTargeting('ad_area_type', 'in_article').setTargeting('load_type', 'lazy').addService(googletag.pubads());
+            MC_article_rectangle_5_slot = googletag.defineSlot(
+                AdUnitPath, 
+                [
+                    [750, 300], [750, 200], [728, 90], 
+                    [480, 320], [336, 280], [320, 480], 
+                    [300, 250], [300, 255], 
+                    [250, 250], [200, 200], 
+                    [2, 1], [1, 1], 'fluid'
+                ], 
+                'MC_article_rectangle_5'
+            )
+                .defineSizeMapping(sizeMapping_article_horizontal)
+                .setTargeting('position', 'MC')
+                .setTargeting('ad_area_type', 'in_article')
+                .setTargeting('load_type', 'lazy')
+                .addService(googletag.pubads());
 
-            MC_article_rectangle_6_slot = googletag.defineSlot(AdUnitPath, [[480, 320], [336, 280], [320, 480], [300, 250], [300, 256], [250, 250], [200, 200], [2, 1], [1, 1], 'fluid'], 'MC_article_rectangle_6')
-                .defineSizeMapping(sizeMapping_article_horizontal).setTargeting('position', 'MC').setTargeting('ad_area_type', 'in_article').setTargeting('load_type', 'lazy').addService(googletag.pubads());
+            MC_article_rectangle_6_slot = googletag.defineSlot(
+                AdUnitPath, 
+                [
+                    [750, 300], [750, 200], [728, 90], 
+                    [480, 320], [336, 280], [320, 480], 
+                    [300, 250], [300, 256], 
+                    [250, 250], [200, 200], 
+                    [2, 1], [1, 1], 'fluid'
+                ], 
+                'MC_article_rectangle_6'
+            )
+                .defineSizeMapping(sizeMapping_article_horizontal)
+                .setTargeting('position', 'MC')
+                .setTargeting('ad_area_type', 'in_article')
+                .setTargeting('load_type', 'lazy')
+                .addService(googletag.pubads());
 
-            MC_article_rectangle_7_slot = googletag.defineSlot(AdUnitPath, [[480, 320], [336, 280], [320, 480], [300, 250], [300, 257], [250, 250], [200, 200], [2, 1], [1, 1], 'fluid'], 'MC_article_rectangle_7')
-                .defineSizeMapping(sizeMapping_article_horizontal).setTargeting('position', 'MC').setTargeting('ad_area_type', 'in_article').setTargeting('load_type', 'lazy').addService(googletag.pubads());
+            MC_article_rectangle_7_slot = googletag.defineSlot(
+                AdUnitPath, 
+                [
+                    [750, 300], [750, 200], [728, 90], 
+                    [480, 320], [336, 280], [320, 480], 
+                    [300, 250], [300, 257], 
+                    [250, 250], [200, 200], 
+                    [2, 1], [1, 1], 'fluid'
+                ], 
+                'MC_article_rectangle_7'
+            )
+                .defineSizeMapping(sizeMapping_article_horizontal)
+                .setTargeting('position', 'MC')
+                .setTargeting('ad_area_type', 'in_article')
+                .setTargeting('load_type', 'lazy')
+                .addService(googletag.pubads());
 
-            MC_article_rectangle_8_slot = googletag.defineSlot(AdUnitPath, [[480, 320], [336, 280], [320, 480], [300, 250], [300, 258], [250, 250], [200, 200], [2, 1], [1, 1], 'fluid'], 'MC_article_rectangle_8')
-                .defineSizeMapping(sizeMapping_article_horizontal).setTargeting('position', 'MC').setTargeting('ad_area_type', 'in_article').setTargeting('load_type', 'lazy').addService(googletag.pubads());
+            MC_article_rectangle_8_slot = googletag.defineSlot(
+                AdUnitPath, 
+                [
+                    [750, 300], [750, 200], [728, 90], 
+                    [480, 320], [336, 280], [320, 480], 
+                    [300, 250], [300, 258], 
+                    [250, 250], [200, 200], 
+                    [2, 1], [1, 1], 'fluid'
+                ], 
+                'MC_article_rectangle_8'
+            )
+                .defineSizeMapping(sizeMapping_article_horizontal)
+                .setTargeting('position', 'MC')
+                .setTargeting('ad_area_type', 'in_article')
+                .setTargeting('load_type', 'lazy')
+                .addService(googletag.pubads());
 
             // 5-11. BC_byline_rectangle (Lazy Load)
             const BC_byline_rectangle_slot = googletag.defineSlot(
                 AdUnitPath,
-                [[480, 320], [336, 280], [320, 480], [320, 100], [320, 50], [300, 250], [250, 250], [200, 200], [2, 1], [1, 1], 'fluid'],
+                [
+                    [750, 300], [750, 200], [728, 90], 
+                    [480, 320], [336, 280], [320, 480], 
+                    [320, 100], [320, 50], 
+                    [300, 250], [250, 250], [200, 200], 
+                    [2, 1], [1, 1], 'fluid'
+                ],
                 'BC_byline_rectangle'
             )
-                .defineSizeMapping(sizeMapping_article_horizontal)
+                .defineSizeMapping(sizeMapping_horizontal)
                 .setTargeting('div_id', 'BC_byline_rectangle')
                 .setTargeting('position', 'BC')
                 .setTargeting('ad_area_type', 'below_byline')
@@ -194,10 +312,18 @@
             // 5-12. BC_billboard_rectangle (Lazy Load)
             const BC_billboard_rectangle_slot = googletag.defineSlot(
                 AdUnitPath,
-                [[480, 320], [336, 280], [320, 480], [300, 250], [250, 250], [200, 200], [320, 100], [320, 50], [2, 1], [1, 1], 'fluid'],
+                [
+                    [1246, 100], [1200, 300], [1200, 100], 
+                    [980, 120], [970, 250], [970, 90], [930, 180], 
+                    [750, 300], [750, 200], [728, 90], 
+                    [480, 320], [336, 280], [320, 480], 
+                    [300, 250], [250, 250], [200, 200], 
+                    [320, 100], [320, 50], 
+                    [2, 1], [1, 1], 'fluid'
+                ],
                 'BC_billboard_rectangle'
             )
-                .defineSizeMapping(sizeMapping_article_horizontal)
+                .defineSizeMapping(sizeMapping_horizontal)
                 .setTargeting('div_id', 'BC_billboard_rectangle')
                 .setTargeting('position', 'BC')
                 .setTargeting('ad_area_type', 'below_comments')
